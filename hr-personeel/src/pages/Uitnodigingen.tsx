@@ -36,7 +36,7 @@ const typeLabels = {
 };
 
 export default function Uitnodigingen() {
-  const { uitnodigingen, maakUitnodiging, updateUitnodiging, verstuurUitnodiging, getGefilterdeOntvangers } =
+  const { uitnodigingen, maakUitnodiging, updateUitnodiging, verstuurUitnodiging, getGefilterdeOntvangers, distributieGroepen } =
     usePersoneel();
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -331,55 +331,88 @@ export default function Uitnodigingen() {
               <h3 className="form-section-title">Ontvangers filteren</h3>
 
               <div className="form-group">
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={formData.filters.alleenActief ?? true}
-                    onChange={e =>
-                      setFormData(prev => ({
-                        ...prev,
-                        filters: { ...prev.filters, alleenActief: e.target.checked },
-                      }))
-                    }
-                  />
-                  Alleen actieve medewerkers
-                </label>
-              </div>
-
-              <div className="form-group">
-                <label>Sectoren</label>
-                <div className="chip-list">
-                  {alleSectoren.map(s => (
-                    <button
-                      key={s}
-                      type="button"
-                      className={`chip ${formData.filters.sectoren?.includes(s) ? 'chip-active' : ''}`}
-                      onClick={() => toggleSectorFilter(s)}
-                    >
-                      {s}
-                    </button>
+                <label>Distributiegroep (MG-)</label>
+                <select
+                  value={formData.filters.distributieGroepIds?.[0] || ''}
+                  onChange={e => {
+                    const val = e.target.value;
+                    setFormData(prev => ({
+                      ...prev,
+                      filters: {
+                        ...prev.filters,
+                        distributieGroepIds: val ? [val] : [],
+                        // Reset other filters when selecting a distribution group
+                        ...(val ? { sectoren: [], types: [], regimes: [] } : {}),
+                      },
+                    }));
+                  }}
+                >
+                  <option value="">-- Handmatig filteren (geen groep) --</option>
+                  {distributieGroepen.map(g => (
+                    <option key={g.id} value={g.id}>
+                      {g.displayName} ({g.ledenIds.length} leden) &mdash; {g.emailAddress}
+                    </option>
                   ))}
-                </div>
+                </select>
                 <span className="form-hint">
-                  Geen selectie = alle sectoren
+                  Selecteer een mailgroep om alle leden als ontvanger te gebruiken, of filter handmatig hieronder
                 </span>
               </div>
 
-              <div className="form-group">
-                <label>Type medewerker</label>
-                <div className="chip-list">
-                  {(['personeel', 'vrijwilliger', 'interim', 'extern'] as PersoneelType[]).map(t => (
-                    <button
-                      key={t}
-                      type="button"
-                      className={`chip ${formData.filters.types?.includes(t) ? 'chip-active' : ''}`}
-                      onClick={() => toggleTypeFilter(t)}
-                    >
-                      {t === 'personeel' ? 'Personeel' : t === 'vrijwilliger' ? 'Vrijwilliger' : t === 'interim' ? 'Interim' : 'Extern'}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              {!formData.filters.distributieGroepIds?.length && (
+                <>
+                  <div className="form-group">
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={formData.filters.alleenActief ?? true}
+                        onChange={e =>
+                          setFormData(prev => ({
+                            ...prev,
+                            filters: { ...prev.filters, alleenActief: e.target.checked },
+                          }))
+                        }
+                      />
+                      Alleen actieve medewerkers
+                    </label>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Sectoren</label>
+                    <div className="chip-list">
+                      {alleSectoren.map(s => (
+                        <button
+                          key={s}
+                          type="button"
+                          className={`chip ${formData.filters.sectoren?.includes(s) ? 'chip-active' : ''}`}
+                          onClick={() => toggleSectorFilter(s)}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                    <span className="form-hint">
+                      Geen selectie = alle sectoren
+                    </span>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Type medewerker</label>
+                    <div className="chip-list">
+                      {(['personeel', 'vrijwilliger', 'interim', 'extern'] as PersoneelType[]).map(t => (
+                        <button
+                          key={t}
+                          type="button"
+                          className={`chip ${formData.filters.types?.includes(t) ? 'chip-active' : ''}`}
+                          onClick={() => toggleTypeFilter(t)}
+                        >
+                          {t === 'personeel' ? 'Personeel' : t === 'vrijwilliger' ? 'Vrijwilliger' : t === 'interim' ? 'Interim' : 'Extern'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
 
               <div className="recipient-preview">
                 <Users size={18} />

@@ -1,4 +1,4 @@
-import type { Medewerker, ValidatieVerzoek, Uitnodiging, GebruikerProfiel } from '../types';
+import type { Medewerker, ValidatieVerzoek, Uitnodiging, GebruikerProfiel, DistributieGroep } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
 const sectoren = [
@@ -159,6 +159,184 @@ export const mockGebruiker: GebruikerProfiel = {
   email: 'hr@diepenbeek.be',
   rol: 'hr_admin',
 };
+
+// Distributiegroepen (MG- mailgroepen uit MS365 / Exchange Admin)
+function getMedewerkerIdsByFilter(
+  filter: { sector?: string; actief?: boolean; type?: string }
+): string[] {
+  return mockMedewerkers
+    .filter(m => {
+      if (filter.sector && m.sector !== filter.sector) return false;
+      if (filter.actief !== undefined && m.actief !== filter.actief) return false;
+      if (filter.type && m.type !== filter.type) return false;
+      return true;
+    })
+    .map(m => m.id);
+}
+
+// Diensthoofden / sectormanager IDs (eerste medewerker per sector)
+const sectorHoofden = sectoren.map(
+  s => mockMedewerkers.find(m => m.sector === s)?.id
+).filter((id): id is string => !!id);
+
+export const mockDistributieGroepen: DistributieGroep[] = [
+  {
+    id: uuidv4(),
+    displayName: 'MG-AllePersoneel',
+    emailAddress: 'mg-allepersoneel@diepenbeek.be',
+    beschrijving: 'Alle actieve personeelsleden van gemeente Diepenbeek',
+    type: 'distributionGroup',
+    ledenIds: getMedewerkerIdsByFilter({ actief: true, type: 'personeel' }),
+    eigenaarIds: [sectorHoofden[0]],
+    bronExchange: true,
+    aanmaakDatum: '2024-01-15',
+    laatstGewijzigd: '2026-01-10',
+  },
+  {
+    id: uuidv4(),
+    displayName: 'MG-AlleMedewerkers',
+    emailAddress: 'mg-allemedewerkers@diepenbeek.be',
+    beschrijving: 'Alle medewerkers inclusief vrijwilligers en interim',
+    type: 'distributionGroup',
+    ledenIds: getMedewerkerIdsByFilter({ actief: true }),
+    eigenaarIds: [sectorHoofden[0]],
+    bronExchange: true,
+    aanmaakDatum: '2024-01-15',
+    laatstGewijzigd: '2026-02-01',
+  },
+  {
+    id: uuidv4(),
+    displayName: 'MG-Diensthoofden',
+    emailAddress: 'mg-diensthoofden@diepenbeek.be',
+    beschrijving: 'Alle diensthoofden en sectormanagers',
+    type: 'distributionGroup',
+    ledenIds: sectorHoofden,
+    eigenaarIds: [sectorHoofden[0]],
+    bronExchange: true,
+    aanmaakDatum: '2024-02-01',
+    laatstGewijzigd: '2025-12-15',
+  },
+  {
+    id: uuidv4(),
+    displayName: 'MG-AlgemeneZaken',
+    emailAddress: 'mg-algemenezaken@diepenbeek.be',
+    beschrijving: 'Sector Algemene Zaken',
+    type: 'distributionGroup',
+    ledenIds: getMedewerkerIdsByFilter({ sector: 'Algemene Zaken', actief: true }),
+    eigenaarIds: [mockMedewerkers.find(m => m.sector === 'Algemene Zaken')?.id || ''],
+    bronExchange: true,
+    aanmaakDatum: '2024-03-01',
+    laatstGewijzigd: '2025-11-20',
+  },
+  {
+    id: uuidv4(),
+    displayName: 'MG-Burgerzaken',
+    emailAddress: 'mg-burgerzaken@diepenbeek.be',
+    beschrijving: 'Sector Burgerzaken',
+    type: 'distributionGroup',
+    ledenIds: getMedewerkerIdsByFilter({ sector: 'Burgerzaken', actief: true }),
+    eigenaarIds: [mockMedewerkers.find(m => m.sector === 'Burgerzaken')?.id || ''],
+    bronExchange: true,
+    aanmaakDatum: '2024-03-01',
+    laatstGewijzigd: '2025-11-20',
+  },
+  {
+    id: uuidv4(),
+    displayName: 'MG-Financien',
+    emailAddress: 'mg-financien@diepenbeek.be',
+    beschrijving: 'Sector Financiën',
+    type: 'distributionGroup',
+    ledenIds: getMedewerkerIdsByFilter({ sector: 'Financiën', actief: true }),
+    eigenaarIds: [mockMedewerkers.find(m => m.sector === 'Financiën')?.id || ''],
+    bronExchange: true,
+    aanmaakDatum: '2024-03-01',
+    laatstGewijzigd: '2025-11-20',
+  },
+  {
+    id: uuidv4(),
+    displayName: 'MG-Grondgebiedzaken',
+    emailAddress: 'mg-grondgebiedzaken@diepenbeek.be',
+    beschrijving: 'Sector Grondgebiedzaken',
+    type: 'distributionGroup',
+    ledenIds: getMedewerkerIdsByFilter({ sector: 'Grondgebiedzaken', actief: true }),
+    eigenaarIds: [mockMedewerkers.find(m => m.sector === 'Grondgebiedzaken')?.id || ''],
+    bronExchange: true,
+    aanmaakDatum: '2024-03-01',
+    laatstGewijzigd: '2025-11-20',
+  },
+  {
+    id: uuidv4(),
+    displayName: 'MG-VrijeTijd',
+    emailAddress: 'mg-vrijetijd@diepenbeek.be',
+    beschrijving: 'Sector Vrije Tijd',
+    type: 'distributionGroup',
+    ledenIds: getMedewerkerIdsByFilter({ sector: 'Vrije Tijd', actief: true }),
+    eigenaarIds: [mockMedewerkers.find(m => m.sector === 'Vrije Tijd')?.id || ''],
+    bronExchange: true,
+    aanmaakDatum: '2024-03-01',
+    laatstGewijzigd: '2025-11-20',
+  },
+  {
+    id: uuidv4(),
+    displayName: 'MG-Welzijn',
+    emailAddress: 'mg-welzijn@diepenbeek.be',
+    beschrijving: 'Sector Welzijn incl. OCMW',
+    type: 'distributionGroup',
+    ledenIds: getMedewerkerIdsByFilter({ sector: 'Welzijn', actief: true }),
+    eigenaarIds: [mockMedewerkers.find(m => m.sector === 'Welzijn')?.id || ''],
+    bronExchange: true,
+    aanmaakDatum: '2024-03-01',
+    laatstGewijzigd: '2025-11-20',
+  },
+  {
+    id: uuidv4(),
+    displayName: 'MG-ICT',
+    emailAddress: 'mg-ict@diepenbeek.be',
+    beschrijving: 'Sector ICT',
+    type: 'microsoft365',
+    ledenIds: getMedewerkerIdsByFilter({ sector: 'ICT', actief: true }),
+    eigenaarIds: [mockMedewerkers.find(m => m.sector === 'ICT')?.id || ''],
+    bronExchange: true,
+    aanmaakDatum: '2024-03-01',
+    laatstGewijzigd: '2025-11-20',
+  },
+  {
+    id: uuidv4(),
+    displayName: 'MG-TechnischeDienst',
+    emailAddress: 'mg-technischedienst@diepenbeek.be',
+    beschrijving: 'Sector Technische Dienst',
+    type: 'distributionGroup',
+    ledenIds: getMedewerkerIdsByFilter({ sector: 'Technische Dienst', actief: true }),
+    eigenaarIds: [mockMedewerkers.find(m => m.sector === 'Technische Dienst')?.id || ''],
+    bronExchange: true,
+    aanmaakDatum: '2024-03-01',
+    laatstGewijzigd: '2025-11-20',
+  },
+  {
+    id: uuidv4(),
+    displayName: 'MG-Vrijwilligers',
+    emailAddress: 'mg-vrijwilligers@diepenbeek.be',
+    beschrijving: 'Alle vrijwilligers van gemeente Diepenbeek',
+    type: 'distributionGroup',
+    ledenIds: getMedewerkerIdsByFilter({ actief: true, type: 'vrijwilliger' }),
+    eigenaarIds: [sectorHoofden[0]],
+    bronExchange: true,
+    aanmaakDatum: '2024-06-01',
+    laatstGewijzigd: '2026-01-15',
+  },
+  {
+    id: uuidv4(),
+    displayName: 'MG-Personeelsfeest2026',
+    emailAddress: 'mg-personeelsfeest2026@diepenbeek.be',
+    beschrijving: 'Uitnodigingslijst personeelsfeest 2026',
+    type: 'distributionGroup',
+    ledenIds: getMedewerkerIdsByFilter({ actief: true }),
+    eigenaarIds: [sectorHoofden[0]],
+    bronExchange: false,
+    aanmaakDatum: '2026-02-10',
+    laatstGewijzigd: '2026-02-10',
+  },
+];
 
 export const alleSectoren = sectoren;
 export const alleDiensten = diensten;

@@ -70,6 +70,7 @@ export interface UitnodigingFilter {
   types?: PersoneelType[];
   regimes?: ArbeidsRegime[];
   alleenActief?: boolean;
+  distributieGroepIds?: string[];
 }
 
 export interface GebruikerProfiel {
@@ -79,6 +80,22 @@ export interface GebruikerProfiel {
   rol: Rol;
   sector?: string;
   dienst?: string;
+}
+
+// Distributiegroepen (MG- mailgroepen uit MS365 / Exchange Admin)
+export type DistributieGroepType = 'distributionGroup' | 'mailEnabledSecurity' | 'microsoft365';
+
+export interface DistributieGroep {
+  id: string;
+  displayName: string;          // bijv. "MG-AllePersoneel"
+  emailAddress: string;         // bijv. "mg-allepersoneel@diepenbeek.be"
+  beschrijving: string;
+  type: DistributieGroepType;
+  ledenIds: string[];           // medewerker IDs
+  eigenaarIds: string[];        // eigenaar medewerker IDs
+  bronExchange: boolean;        // uit Exchange geïmporteerd
+  aanmaakDatum: string;
+  laatstGewijzigd: string;
 }
 
 export interface DashboardStats {

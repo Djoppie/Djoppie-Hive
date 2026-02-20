@@ -7,6 +7,7 @@ import Validatie from './pages/Validatie';
 import Uitnodigingen from './pages/Uitnodigingen';
 import Rollen from './pages/Rollen';
 import ADImport from './pages/ADImport';
+import DistributieGroepen from './pages/DistributieGroepen';
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/personeel" element={<PersoneelLijst />} />
             <Route path="/validatie" element={<Validatie />} />
+            <Route path="/distributiegroepen" element={<DistributieGroepen />} />
             <Route path="/uitnodigingen" element={<Uitnodigingen />} />
             <Route path="/rollen" element={<Rollen />} />
             <Route path="/import" element={<ADImport />} />

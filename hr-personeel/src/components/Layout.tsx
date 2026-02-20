@@ -12,6 +12,7 @@ import {
   Building2,
   LogOut,
   User,
+  MailCheck,
 } from 'lucide-react';
 import { usePersoneel } from '../context/PersoneelContext';
 
@@ -19,6 +20,7 @@ const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/personeel', icon: Users, label: 'Personeelslijst' },
   { to: '/validatie', icon: ClipboardCheck, label: 'Validatie' },
+  { to: '/distributiegroepen', icon: MailCheck, label: 'Distributiegroepen' },
   { to: '/uitnodigingen', icon: Mail, label: 'Uitnodigingen' },
   { to: '/rollen', icon: Shield, label: 'Rollen & Rechten' },
   { to: '/import', icon: CloudDownload, label: 'AD Import' },
