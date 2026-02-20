@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="DjoppiePaparazzi.API/DjoppiePaparazzi.API.csproj" />
+  <Project Path="DjoppiePaparazzi.Core/DjoppiePaparazzi.Core.csproj" />
+  <Project Path="DjoppiePaparazzi.Infrastructure/DjoppiePaparazzi.Infrastructure.csproj" />
+</Solution>
