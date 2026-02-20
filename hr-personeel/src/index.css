@@ -5,10 +5,10 @@
 
 /* ---------- CSS Variables ---------- */
 :root {
-  --color-primary: #1e40af;
-  --color-primary-light: #3b82f6;
-  --color-primary-dark: #1e3a8a;
-  --color-primary-bg: #eff6ff;
+  --color-primary: #ea580c;
+  --color-primary-light: #f97316;
+  --color-primary-dark: #c2410c;
+  --color-primary-bg: #fff7ed;
 
   --color-success: #16a34a;
   --color-success-light: #22c55e;
@@ -29,16 +29,16 @@
   --color-muted: #6b7280;
   --color-muted-light: #9ca3af;
 
-  --bg-main: #f1f5f9;
+  --bg-main: #faf5f0;
   --bg-card: #ffffff;
-  --bg-sidebar: #0f172a;
-  --bg-sidebar-hover: #1e293b;
-  --bg-sidebar-active: #1e40af;
+  --bg-sidebar: #1c1917;
+  --bg-sidebar-hover: #292524;
+  --bg-sidebar-active: #ea580c;
 
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
-  --text-sidebar: #cbd5e1;
+  --text-primary: #1c1917;
+  --text-secondary: #57534e;
+  --text-muted: #a8a29e;
+  --text-sidebar: #d6d3d1;
   --text-sidebar-active: #ffffff;
 
   --border-color: #e2e8f0;
@@ -118,6 +118,13 @@ body {
   align-items: center;
   gap: 12px;
   color: #fff;
+}
+
+.logo-img {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  flex-shrink: 0;
 }
 
 .logo-text h1 {
@@ -671,7 +678,7 @@ button {
 
 .search-box:focus-within {
   border-color: var(--color-primary-light);
-  box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+  box-shadow: 0 0 0 3px rgba(249,115,22,0.15);
 }
 
 .search-box input {
@@ -754,7 +761,7 @@ button {
 .form-group textarea:focus {
   outline: none;
   border-color: var(--color-primary-light);
-  box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+  box-shadow: 0 0 0 3px rgba(249,115,22,0.15);
 }
 
 .form-group input:disabled,
@@ -856,7 +863,7 @@ button {
 }
 
 .data-table tbody tr:hover {
-  background: rgba(59,130,246,0.03);
+  background: rgba(249,115,22,0.04);
 }
 
 .data-table tbody tr:last-child td {
@@ -954,11 +961,11 @@ button {
   font-weight: 600;
 }
 
-.regime-voltijds { background: #dbeafe; color: #1d4ed8; }
+.regime-voltijds { background: #ffedd5; color: #c2410c; }
 .regime-deeltijds { background: #fef3c7; color: #b45309; }
 .regime-vrijwilliger { background: #d1fae5; color: #065f46; }
 
-.type-personeel { background: #e0e7ff; color: #3730a3; }
+.type-personeel { background: #ffedd5; color: #9a3412; }
 .type-vrijwilliger { background: #d1fae5; color: #065f46; }
 .type-interim { background: #fef3c7; color: #b45309; }
 .type-extern { background: #f1f5f9; color: #475569; }
@@ -1380,7 +1387,7 @@ button {
 
 .role-card-selected {
   border-color: var(--color-primary-light);
-  box-shadow: 0 0 0 2px rgba(59,130,246,0.1);
+  box-shadow: 0 0 0 2px rgba(249,115,22,0.15);
 }
 
 .role-card-header {
@@ -1729,7 +1736,7 @@ button {
 .dg-group-selected {
   border-color: var(--color-primary);
   background: var(--color-primary-bg);
-  box-shadow: 0 0 0 2px rgba(59,130,246,0.12);
+  box-shadow: 0 0 0 2px rgba(249,115,22,0.15);
 }
 
 .dg-group-icon {
@@ -1783,8 +1790,8 @@ button {
   font-weight: 600;
   padding: 1px 6px;
   border-radius: 8px;
-  background: #e0e7ff;
-  color: #3730a3;
+  background: #ffedd5;
+  color: #9a3412;
   white-space: nowrap;
 }
 

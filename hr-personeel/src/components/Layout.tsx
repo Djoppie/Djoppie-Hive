@@ -9,11 +9,11 @@ import {
   CloudDownload,
   Menu,
   X,
-  Building2,
   LogOut,
   User,
   MailCheck,
 } from 'lucide-react';
+import diepenbeekLogo from '../assets/diepenbeek-logo.svg';
 import { usePersoneel } from '../context/PersoneelContext';
 
 const navItems = [
@@ -38,7 +38,7 @@ export default function Layout() {
       <aside className={`sidebar ${sidebarOpen ? 'open' : 'collapsed'}`}>
         <div className="sidebar-header">
           <div className="logo-section">
-            <Building2 size={28} />
+            <img src={diepenbeekLogo} alt="Diepenbeek" className="logo-img" />
             {sidebarOpen && (
               <div className="logo-text">
                 <h1>Diepenbeek</h1>
