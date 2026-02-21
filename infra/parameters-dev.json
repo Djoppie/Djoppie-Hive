@@ -1,0 +1,48 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environment": {
+      "value": "dev"
+    },
+    "location": {
+      "value": "westeurope"
+    },
+    "projectName": {
+      "value": "djoppie-hive"
+    },
+    "sqlAdminUsername": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/{subscription-id}/resourceGroups/{rg-name}/providers/Microsoft.KeyVault/vaults/{kv-name}"
+        },
+        "secretName": "SqlAdminUsername"
+      }
+    },
+    "sqlAdminPassword": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/{subscription-id}/resourceGroups/{rg-name}/providers/Microsoft.KeyVault/vaults/{kv-name}"
+        },
+        "secretName": "SqlAdminPassword"
+      }
+    },
+    "entraTenantId": {
+      "value": "7db28d6f-d542-40c1-b529-5e5ed2aad545"
+    },
+    "entraBackendClientId": {
+      "value": "2b620e06-39ee-4177-a559-76a12a79320f"
+    },
+    "entraBackendClientSecret": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/{subscription-id}/resourceGroups/{rg-name}/providers/Microsoft.KeyVault/vaults/{kv-name}"
+        },
+        "secretName": "EntraBackendClientSecret"
+      }
+    },
+    "entraFrontendClientId": {
+      "value": "acc348be-b533-4402-8041-672c1cba1273"
+    }
+  }
+}

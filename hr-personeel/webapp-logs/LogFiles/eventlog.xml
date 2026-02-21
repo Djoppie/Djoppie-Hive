@@ -1,0 +1,55 @@
+<Events><Event><System><Provider Name=".NET Runtime"/><EventID>1000</EventID><Level>2</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-02-21T15:27:29Z"/><EventRecordID>485613281</EventRecordID><Channel>Application</Channel><Computer>WEBWK000003</Computer><Security/></System><EventData><Data>Category: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager
+EventId: 35
+
+No XML encryptor configured. Key {64391fed-3921-4f1d-80ec-c93f3b68cb29} may be persisted to storage in unencrypted form.
+</Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1032</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-02-21T15:27:29Z"/><EventRecordID>485613328</EventRecordID><Channel>Application</Channel><Computer>WEBWK000003</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' started successfully.</Data><Data>Process Id: 9760.</Data><Data>File Version: 18.0.25301.22. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name=".NET Runtime"/><EventID>1000</EventID><Level>1</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-02-21T15:31:59Z"/><EventRecordID>485883062</EventRecordID><Channel>Application</Channel><Computer>WEBWK000003</Computer><Security/></System><EventData><Data>Category: DjoppieHive.Infrastructure.Services.GraphDistributionGroupService
+EventId: 0
+SpanId: 9f5d3c76a78b533c
+TraceId: f40708b2c46050e627d4e68cd4d1b503
+ParentId: 0000000000000000
+RequestId: 4000015a-0005-f600-b63f-84710c7967bb
+RequestPath: /api/distributiongroups
+ActionId: 9bc1240d-782b-49ff-b64b-bf59159ef595
+ActionName: DjoppieHive.API.Controllers.DistributionGroupsController.GetAll (DjoppieHive.API)
+
+Error fetching MG- distribution groups from Graph API
+
+Exception: 
+Microsoft.Graph.Models.ODataErrors.ODataError: Sorting not supported for current query.
+   at Microsoft.Kiota.Http.HttpClientLibrary.HttpClientRequestAdapter.ThrowIfFailedResponseAsync(HttpResponseMessage response, Dictionary`2 errorMapping, Activity activityForAttributes, CancellationToken cancellationToken)
+   at Microsoft.Kiota.Http.HttpClientLibrary.HttpClientRequestAdapter.SendAsync[ModelType](RequestInformation requestInfo, ParsableFactory`1 factory, Dictionary`2 errorMapping, CancellationToken cancellationToken)
+   at Microsoft.Kiota.Http.HttpClientLibrary.HttpClientRequestAdapter.SendAsync[ModelType](RequestInformation requestInfo, ParsableFactory`1 factory, Dictionary`2 errorMapping, CancellationToken cancellationToken)
+   at Microsoft.Graph.Groups.GroupsRequestBuilder.GetAsync(Action`1 requestConfiguration, CancellationToken cancellationToken)
+   at DjoppieHive.Infrastructure.Services.GraphDistributionGroupService.GetAllGroupsAsync(CancellationToken cancellationToken) in C:\Users\jowij\VSCodeDiepenbeek\Djoppie-Paparazzi\src\backend\DjoppieHive.Infrastructure\Services\GraphDistributionGroupService.cs:line 31
+</Data></EventData></Event><Event><System><Provider Name=".NET Runtime"/><EventID>1000</EventID><Level>1</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-02-21T15:31:59Z"/><EventRecordID>485883093</EventRecordID><Channel>Application</Channel><Computer>WEBWK000003</Computer><Security/></System><EventData><Data>Category: Microsoft.AspNetCore.Server.IIS.Core.IISHttpServer
+EventId: 2
+SpanId: 9f5d3c76a78b533c
+TraceId: f40708b2c46050e627d4e68cd4d1b503
+ParentId: 0000000000000000
+RequestId: 4000015a-0005-f600-b63f-84710c7967bb
+RequestPath: /api/distributiongroups
+
+Connection ID "17726168155610415448", Request ID "4000015a-0005-f600-b63f-84710c7967bb": An unhandled exception was thrown by the application.
+
+Exception: 
+Microsoft.Graph.Models.ODataErrors.ODataError: Sorting not supported for current query.
+   at Microsoft.Kiota.Http.HttpClientLibrary.HttpClientRequestAdapter.ThrowIfFailedResponseAsync(HttpResponseMessage response, Dictionary`2 errorMapping, Activity activityForAttributes, CancellationToken cancellationToken)
+   at Microsoft.Kiota.Http.HttpClientLibrary.HttpClientRequestAdapter.SendAsync[ModelType](RequestInformation requestInfo, ParsableFactory`1 factory, Dictionary`2 errorMapping, CancellationToken cancellationToken)
+   at Microsoft.Kiota.Http.HttpClientLibrary.HttpClientRequestAdapter.SendAsync[ModelType](RequestInformation requestInfo, ParsableFactory`1 factory, Dictionary`2 errorMapping, CancellationToken cancellationToken)
+   at Microsoft.Graph.Groups.GroupsRequestBuilder.GetAsync(Action`1 requestConfiguration, CancellationToken cancellationToken)
+   at DjoppieHive.Infrastructure.Services.GraphDistributionGroupService.GetAllGroupsAsync(CancellationToken cancellationToken) in C:\Users\jowij\VSCodeDiepenbeek\Djoppie-Paparazzi\src\backend\DjoppieHive.Infrastructure\Services\GraphDistributionGroupService.cs:line 31
+   at DjoppieHive.API.Controllers.DistributionGroupsController.GetAll(CancellationToken cancellationToken) in C:\Users\jowij\VSCodeDiepenbeek\Djoppie-Paparazzi\src\backend\DjoppieHive.API\Controllers\DistributionGroupsController.cs:line 31
+   at lambda_method5(Closure, Object)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.AwaitableObjectResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeActionMethodAsync&gt;g__Logged|12_1(ControllerActionInvoker invoker)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeNextActionFilterAsync&gt;g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State&amp; next, Scope&amp; scope, Object&amp; state, Boolean&amp; isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeInnerFilterAsync&gt;g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeFilterPipelineAsync&gt;g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Logged|17_1(ResourceInvoker invoker)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Logged|17_1(ResourceInvoker invoker)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Server.IIS.Core.IISHttpContextOfT`1.ProcessRequestAsync()
+</Data></EventData></Event></Events>

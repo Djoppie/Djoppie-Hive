@@ -1,0 +1,99 @@
+# =============================================================================
+# CI Pipeline - Frontend (React + Vite + TypeScript)
+# =============================================================================
+# Triggers on changes to frontend code
+# Builds, lints, and publishes artifacts for deployment
+# =============================================================================
+
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+      - feature/*
+  paths:
+    include:
+      - hr-personeel/**
+      - pipelines/ci-frontend.yml
+
+pr:
+  branches:
+    include:
+      - main
+      - develop
+  paths:
+    include:
+      - hr-personeel/**
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  nodeVersion: '20.x'
+  workingDirectory: 'hr-personeel'
+
+stages:
+  - stage: Build
+    displayName: 'Build & Lint'
+    jobs:
+      - job: BuildJob
+        displayName: 'Build Frontend'
+        steps:
+          - task: NodeTool@0
+            displayName: 'Install Node.js'
+            inputs:
+              versionSpec: '$(nodeVersion)'
+
+          - script: npm ci
+            displayName: 'Install dependencies'
+            workingDirectory: '$(workingDirectory)'
+
+          - script: npm run lint
+            displayName: 'Run ESLint'
+            workingDirectory: '$(workingDirectory)'
+            continueOnError: true
+
+          - script: npm run build
+            displayName: 'Build for production'
+            workingDirectory: '$(workingDirectory)'
+            env:
+              VITE_ENTRA_CLIENT_ID: $(VITE_ENTRA_CLIENT_ID)
+              VITE_ENTRA_TENANT_ID: $(VITE_ENTRA_TENANT_ID)
+              VITE_ENTRA_BACKEND_CLIENT_ID: $(VITE_ENTRA_BACKEND_CLIENT_ID)
+              VITE_API_URL: $(VITE_API_URL)
+
+          - task: CopyFiles@2
+            displayName: 'Copy build output'
+            inputs:
+              sourceFolder: '$(workingDirectory)/dist'
+              contents: '**'
+              targetFolder: '$(Build.ArtifactStagingDirectory)/frontend'
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish artifacts'
+            inputs:
+              pathToPublish: '$(Build.ArtifactStagingDirectory)/frontend'
+              artifactName: 'frontend-app'
+
+  - stage: Analyze
+    displayName: 'Code Analysis'
+    dependsOn: Build
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - job: AnalyzeJob
+        displayName: 'Analyze Code'
+        steps:
+          - task: NodeTool@0
+            displayName: 'Install Node.js'
+            inputs:
+              versionSpec: '$(nodeVersion)'
+
+          - script: npm ci
+            displayName: 'Install dependencies'
+            workingDirectory: '$(workingDirectory)'
+
+          - script: |
+              npm audit --audit-level=moderate || true
+            displayName: 'Security audit'
+            workingDirectory: '$(workingDirectory)'
+            continueOnError: true

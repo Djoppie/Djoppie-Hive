@@ -1,0 +1,45 @@
+# =============================================================================
+# Template: Azure Deployment Steps
+# =============================================================================
+# Reusable template for deploying to Azure services
+# =============================================================================
+
+parameters:
+  - name: azureSubscription
+    type: string
+  - name: appServiceName
+    type: string
+  - name: resourceGroup
+    type: string
+  - name: packagePath
+    type: string
+  - name: runtimeStack
+    type: string
+    default: 'DOTNETCORE|8.0'
+  - name: slotName
+    type: string
+    default: ''
+
+steps:
+  - task: AzureWebApp@1
+    displayName: 'Deploy to ${{ parameters.appServiceName }}'
+    inputs:
+      azureSubscription: '${{ parameters.azureSubscription }}'
+      appType: 'webAppLinux'
+      appName: '${{ parameters.appServiceName }}'
+      ${{ if ne(parameters.slotName, '') }}:
+        deployToSlotOrASE: true
+        slotName: '${{ parameters.slotName }}'
+      package: '${{ parameters.packagePath }}'
+      runtimeStack: '${{ parameters.runtimeStack }}'
+
+  - ${{ if ne(parameters.slotName, '') }}:
+    - task: AzureAppServiceManage@0
+      displayName: 'Swap slots'
+      inputs:
+        azureSubscription: '${{ parameters.azureSubscription }}'
+        action: 'Swap Slots'
+        webAppName: '${{ parameters.appServiceName }}'
+        resourceGroupName: '${{ parameters.resourceGroup }}'
+        sourceSlot: '${{ parameters.slotName }}'
+        targetSlot: 'production'

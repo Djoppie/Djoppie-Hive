@@ -1,0 +1,11 @@
+@DjoppieHive.API_HostAddress = http://localhost:5014
+
+GET {{DjoppieHive.API_HostAddress}}/health
+Accept: application/json
+
+###
+
+GET {{DjoppieHive.API_HostAddress}}/api/distribution-groups
+Accept: application/json
+
+###

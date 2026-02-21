@@ -1,0 +1,182 @@
+# =============================================================================
+# CD Pipeline - Deploy to Azure (DEV Environment)
+# =============================================================================
+# Deploys backend to App Service and frontend to Static Web App
+# Triggered after successful CI builds on main branch
+# =============================================================================
+
+trigger: none  # Manual or triggered by CI
+
+resources:
+  pipelines:
+    - pipeline: backend-ci
+      source: 'CI-Backend'
+      trigger:
+        branches:
+          include:
+            - main
+    - pipeline: frontend-ci
+      source: 'CI-Frontend'
+      trigger:
+        branches:
+          include:
+            - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - group: djoppie-hive-dev  # Variable group with secrets
+  - name: azureSubscription
+    value: 'Azure-Djoppie-Hive'
+  - name: resourceGroup
+    value: 'rg-djoppie-hive'
+  - name: appServiceName
+    value: 'app-djoppie-hive-dev'
+  - name: staticWebAppName
+    value: 'stapp-djoppie-hive-dev'
+
+stages:
+  # ==========================================================================
+  # Stage: Deploy Infrastructure
+  # ==========================================================================
+  - stage: Infrastructure
+    displayName: 'Deploy Infrastructure'
+    condition: and(succeeded(), eq(variables['deployInfrastructure'], 'true'))
+    jobs:
+      - deployment: DeployBicep
+        displayName: 'Deploy Bicep Templates'
+        environment: 'djoppie-hive-dev'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+
+                - task: AzureCLI@2
+                  displayName: 'Deploy Bicep to Azure'
+                  inputs:
+                    azureSubscription: '$(azureSubscription)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      az deployment sub create \
+                        --location westeurope \
+                        --template-file infra/bicep/main.dev.bicep \
+                        --parameters infra/parameters-dev.json
+
+  # ==========================================================================
+  # Stage: Deploy Backend API
+  # ==========================================================================
+  - stage: DeployBackend
+    displayName: 'Deploy Backend API'
+    dependsOn: []
+    jobs:
+      - deployment: DeployAPI
+        displayName: 'Deploy to App Service'
+        environment: 'djoppie-hive-dev'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: backend-ci
+                  artifact: backend-api
+                  displayName: 'Download backend artifact'
+
+                - task: AzureWebApp@1
+                  displayName: 'Deploy to Azure App Service'
+                  inputs:
+                    azureSubscription: '$(azureSubscription)'
+                    appType: 'webAppLinux'
+                    appName: '$(appServiceName)'
+                    package: '$(Pipeline.Workspace)/backend-ci/backend-api/*.zip'
+                    runtimeStack: 'DOTNETCORE|8.0'
+
+                - task: AzureAppServiceSettings@1
+                  displayName: 'Configure App Settings'
+                  inputs:
+                    azureSubscription: '$(azureSubscription)'
+                    appName: '$(appServiceName)'
+                    resourceGroupName: '$(resourceGroup)'
+                    appSettings: |
+                      [
+                        {
+                          "name": "ASPNETCORE_ENVIRONMENT",
+                          "value": "Production"
+                        },
+                        {
+                          "name": "AzureAd__TenantId",
+                          "value": "@Microsoft.KeyVault(SecretUri=https://kv-djoppie-hive-dev.vault.azure.net/secrets/EntraTenantId)"
+                        },
+                        {
+                          "name": "AzureAd__ClientId",
+                          "value": "@Microsoft.KeyVault(SecretUri=https://kv-djoppie-hive-dev.vault.azure.net/secrets/EntraBackendClientId)"
+                        },
+                        {
+                          "name": "AzureAd__ClientSecret",
+                          "value": "@Microsoft.KeyVault(SecretUri=https://kv-djoppie-hive-dev.vault.azure.net/secrets/EntraBackendClientSecret)"
+                        },
+                        {
+                          "name": "ConnectionStrings__DefaultConnection",
+                          "value": "@Microsoft.KeyVault(SecretUri=https://kv-djoppie-hive-dev.vault.azure.net/secrets/SqlConnectionString)"
+                        }
+                      ]
+
+  # ==========================================================================
+  # Stage: Deploy Frontend
+  # ==========================================================================
+  - stage: DeployFrontend
+    displayName: 'Deploy Frontend'
+    dependsOn: []
+    jobs:
+      - deployment: DeploySWA
+        displayName: 'Deploy to Static Web App'
+        environment: 'djoppie-hive-dev'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: frontend-ci
+                  artifact: frontend-app
+                  displayName: 'Download frontend artifact'
+
+                - task: AzureStaticWebApp@0
+                  displayName: 'Deploy to Azure Static Web App'
+                  inputs:
+                    workingDirectory: '$(Pipeline.Workspace)/frontend-ci/frontend-app'
+                    app_location: '/'
+                    skip_app_build: true
+                    azure_static_web_apps_api_token: '$(STATIC_WEB_APP_DEPLOYMENT_TOKEN)'
+
+  # ==========================================================================
+  # Stage: Smoke Tests
+  # ==========================================================================
+  - stage: SmokeTests
+    displayName: 'Smoke Tests'
+    dependsOn:
+      - DeployBackend
+      - DeployFrontend
+    jobs:
+      - job: HealthCheck
+        displayName: 'Health Check'
+        steps:
+          - script: |
+              echo "Checking API health..."
+              response=$(curl -s -o /dev/null -w "%{http_code}" https://$(appServiceName).azurewebsites.net/health)
+              if [ "$response" != "200" ]; then
+                echo "Health check failed with status: $response"
+                exit 1
+              fi
+              echo "API health check passed!"
+            displayName: 'API Health Check'
+
+          - script: |
+              echo "Checking Frontend availability..."
+              response=$(curl -s -o /dev/null -w "%{http_code}" https://$(staticWebAppUrl))
+              if [ "$response" != "200" ]; then
+                echo "Frontend check failed with status: $response"
+                exit 1
+              fi
+              echo "Frontend check passed!"
+            displayName: 'Frontend Health Check'
+            continueOnError: true

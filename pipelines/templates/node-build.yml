@@ -1,0 +1,47 @@
+# =============================================================================
+# Template: Node.js Build Steps
+# =============================================================================
+# Reusable template for building Node.js/React projects
+# =============================================================================
+
+parameters:
+  - name: nodeVersion
+    type: string
+    default: '20.x'
+  - name: workingDirectory
+    type: string
+  - name: runLint
+    type: boolean
+    default: true
+  - name: runTests
+    type: boolean
+    default: false
+  - name: buildCommand
+    type: string
+    default: 'npm run build'
+
+steps:
+  - task: NodeTool@0
+    displayName: 'Install Node.js ${{ parameters.nodeVersion }}'
+    inputs:
+      versionSpec: '${{ parameters.nodeVersion }}'
+
+  - script: npm ci
+    displayName: 'Install dependencies'
+    workingDirectory: '${{ parameters.workingDirectory }}'
+
+  - ${{ if parameters.runLint }}:
+    - script: npm run lint
+      displayName: 'Lint code'
+      workingDirectory: '${{ parameters.workingDirectory }}'
+      continueOnError: true
+
+  - ${{ if parameters.runTests }}:
+    - script: npm test
+      displayName: 'Run tests'
+      workingDirectory: '${{ parameters.workingDirectory }}'
+      continueOnError: true
+
+  - script: ${{ parameters.buildCommand }}
+    displayName: 'Build'
+    workingDirectory: '${{ parameters.workingDirectory }}'

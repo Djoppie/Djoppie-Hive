@@ -1,0 +1,43 @@
+# Build outputs
+bin/
+obj/
+
+# .NET
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+.vs/
+*.db
+*.db-journal
+
+# Node.js
+node_modules/
+dist/
+.npm
+.eslintcache
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+appsettings.*.local.json
+
+# Test results
+TestResults/
+coverage/

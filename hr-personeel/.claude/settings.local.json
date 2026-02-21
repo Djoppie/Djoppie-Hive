@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: add ASP.NET Core 8 backend with Clean Architecture\n\n- Create 3-layer solution \\(API, Core, Infrastructure\\)\n- Add Entra ID authentication with Microsoft.Identity.Web\n- Add Microsoft Graph integration for MG- distribution groups\n- Create Employee and DistributionGroup entities\n- Add GraphDistributionGroupService and GraphEmployeeService\n- Configure EF Core with SQLite \\(dev\\) and SQL Server \\(prod\\)\n- Add Swagger/OpenAPI documentation\n- Add CORS for frontend integration\n- Add health check endpoint\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(az webapp deploy:*)",
+      "Bash(xargs sed:*)",
+      "Bash(az group:*)"
+    ]
+  }
+}
