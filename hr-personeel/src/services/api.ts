@@ -16,7 +16,7 @@ async function getAccessToken(): Promise<string | null> {
       account,
     });
     return response.accessToken;
-  } catch (error) {
+  } catch {
     // If silent token acquisition fails, try interactive
     try {
       const response = await msalInstance.acquireTokenPopup(apiRequest);

@@ -154,17 +154,19 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 export function useAuth() {
   const { instance, accounts, inProgress } = useMsal();
   const isAuthenticated = useIsAuthenticated();
-  const [account, setAccount] = useState<AccountInfo | null>(null);
 
-  useEffect(() => {
+  // Compute account directly without useEffect
+  const account = (() => {
     const activeAccount = instance.getActiveAccount();
     if (activeAccount) {
-      setAccount(activeAccount);
-    } else if (accounts.length > 0) {
-      instance.setActiveAccount(accounts[0]);
-      setAccount(accounts[0]);
+      return activeAccount;
     }
-  }, [instance, accounts]);
+    if (accounts.length > 0) {
+      instance.setActiveAccount(accounts[0]);
+      return accounts[0];
+    }
+    return null;
+  })();
 
   const login = async () => {
     await instance.loginRedirect(loginRequest);

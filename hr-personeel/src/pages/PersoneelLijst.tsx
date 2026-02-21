@@ -22,6 +22,17 @@ import { alleSectoren } from '../data/mockData';
 type SortKey = 'volledigeNaam' | 'email' | 'sector' | 'dienst' | 'type' | 'arbeidsRegime' | 'validatieStatus';
 type SortDir = 'asc' | 'desc';
 
+interface SortIconProps {
+  columnKey: SortKey;
+  sortKey: SortKey;
+  sortDir: SortDir;
+}
+
+function SortIcon({ columnKey, sortKey, sortDir }: SortIconProps) {
+  if (sortKey !== columnKey) return null;
+  return sortDir === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />;
+}
+
 export default function PersoneelLijst() {
   const { medewerkers, updateMedewerker, voegMedewerkerToe, verwijderMedewerker } = usePersoneel();
 
@@ -78,11 +89,6 @@ export default function PersoneelLijst() {
       setSortKey(key);
       setSortDir('asc');
     }
-  };
-
-  const SortIcon = ({ columnKey }: { columnKey: SortKey }) => {
-    if (sortKey !== columnKey) return null;
-    return sortDir === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />;
   };
 
   const handleExportCSV = () => {
@@ -280,27 +286,27 @@ export default function PersoneelLijst() {
                 />
               </th>
               <th className="sortable" onClick={() => handleSort('volledigeNaam')}>
-                Naam <SortIcon columnKey="volledigeNaam" />
+                Naam <SortIcon columnKey="volledigeNaam" sortKey={sortKey} sortDir={sortDir} />
               </th>
               <th className="sortable" onClick={() => handleSort('email')}>
-                E-mail <SortIcon columnKey="email" />
+                E-mail <SortIcon columnKey="email" sortKey={sortKey} sortDir={sortDir} />
               </th>
               <th className="sortable" onClick={() => handleSort('sector')}>
-                Sector <SortIcon columnKey="sector" />
+                Sector <SortIcon columnKey="sector" sortKey={sortKey} sortDir={sortDir} />
               </th>
               <th className="sortable" onClick={() => handleSort('dienst')}>
-                Dienst <SortIcon columnKey="dienst" />
+                Dienst <SortIcon columnKey="dienst" sortKey={sortKey} sortDir={sortDir} />
               </th>
               <th>Functie</th>
               <th className="sortable" onClick={() => handleSort('arbeidsRegime')}>
-                Regime <SortIcon columnKey="arbeidsRegime" />
+                Regime <SortIcon columnKey="arbeidsRegime" sortKey={sortKey} sortDir={sortDir} />
               </th>
               <th className="sortable" onClick={() => handleSort('type')}>
-                Type <SortIcon columnKey="type" />
+                Type <SortIcon columnKey="type" sortKey={sortKey} sortDir={sortDir} />
               </th>
               <th>Actief</th>
               <th className="sortable" onClick={() => handleSort('validatieStatus')}>
-                Status <SortIcon columnKey="validatieStatus" />
+                Status <SortIcon columnKey="validatieStatus" sortKey={sortKey} sortDir={sortDir} />
               </th>
               <th>Bron</th>
               <th>Acties</th>
@@ -398,6 +404,7 @@ export default function PersoneelLijst() {
       </div>
 
       <MedewerkerModal
+        key={bewerkMedewerker?.id ?? "new"}
         medewerker={bewerkMedewerker}
         open={modalOpen}
         onClose={() => {
