@@ -8,12 +8,12 @@ import {
   UserMinus,
   Edit3,
   Trash2,
-  ChevronDown,
-  ChevronRight,
+
+
   Cloud,
   FolderPlus,
   X,
-  Eye,
+
   Shield,
   Globe,
 } from 'lucide-react';

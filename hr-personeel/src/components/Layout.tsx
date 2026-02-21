@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import diepenbeekLogo from '../assets/diepenbeek-logo.svg';
 import { usePersoneel } from '../context/PersoneelContext';
+import { useAuth } from '../auth/AuthProvider';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -28,7 +29,13 @@ const navItems = [
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const { gebruiker, medewerkers } = usePersoneel();
+  const { medewerkers } = usePersoneel();
+  const { user, logout } = useAuth();
+  
+  const handleLogout = () => {
+    logout();
+  };
+
   const teValideren = medewerkers.filter(
     m => m.validatieStatus === 'nieuw' || m.validatieStatus === 'in_review'
   ).length;
@@ -88,21 +95,15 @@ export default function Layout() {
             </div>
             {sidebarOpen && (
               <div className="user-details">
-                <span className="user-name">{gebruiker.naam}</span>
+                <span className="user-name">{user?.name || 'Gebruiker'}</span>
                 <span className="user-role">
-                  {gebruiker.rol === 'hr_admin'
-                    ? 'HR Administrator'
-                    : gebruiker.rol === 'diensthoofd'
-                    ? 'Diensthoofd'
-                    : gebruiker.rol === 'sectormanager'
-                    ? 'Sectormanager'
-                    : 'Medewerker'}
+                {user?.email || ""}
                 </span>
               </div>
             )}
           </div>
           {sidebarOpen && (
-            <button className="logout-btn" title="Afmelden">
+            <button className="logout-btn" title="Afmelden" onClick={handleLogout}>
               <LogOut size={18} />
             </button>
           )}

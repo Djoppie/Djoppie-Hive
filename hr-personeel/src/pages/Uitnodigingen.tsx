@@ -3,7 +3,7 @@ import {
   Plus,
   Send,
   Trash2,
-  Edit3,
+
   Users,
   Calendar,
   Mail,
@@ -11,7 +11,7 @@ import {
   Megaphone,
   GraduationCap,
   MessageCircle,
-  MoreHorizontal,
+
   Eye,
   X,
 } from 'lucide-react';

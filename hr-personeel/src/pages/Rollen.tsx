@@ -4,12 +4,12 @@ import {
   ShieldCheck,
   ShieldAlert,
   UserCog,
-  Eye,
+
   Edit3,
   Trash2,
   Users,
-  Settings,
-  Lock,
+
+
   Unlock,
 } from 'lucide-react';
 import type { Rol } from '../types';

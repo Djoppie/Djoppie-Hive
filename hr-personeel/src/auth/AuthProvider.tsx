@@ -1,0 +1,166 @@
+import type { ReactNode } from 'react';
+import { useEffect, useState } from 'react';
+import {
+  MsalProvider,
+  AuthenticatedTemplate,
+  UnauthenticatedTemplate,
+  useMsal,
+  useIsAuthenticated,
+} from '@azure/msal-react';
+import type { AccountInfo } from '@azure/msal-browser';
+import {
+  PublicClientApplication,
+  EventType,
+  InteractionStatus,
+} from '@azure/msal-browser';
+import { msalConfig, loginRequest } from './authConfig';
+
+// Initialize MSAL instance
+export const msalInstance = new PublicClientApplication(msalConfig);
+
+// Set active account on initialization
+const accounts = msalInstance.getAllAccounts();
+if (accounts.length > 0) {
+  msalInstance.setActiveAccount(accounts[0]);
+}
+
+// Handle redirect promise
+msalInstance.handleRedirectPromise().catch(console.error);
+
+// Listen for account changes
+msalInstance.addEventCallback((event) => {
+  if (event.eventType === EventType.LOGIN_SUCCESS && event.payload) {
+    const account = (event.payload as { account: AccountInfo }).account;
+    msalInstance.setActiveAccount(account);
+  }
+});
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export function AuthProvider({ children }: AuthProviderProps) {
+  return (
+    <MsalProvider instance={msalInstance}>
+      {children}
+    </MsalProvider>
+  );
+}
+
+// Login page component
+function LoginPage() {
+  const { instance, inProgress } = useMsal();
+  const [error, setError] = useState<string | null>(null);
+
+  const handleLogin = async () => {
+    try {
+      setError(null);
+      await instance.loginRedirect(loginRequest);
+    } catch (err) {
+      setError('Aanmelden mislukt. Probeer het opnieuw.');
+      console.error('Login error:', err);
+    }
+  };
+
+  const isLoading = inProgress !== InteractionStatus.None;
+
+  return (
+    <div className="login-page">
+      <div className="login-card">
+        <div className="login-header">
+          <h1>Djoppie-Paparazzi</h1>
+          <p>HR Personeelsbeheer - Gemeente Diepenbeek</p>
+        </div>
+
+        {error && (
+          <div className="login-error">
+            {error}
+          </div>
+        )}
+
+        <button
+          className="login-button"
+          onClick={handleLogin}
+          disabled={isLoading}
+        >
+          {isLoading ? 'Bezig met aanmelden...' : 'Aanmelden met Microsoft'}
+        </button>
+
+        <p className="login-hint">
+          Gebruik uw gemeentelijke Microsoft-account om aan te melden.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+interface ProtectedRouteProps {
+  children: ReactNode;
+}
+
+export function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const { inProgress } = useMsal();
+
+  // Show loading while checking auth status
+  if (inProgress !== InteractionStatus.None) {
+    return (
+      <div className="auth-loading">
+        <div className="loading-spinner" />
+        <p>Authenticatie controleren...</p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <AuthenticatedTemplate>
+        {children}
+      </AuthenticatedTemplate>
+      <UnauthenticatedTemplate>
+        <LoginPage />
+      </UnauthenticatedTemplate>
+    </>
+  );
+}
+
+// Hook to get current user info
+export function useAuth() {
+  const { instance, accounts, inProgress } = useMsal();
+  const isAuthenticated = useIsAuthenticated();
+  const [account, setAccount] = useState<AccountInfo | null>(null);
+
+  useEffect(() => {
+    const activeAccount = instance.getActiveAccount();
+    if (activeAccount) {
+      setAccount(activeAccount);
+    } else if (accounts.length > 0) {
+      instance.setActiveAccount(accounts[0]);
+      setAccount(accounts[0]);
+    }
+  }, [instance, accounts]);
+
+  const login = async () => {
+    await instance.loginRedirect(loginRequest);
+  };
+
+  const logout = async () => {
+    await instance.logoutRedirect({
+      postLogoutRedirectUri: window.location.origin,
+    });
+  };
+
+  return {
+    isAuthenticated,
+    isLoading: inProgress !== InteractionStatus.None,
+    account,
+    user: account ? {
+      name: account.name || 'Onbekende gebruiker',
+      email: account.username,
+      id: account.localAccountId,
+    } : null,
+    login,
+    logout,
+  };
+}
+
+export { AuthenticatedTemplate, UnauthenticatedTemplate };

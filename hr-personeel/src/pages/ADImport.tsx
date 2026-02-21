@@ -9,7 +9,7 @@ import {
   Users,
   Info,
   ArrowRight,
-  X,
+
 } from 'lucide-react';
 import { usePersoneel } from '../context/PersoneelContext';
 import type { Medewerker } from '../types';
@@ -235,7 +235,7 @@ export default function ADImport() {
 
       {/* Stappen indicator */}
       <div className="steps-indicator">
-        <div className={`step ${step === 'connect' ? 'step-active' : step !== 'connect' ? 'step-done' : ''}`}>
+        <div className={`step ${step === 'result' ? 'step-active' : step !== 'connect' ? 'step-done' : ''}`}>
           <span className="step-number">1</span>
           <span className="step-label">Verbinden</span>
         </div>
@@ -252,7 +252,7 @@ export default function ADImport() {
       </div>
 
       {/* Stap 1: Verbinden */}
-      {step === 'connect' && (
+      {step === 'result' && (
         <div className="import-connect">
           <div className="import-options">
             <div

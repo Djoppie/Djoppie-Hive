@@ -360,9 +360,9 @@ export default function PersoneelLijst() {
                 </td>
                 <td>
                   {m.bronAD ? (
-                    <Cloud size={16} className="text-info" title="Azure AD" />
+                    <span title="Azure AD"><Cloud size={16} className="text-info" /></span>
                   ) : (
-                    <UserPlus size={16} className="text-muted" title="Handmatig" />
+                    <span title="Handmatig"><UserPlus size={16} className="text-muted" /></span>
                   )}
                 </td>
                 <td className="td-actions">
