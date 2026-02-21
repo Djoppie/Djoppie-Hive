@@ -18,28 +18,55 @@ import { msalConfig, loginRequest } from './authConfig';
 // Initialize MSAL instance
 export const msalInstance = new PublicClientApplication(msalConfig);
 
-// Set active account on initialization
-const accounts = msalInstance.getAllAccounts();
-if (accounts.length > 0) {
-  msalInstance.setActiveAccount(accounts[0]);
-}
-
-// Handle redirect promise
-msalInstance.handleRedirectPromise().catch(console.error);
-
-// Listen for account changes
-msalInstance.addEventCallback((event) => {
-  if (event.eventType === EventType.LOGIN_SUCCESS && event.payload) {
-    const account = (event.payload as { account: AccountInfo }).account;
-    msalInstance.setActiveAccount(account);
-  }
-});
-
 interface AuthProviderProps {
   children: ReactNode;
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  useEffect(() => {
+    const initializeMsal = async () => {
+      try {
+        // Initialize MSAL instance first (required in MSAL v3+)
+        await msalInstance.initialize();
+
+        // Handle redirect promise after initialization
+        await msalInstance.handleRedirectPromise();
+
+        // Set active account if available
+        const accounts = msalInstance.getAllAccounts();
+        if (accounts.length > 0) {
+          msalInstance.setActiveAccount(accounts[0]);
+        }
+
+        // Listen for account changes
+        msalInstance.addEventCallback((event) => {
+          if (event.eventType === EventType.LOGIN_SUCCESS && event.payload) {
+            const account = (event.payload as { account: AccountInfo }).account;
+            msalInstance.setActiveAccount(account);
+          }
+        });
+
+        setIsInitialized(true);
+      } catch (error) {
+        console.error('MSAL initialization error:', error);
+        setIsInitialized(true); // Still render to show error state
+      }
+    };
+
+    initializeMsal();
+  }, []);
+
+  if (!isInitialized) {
+    return (
+      <div className="auth-loading">
+        <div className="loading-spinner" />
+        <p>Applicatie laden...</p>
+      </div>
+    );
+  }
+
   return (
     <MsalProvider instance={msalInstance}>
       {children}
