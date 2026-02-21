@@ -1,4 +1,4 @@
-namespace DjoppiePaparazzi.Core.Entities;
+namespace DjoppieHive.Core.Entities;
 
 /// <summary>
 /// Represents an employee from MG- distribution groups in Entra ID.

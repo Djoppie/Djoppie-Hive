@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Djoppie-Paparazzi** (HRadmin) is an HR administration system designed for IT-support and HR managers at Gemeente Diepenbeek. The system focuses on employee management, distribution groups, and HR workflows with deep integration into Microsoft 365.
+**Djoppie-Hive** (HRadmin) is an HR administration system designed for IT-support and HR managers at Gemeente Diepenbeek. The system focuses on employee management, distribution groups, and HR workflows with deep integration into Microsoft 365.
 
 ### Core Features (Planned/In Progress)
 
@@ -52,7 +52,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Structure
 
 ```
-Djoppie-Paparazzi/
+Djoppie-Hive/
 ├── .claude/                    # Claude Code configuration
 │   ├── agents/                 # Specialized agent definitions
 │   │   ├── project-orchestrator.md
@@ -76,9 +76,9 @@ Djoppie-Paparazzi/
 │   ├── .env.production         # Azure production environment
 │   └── vite.config.ts
 ├── src/backend/ (planned)      # ASP.NET Core backend
-│   ├── DjoppiePaparazzi.API/
-│   ├── DjoppiePaparazzi.Core/
-│   └── DjoppiePaparazzi.Infrastructure/
+│   ├── DjoppieHive.API/
+│   ├── DjoppieHive.Core/
+│   └── DjoppieHive.Infrastructure/
 ├── infra/ (planned)            # Infrastructure as Code
 │   └── bicep/
 ├── .azuredevops/ (planned)     # Azure DevOps pipelines
@@ -93,8 +93,8 @@ Djoppie-Paparazzi/
 
 | App Name | Client ID | Purpose |
 |----------|-----------|---------|
-| Djoppie-Paparazzi-Web | acc348be-b533-4402-8041-672c1cba1273 | Frontend SPA |
-| Djoppie-Paparazzi-API | 2b620e06-39ee-4177-a559-76a12a79320f | Backend API |
+| Djoppie-Hive-Web | acc348be-b533-4402-8041-672c1cba1273 | Frontend SPA |
+| Djoppie-Hive-API | 2b620e06-39ee-4177-a559-76a12a79320f | Backend API |
 
 ### Tenant Information
 
@@ -115,25 +115,25 @@ Djoppie-Paparazzi/
 ### Naming Convention
 
 ```
-{resource-type}-djoppie-paparazzi-{environment}-{suffix}
+{resource-type}-djoppie-hive-{environment}-{suffix}
 ```
 
 ### Resource Group
 
-- **Name**: rg-djoppie-paparazzi
+- **Name**: rg-djoppie-hive
 - **Location**: West Europe
 
 ### DEV Environment Resources
 
 | Resource | Name | SKU | Est. Cost |
 |----------|------|-----|-----------|
-| App Service Plan | plan-djoppie-paparazzi-dev | F1 (Free) | €0 |
-| App Service | app-djoppie-paparazzi-dev-api | - | €0 |
-| Static Web App | swa-djoppie-paparazzi-dev-ui | Free | €0 |
-| SQL Database | sqldb-djoppie-paparazzi-dev | Serverless | €4-6 |
-| Key Vault | kv-djoppie-paparazzi-dev-{suffix} | Standard | ~€0 |
-| App Insights | appi-djoppie-paparazzi-dev | Free (5GB) | €0 |
-| Log Analytics | log-djoppie-paparazzi-dev | Free (5GB) | €0 |
+| App Service Plan | plan-djoppie-hive-dev | F1 (Free) | €0 |
+| App Service | app-djoppie-hive-dev-api | - | €0 |
+| Static Web App | swa-djoppie-hive-dev-ui | Free | €0 |
+| SQL Database | sqldb-djoppie-hive-dev | Serverless | €4-6 |
+| Key Vault | kv-djoppie-hive-dev-{suffix} | Standard | ~€0 |
+| App Insights | appi-djoppie-hive-dev | Free (5GB) | €0 |
+| Log Analytics | log-djoppie-hive-dev | Free (5GB) | €0 |
 
 **Total Estimated Monthly Cost: €6-10**
 
@@ -169,7 +169,7 @@ dotnet restore
 dotnet build
 
 # Run API (http://localhost:5052)
-cd DjoppiePaparazzi.API
+cd DjoppieHive.API
 dotnet run
 
 # Run with watch mode
@@ -184,13 +184,13 @@ dotnet test
 ```bash
 # Create new migration
 dotnet ef migrations add <MigrationName> \
-  --project DjoppiePaparazzi.Infrastructure \
-  --startup-project DjoppiePaparazzi.API
+  --project DjoppieHive.Infrastructure \
+  --startup-project DjoppieHive.API
 
 # Apply migrations
 dotnet ef database update \
-  --project DjoppiePaparazzi.Infrastructure \
-  --startup-project DjoppiePaparazzi.API
+  --project DjoppieHive.Infrastructure \
+  --startup-project DjoppieHive.API
 ```
 
 ## Environment Configuration
@@ -211,11 +211,11 @@ VITE_ENTRA_API_SCOPE=api://2b620e06-39ee-4177-a559-76a12a79320f/access_as_user
 
 **Frontend** (`hr-personeel/.env.production`):
 ```env
-VITE_API_URL=https://app-djoppie-paparazzi-dev-api.azurewebsites.net/api
+VITE_API_URL=https://app-djoppie-hive-dev-api.azurewebsites.net/api
 VITE_ENTRA_CLIENT_ID=acc348be-b533-4402-8041-672c1cba1273
 VITE_ENTRA_TENANT_ID=7db28d6f-d542-40c1-b529-5e5ed2aad545
 VITE_ENTRA_AUTHORITY=https://login.microsoftonline.com/7db28d6f-d542-40c1-b529-5e5ed2aad545
-VITE_ENTRA_REDIRECT_URI=https://swa-djoppie-paparazzi-dev-ui.azurestaticapps.net
+VITE_ENTRA_REDIRECT_URI=https://swa-djoppie-hive-dev-ui.azurestaticapps.net
 VITE_ENTRA_API_SCOPE=api://2b620e06-39ee-4177-a559-76a12a79320f/access_as_user
 ```
 
@@ -315,7 +315,7 @@ The organization uses **MG- prefixed distribution groups** in Microsoft Entra ID
 - **Naming Convention**: `MG-{GroupName}` (e.g., `MG-IT-Afdeling`, `MG-HR-Team`)
 - **Purpose**: These mail-enabled distribution groups contain all persons managed in Active Directory
 - **Sync**: Groups are synced from on-premises AD to Entra ID
-- **HR Integration**: Djoppie-Paparazzi reads and manages membership of these groups
+- **HR Integration**: Djoppie-Hive reads and manages membership of these groups
 
 ### Group Management Features
 
@@ -332,7 +332,7 @@ On-Premises AD ←→ Azure AD Connect ←→ Microsoft Entra ID
                                               ↓
                                     Microsoft Graph API
                                               ↓
-                                    Djoppie-Paparazzi API
+                                    Djoppie-Hive API
                                               ↓
                                     HR Management Interface
 ```
@@ -385,7 +385,7 @@ DELETE /groups/{group-id}/members/{member-id}/$ref
 
 The backend must allow:
 - `http://localhost:5173` (local development)
-- `https://swa-djoppie-paparazzi-dev-ui.azurestaticapps.net` (Azure DEV)
+- `https://swa-djoppie-hive-dev-ui.azurestaticapps.net` (Azure DEV)
 
 ## Repository Information
 

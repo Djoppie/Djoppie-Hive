@@ -1,17 +1,33 @@
-using DjoppiePaparazzi.Infrastructure;
-using DjoppiePaparazzi.Infrastructure.Data;
+using Azure.Identity;
+using DjoppieHive.Infrastructure;
+using DjoppieHive.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Graph;
 using Microsoft.Identity.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add Entra ID authentication
+// Add Entra ID authentication for API access
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"))
-    .EnableTokenAcquisitionToCallDownstreamApi()
-    .AddMicrosoftGraph(builder.Configuration.GetSection("Graph"))
-    .AddInMemoryTokenCaches();
+    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
+
+// Add Graph client using client credentials flow (application permissions)
+var tenantId = builder.Configuration["AzureAd:TenantId"];
+var clientId = builder.Configuration["AzureAd:ClientId"];
+var clientSecret = builder.Configuration["AzureAd:ClientSecret"];
+
+if (!string.IsNullOrEmpty(tenantId) && !string.IsNullOrEmpty(clientId) && !string.IsNullOrEmpty(clientSecret))
+{
+    var credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
+    var graphClient = new GraphServiceClient(credential, new[] { "https://graph.microsoft.com/.default" });
+    builder.Services.AddSingleton(graphClient);
+}
+else
+{
+    // Log warning if Graph settings are missing
+    Console.WriteLine("WARNING: Graph API credentials not configured. Distribution groups will not work.");
+}
 
 // Add authorization
 builder.Services.AddAuthorization();
@@ -28,7 +44,7 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new()
     {
-        Title = "Djoppie-Paparazzi API",
+        Title = "Djoppie-Hive API",
         Version = "v1",
         Description = "HR Admin API for Gemeente Diepenbeek - MG- Distribution Groups Management"
     });
@@ -60,7 +76,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Djoppie-Paparazzi API v1");
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Djoppie-Hive API v1");
     });
 
     // Auto-migrate database in development

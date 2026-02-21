@@ -1,4 +1,4 @@
-namespace DjoppiePaparazzi.Core.DTOs;
+namespace DjoppieHive.Core.DTOs;
 
 public record DistributionGroupDto(
     string Id,

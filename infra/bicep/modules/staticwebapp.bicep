@@ -1,5 +1,5 @@
 // ============================================================================
-// Azure Static Web App Module - Djoppie-Paparazzi
+// Azure Static Web App Module - Djoppie-Hive
 // ============================================================================
 // Description: Deploys Azure Static Web App for React HR Admin frontend
 // Tier: Free (100 GB bandwidth, 0.5 GB storage)

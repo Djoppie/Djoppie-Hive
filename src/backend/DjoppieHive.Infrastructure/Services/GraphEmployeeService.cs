@@ -1,10 +1,10 @@
-using DjoppiePaparazzi.Core.DTOs;
-using DjoppiePaparazzi.Core.Interfaces;
+using DjoppieHive.Core.DTOs;
+using DjoppieHive.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
 
-namespace DjoppiePaparazzi.Infrastructure.Services;
+namespace DjoppieHive.Infrastructure.Services;
 
 /// <summary>
 /// Implementation of IEmployeeService using Microsoft Graph API.

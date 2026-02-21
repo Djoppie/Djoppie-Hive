@@ -1,9 +1,9 @@
-using DjoppiePaparazzi.Core.DTOs;
-using DjoppiePaparazzi.Core.Interfaces;
+using DjoppieHive.Core.DTOs;
+using DjoppieHive.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace DjoppiePaparazzi.API.Controllers;
+namespace DjoppieHive.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -30,6 +30,34 @@ public class DistributionGroupsController : ControllerBase
     {
         var groups = await _groupService.GetAllGroupsAsync(cancellationToken);
         return Ok(groups);
+    }
+
+    /// <summary>
+    /// Test endpoint to verify Graph API connection (no auth required for debugging).
+    /// </summary>
+    [HttpGet("test")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    public async Task<ActionResult<object>> TestGraphConnection(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var groups = await _groupService.GetAllGroupsAsync(cancellationToken);
+            return Ok(new {
+                success = true,
+                groupCount = groups.Count(),
+                groups = groups.Select(g => new { g.DisplayName, g.Email })
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Graph API test failed");
+            return Ok(new {
+                success = false,
+                error = ex.Message,
+                innerError = ex.InnerException?.Message
+            });
+        }
     }
 
     /// <summary>

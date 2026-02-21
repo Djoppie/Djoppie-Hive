@@ -1,9 +1,9 @@
-using DjoppiePaparazzi.Core.DTOs;
-using DjoppiePaparazzi.Core.Interfaces;
+using DjoppieHive.Core.DTOs;
+using DjoppieHive.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace DjoppiePaparazzi.API.Controllers;
+namespace DjoppieHive.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

@@ -31,8 +31,8 @@ pool:
 variables:
   buildConfiguration: 'Release'
   dotnetVersion: '8.0.x'
-  projectPath: 'src/backend/DjoppiePaparazzi.API/DjoppiePaparazzi.API.csproj'
-  solutionPath: 'src/backend/DjoppiePaparazzi.slnx'
+  projectPath: 'src/backend/DjoppieHive.API/DjoppieHive.API.csproj'
+  solutionPath: 'src/backend/DjoppieHive.slnx'
 
 stages:
   - stage: Build

@@ -1,7 +1,7 @@
-using DjoppiePaparazzi.Core.Entities;
+using DjoppieHive.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace DjoppiePaparazzi.Infrastructure.Data;
+namespace DjoppieHive.Infrastructure.Data;
 
 public class ApplicationDbContext : DbContext
 {

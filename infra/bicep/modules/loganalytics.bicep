@@ -1,5 +1,5 @@
 // ============================================================================
-// Log Analytics Workspace Module - Djoppie-Paparazzi
+// Log Analytics Workspace Module - Djoppie-Hive
 // ============================================================================
 // Description: Deploys Log Analytics Workspace for monitoring
 // Tier: PerGB2018 (Free tier: 5GB/month)

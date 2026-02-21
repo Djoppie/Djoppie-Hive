@@ -1,5 +1,5 @@
 // ============================================================================
-// Azure SQL Server Module - DEV Environment - Djoppie-Paparazzi
+// Azure SQL Server Module - DEV Environment - Djoppie-Hive
 // ============================================================================
 // Description: Deploys Azure SQL Server with Serverless database for HR data
 // Tier: GP_S_Gen5_1 (0.5-1 vCore, auto-pause enabled)
@@ -63,7 +63,7 @@ param maxSizeBytes int = 34359738368 // 32 GB
 // VARIABLES
 // ============================================================================
 
-var sqlServerName = 'sql-paparazzi-${environment}-${uniqueSuffix}'
+var sqlServerName = 'sql-hive-${environment}-${uniqueSuffix}'
 
 // ============================================================================
 // RESOURCES

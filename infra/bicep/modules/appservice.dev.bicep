@@ -1,5 +1,5 @@
 // ============================================================================
-// App Service Module - DEV Environment - Djoppie-Paparazzi
+// App Service Module - DEV Environment - Djoppie-Hive
 // ============================================================================
 // Description: Deploys App Service for ASP.NET Core 8.0 HR Admin API
 // Tier: Follows App Service Plan tier (F1 Free)

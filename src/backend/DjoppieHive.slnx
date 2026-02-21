@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="DjoppieHive.API/DjoppieHive.API.csproj" />
+  <Project Path="DjoppieHive.Core/DjoppieHive.Core.csproj" />
+  <Project Path="DjoppieHive.Infrastructure/DjoppieHive.Infrastructure.csproj" />
+</Solution>

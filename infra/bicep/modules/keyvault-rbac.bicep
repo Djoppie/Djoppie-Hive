@@ -1,5 +1,5 @@
 // ============================================================================
-// Key Vault RBAC Module - Djoppie-Paparazzi
+// Key Vault RBAC Module - Djoppie-Hive
 // ============================================================================
 // Description: Grants App Service Managed Identity access to Key Vault
 // Using Azure RBAC instead of access policies (modern standard)

@@ -1,5 +1,5 @@
 // ============================================================================
-// App Service Plan Module - DEV Environment - Djoppie-Paparazzi
+// App Service Plan Module - DEV Environment - Djoppie-Hive
 // ============================================================================
 // Description: Deploys App Service Plan for HR Admin API
 // Tier: F1 Free (shared infrastructure)

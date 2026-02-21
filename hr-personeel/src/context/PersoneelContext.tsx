@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import type {
   Medewerker,
   ValidatieVerzoek,
@@ -16,6 +16,7 @@ import {
   mockDistributieGroepen,
 } from '../data/mockData';
 import { v4 as uuidv4 } from 'uuid';
+import { distributionGroupsApi } from '../services/api';
 
 interface PersoneelContextType {
   medewerkers: Medewerker[];
@@ -57,6 +58,34 @@ export function PersoneelProvider({ children }: { children: ReactNode }) {
   const [uitnodigingen, setUitnodigingen] = useState<Uitnodiging[]>(mockUitnodigingen);
   const [gebruiker] = useState<GebruikerProfiel>(mockGebruiker);
   const [distributieGroepen, setDistributieGroepen] = useState<DistributieGroep[]>(mockDistributieGroepen);
+  // Fetch distribution groups from API on mount
+  useEffect(() => {
+    const fetchFromApi = async () => {
+      try {
+        const apiGroups = await distributionGroupsApi.getAll();
+        const convertedGroups: DistributieGroep[] = apiGroups.map(g => ({
+          id: g.id,
+          displayName: g.displayName,
+          emailAddress: g.email,
+          beschrijving: g.description || '',
+          type: 'distributionGroup' as const,
+          ledenIds: [],
+          eigenaarIds: [],
+          bronExchange: true,
+          aanmaakDatum: new Date().toISOString().split('T')[0],
+          laatstGewijzigd: new Date().toISOString().split('T')[0],
+        }));
+        if (convertedGroups.length > 0) {
+          setDistributieGroepen(convertedGroups);
+          console.log('Loaded', convertedGroups.length, 'MG- groups from API');
+        }
+      } catch (err) {
+        console.error('Failed to fetch from API, using mock data:', err);
+      }
+    };
+    fetchFromApi();
+  }, []);
+
 
   const updateMedewerker = useCallback((id: string, updates: Partial<Medewerker>) => {
     setMedewerkers(prev =>

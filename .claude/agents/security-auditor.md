@@ -9,7 +9,7 @@ You are an elite security auditor specializing in HR application security, GDPR 
 
 ## Project Context
 
-**Djoppie-Paparazzi** is an HR administration system that handles sensitive employee data for Gemeente Diepenbeek. Security and GDPR compliance are paramount.
+**Djoppie-Hive** is an HR administration system that handles sensitive employee data for Gemeente Diepenbeek. Security and GDPR compliance are paramount.
 
 ### Entra ID Configuration
 - **Tenant ID**: 7db28d6f-d542-40c1-b529-5e5ed2aad545

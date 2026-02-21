@@ -26,15 +26,15 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  - group: djoppie-paparazzi-dev  # Variable group with secrets
+  - group: djoppie-hive-dev  # Variable group with secrets
   - name: azureSubscription
-    value: 'Azure-Djoppie-Paparazzi'
+    value: 'Azure-Djoppie-Hive'
   - name: resourceGroup
-    value: 'rg-djoppie-paparazzi'
+    value: 'rg-djoppie-hive'
   - name: appServiceName
-    value: 'app-djoppie-paparazzi-dev'
+    value: 'app-djoppie-hive-dev'
   - name: staticWebAppName
-    value: 'stapp-djoppie-paparazzi-dev'
+    value: 'stapp-djoppie-hive-dev'
 
 stages:
   # ==========================================================================
@@ -46,7 +46,7 @@ stages:
     jobs:
       - deployment: DeployBicep
         displayName: 'Deploy Bicep Templates'
-        environment: 'djoppie-paparazzi-dev'
+        environment: 'djoppie-hive-dev'
         strategy:
           runOnce:
             deploy:
@@ -74,7 +74,7 @@ stages:
     jobs:
       - deployment: DeployAPI
         displayName: 'Deploy to App Service'
-        environment: 'djoppie-paparazzi-dev'
+        environment: 'djoppie-hive-dev'
         strategy:
           runOnce:
             deploy:
@@ -106,19 +106,19 @@ stages:
                         },
                         {
                           "name": "AzureAd__TenantId",
-                          "value": "@Microsoft.KeyVault(SecretUri=https://kv-djoppie-paparazzi-dev.vault.azure.net/secrets/EntraTenantId)"
+                          "value": "@Microsoft.KeyVault(SecretUri=https://kv-djoppie-hive-dev.vault.azure.net/secrets/EntraTenantId)"
                         },
                         {
                           "name": "AzureAd__ClientId",
-                          "value": "@Microsoft.KeyVault(SecretUri=https://kv-djoppie-paparazzi-dev.vault.azure.net/secrets/EntraBackendClientId)"
+                          "value": "@Microsoft.KeyVault(SecretUri=https://kv-djoppie-hive-dev.vault.azure.net/secrets/EntraBackendClientId)"
                         },
                         {
                           "name": "AzureAd__ClientSecret",
-                          "value": "@Microsoft.KeyVault(SecretUri=https://kv-djoppie-paparazzi-dev.vault.azure.net/secrets/EntraBackendClientSecret)"
+                          "value": "@Microsoft.KeyVault(SecretUri=https://kv-djoppie-hive-dev.vault.azure.net/secrets/EntraBackendClientSecret)"
                         },
                         {
                           "name": "ConnectionStrings__DefaultConnection",
-                          "value": "@Microsoft.KeyVault(SecretUri=https://kv-djoppie-paparazzi-dev.vault.azure.net/secrets/SqlConnectionString)"
+                          "value": "@Microsoft.KeyVault(SecretUri=https://kv-djoppie-hive-dev.vault.azure.net/secrets/SqlConnectionString)"
                         }
                       ]
 
@@ -131,7 +131,7 @@ stages:
     jobs:
       - deployment: DeploySWA
         displayName: 'Deploy to Static Web App'
-        environment: 'djoppie-paparazzi-dev'
+        environment: 'djoppie-hive-dev'
         strategy:
           runOnce:
             deploy:

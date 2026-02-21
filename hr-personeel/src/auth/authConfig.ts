@@ -1,7 +1,7 @@
 import type { Configuration } from '@azure/msal-browser';
 import { LogLevel } from '@azure/msal-browser';
 
-// MSAL configuration for Djoppie-Paparazzi
+// MSAL configuration for Djoppie-Hive
 export const msalConfig: Configuration = {
   auth: {
     clientId: import.meta.env.VITE_ENTRA_CLIENT_ID || 'acc348be-b533-4402-8041-672c1cba1273',

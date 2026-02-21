@@ -1,6 +1,6 @@
-using DjoppiePaparazzi.Core.DTOs;
+using DjoppieHive.Core.DTOs;
 
-namespace DjoppiePaparazzi.Core.Interfaces;
+namespace DjoppieHive.Core.Interfaces;
 
 /// <summary>
 /// Service interface for managing employees from Entra ID.

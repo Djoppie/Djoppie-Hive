@@ -1,5 +1,5 @@
 // ============================================================================
-// Djoppie-Paparazzi - DEV Environment Infrastructure
+// Djoppie-Hive - DEV Environment Infrastructure
 // ============================================================================
 // Description: Ultra-low cost development environment for HR Admin system
 // Default Region: West Europe
@@ -19,7 +19,7 @@ param environment string = 'dev'
 param location string = 'westeurope'
 
 @description('Project name prefix for all resources')
-param projectName string = 'djoppie-paparazzi'
+param projectName string = 'djoppie-hive'
 
 @description('Unique suffix for globally unique resource names (6 characters)')
 @minLength(6)

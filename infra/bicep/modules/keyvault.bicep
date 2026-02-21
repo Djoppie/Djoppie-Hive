@@ -1,5 +1,5 @@
 // ============================================================================
-// Azure Key Vault Module - Djoppie-Paparazzi
+// Azure Key Vault Module - Djoppie-Hive
 // ============================================================================
 // Description: Deploys Azure Key Vault for HR Admin secrets management
 // Tier: Standard (software-protected keys)
@@ -40,7 +40,7 @@ param enablePurgeProtection bool = false
 // ============================================================================
 
 // Key Vault names must be 3-24 characters
-var keyVaultName = 'kv-paparazzi-${environment}-${uniqueSuffix}'
+var keyVaultName = 'kv-hive-${environment}-${uniqueSuffix}'
 
 // ============================================================================
 // RESOURCES

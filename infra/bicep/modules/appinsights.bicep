@@ -1,5 +1,5 @@
 // ============================================================================
-// Application Insights Module - Djoppie-Paparazzi
+// Application Insights Module - Djoppie-Hive
 // ============================================================================
 // Description: Deploys Application Insights for HR Admin monitoring
 // Tier: Per-GB (Free tier: 5GB/month)

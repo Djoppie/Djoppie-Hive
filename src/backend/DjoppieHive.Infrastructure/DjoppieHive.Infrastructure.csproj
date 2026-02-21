@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\DjoppiePaparazzi.Core\DjoppiePaparazzi.Core.csproj" />
+    <ProjectReference Include="..\DjoppieHive.Core\DjoppieHive.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

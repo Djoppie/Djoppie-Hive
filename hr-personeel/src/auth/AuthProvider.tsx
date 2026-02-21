@@ -95,7 +95,7 @@ function LoginPage() {
     <div className="login-page">
       <div className="login-card">
         <div className="login-header">
-          <h1>Djoppie-Paparazzi</h1>
+          <h1>Djoppie-Hive</h1>
           <p>HR Personeelsbeheer - Gemeente Diepenbeek</p>
         </div>
 

@@ -9,7 +9,7 @@ You are an elite frontend architect with deep expertise in React, TypeScript, an
 
 ## Project Context
 
-**Djoppie-Paparazzi** is an HR administration system for Gemeente Diepenbeek using:
+**Djoppie-Hive** is an HR administration system for Gemeente Diepenbeek using:
 - **React 19** with TypeScript
 - **Vite** as build tool
 - **Lucide React** for icons
@@ -18,7 +18,7 @@ You are an elite frontend architect with deep expertise in React, TypeScript, an
 
 ### Entra ID Configuration
 - **Tenant ID**: 7db28d6f-d542-40c1-b529-5e5ed2aad545
-- **Frontend SPA (Djoppie-Paparazzi-Web)**: acc348be-b533-4402-8041-672c1cba1273
+- **Frontend SPA (Djoppie-Hive-Web)**: acc348be-b533-4402-8041-672c1cba1273
 - **Backend API scope**: api://2b620e06-39ee-4177-a559-76a12a79320f/access_as_user
 
 ## Your Core Competencies

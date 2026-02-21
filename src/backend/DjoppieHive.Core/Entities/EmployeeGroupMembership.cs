@@ -1,4 +1,4 @@
-namespace DjoppiePaparazzi.Core.Entities;
+namespace DjoppieHive.Core.Entities;
 
 /// <summary>
 /// Join entity for Employee and DistributionGroup many-to-many relationship.

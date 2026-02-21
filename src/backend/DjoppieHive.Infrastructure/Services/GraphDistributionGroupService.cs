@@ -1,10 +1,10 @@
-using DjoppiePaparazzi.Core.DTOs;
-using DjoppiePaparazzi.Core.Interfaces;
+using DjoppieHive.Core.DTOs;
+using DjoppieHive.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
 
-namespace DjoppiePaparazzi.Infrastructure.Services;
+namespace DjoppieHive.Infrastructure.Services;
 
 /// <summary>
 /// Implementation of IDistributionGroupService using Microsoft Graph API.
@@ -33,14 +33,15 @@ public class GraphDistributionGroupService : IDistributionGroupService
                 {
                     config.QueryParameters.Filter = $"startsWith(displayName, '{MgGroupPrefix}')";
                     config.QueryParameters.Select = ["id", "displayName", "description", "mail"];
-                    config.QueryParameters.Orderby = ["displayName"];
+                    // Note: $orderby is not supported with startsWith filter, sorting done in memory
                 }, cancellationToken);
 
             var result = new List<DistributionGroupDto>();
 
             if (groups?.Value != null)
             {
-                foreach (var group in groups.Value)
+                // Sort in memory since Graph API doesn't support orderby with startsWith
+                foreach (var group in groups.Value.OrderBy(g => g.DisplayName))
                 {
                     var memberCount = await GetMemberCountAsync(group.Id!, cancellationToken);
                     result.Add(new DistributionGroupDto(

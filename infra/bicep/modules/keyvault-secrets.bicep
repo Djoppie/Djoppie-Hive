@@ -1,5 +1,5 @@
 // ============================================================================
-// Key Vault Secrets Module - Djoppie-Paparazzi
+// Key Vault Secrets Module - Djoppie-Hive
 // ============================================================================
 // Description: Stores application secrets in Key Vault for HR Admin
 // Secrets are referenced by App Service using Key Vault references

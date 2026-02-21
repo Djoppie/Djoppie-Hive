@@ -1,6 +1,6 @@
-# Azure DevOps Pipelines - Djoppie-Paparazzi
+# Azure DevOps Pipelines - Djoppie-Hive
 
-This directory contains the CI/CD pipeline configurations for the Djoppie-Paparazzi HR Admin application.
+This directory contains the CI/CD pipeline configurations for the Djoppie-Hive HR Admin application.
 
 ## Pipeline Overview
 
@@ -16,13 +16,13 @@ This directory contains the CI/CD pipeline configurations for the Djoppie-Papara
 
 1. Go to Azure DevOps > Project Settings > Service connections
 2. Create new "Azure Resource Manager" connection
-3. Name it: `Azure-Djoppie-Paparazzi`
+3. Name it: `Azure-Djoppie-Hive`
 4. Select subscription and authorize
 
 ### 2. Create Variable Group
 
 1. Go to Pipelines > Library
-2. Create new variable group: `djoppie-paparazzi-dev`
+2. Create new variable group: `djoppie-hive-dev`
 3. Add the following variables:
 
 | Variable | Type | Description |
@@ -38,13 +38,13 @@ This directory contains the CI/CD pipeline configurations for the Djoppie-Papara
 VITE_ENTRA_CLIENT_ID = acc348be-b533-4402-8041-672c1cba1273
 VITE_ENTRA_TENANT_ID = 7db28d6f-d542-40c1-b529-5e5ed2aad545
 VITE_ENTRA_BACKEND_CLIENT_ID = 2b620e06-39ee-4177-a559-76a12a79320f
-VITE_API_URL = https://app-djoppie-paparazzi-dev.azurewebsites.net/api
+VITE_API_URL = https://app-djoppie-hive-dev.azurewebsites.net/api
 ```
 
 ### 3. Create Environments
 
 1. Go to Pipelines > Environments
-2. Create environment: `djoppie-paparazzi-dev`
+2. Create environment: `djoppie-hive-dev`
 3. (Optional) Add approval checks for production deployments
 
 ### 4. Create Pipelines
@@ -106,7 +106,7 @@ Reusable templates are located in `/pipelines/templates/`:
 steps:
   - template: templates/dotnet-build.yml
     parameters:
-      projectPath: 'src/backend/DjoppiePaparazzi.slnx'
+      projectPath: 'src/backend/DjoppieHive.slnx'
       buildConfiguration: 'Release'
       runTests: true
 ```

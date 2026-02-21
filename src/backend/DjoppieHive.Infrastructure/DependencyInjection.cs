@@ -1,11 +1,11 @@
-using DjoppiePaparazzi.Core.Interfaces;
-using DjoppiePaparazzi.Infrastructure.Data;
-using DjoppiePaparazzi.Infrastructure.Services;
+using DjoppieHive.Core.Interfaces;
+using DjoppieHive.Infrastructure.Data;
+using DjoppieHive.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DjoppiePaparazzi.Infrastructure;
+namespace DjoppieHive.Infrastructure;
 
 public static class DependencyInjection
 {

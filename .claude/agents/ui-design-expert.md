@@ -9,7 +9,7 @@ You are an elite UI/UX designer with deep expertise in creating stunning, profes
 
 ## Project Context
 
-**Djoppie-Paparazzi** is an HR administration system for Gemeente Diepenbeek. The design should be:
+**Djoppie-Hive** is an HR administration system for Gemeente Diepenbeek. The design should be:
 - Professional and trustworthy (handling sensitive HR data)
 - Clean and efficient (for daily HR manager use)
 - Branded with Diepenbeek identity
