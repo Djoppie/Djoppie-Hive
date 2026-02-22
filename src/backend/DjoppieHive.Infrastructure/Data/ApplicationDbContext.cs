@@ -15,6 +15,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<EmployeeGroupMembership> EmployeeGroupMemberships => Set<EmployeeGroupMembership>();
     public DbSet<SyncLogboek> SyncLogboeken => Set<SyncLogboek>();
     public DbSet<ValidatieVerzoek> ValidatieVerzoeken => Set<ValidatieVerzoek>();
+    public DbSet<VrijwilligerDetails> VrijwilligerDetails => Set<VrijwilligerDetails>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -27,9 +28,26 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.EntraObjectId).IsUnique();
             entity.HasIndex(e => e.Email);
             entity.HasIndex(e => e.Bron);
+            entity.HasIndex(e => e.EmployeeType);
+            entity.HasIndex(e => e.ArbeidsRegime);
+            entity.HasIndex(e => e.DienstId);
             entity.Property(e => e.DisplayName).HasMaxLength(256).IsRequired();
             entity.Property(e => e.Email).HasMaxLength(256).IsRequired();
             entity.Property(e => e.EntraObjectId).HasMaxLength(36).IsRequired();
+            entity.Property(e => e.PhotoUrl).HasMaxLength(500);
+            entity.Property(e => e.Telefoonnummer).HasMaxLength(50);
+
+            // Relatie met Dienst (DistributionGroup)
+            entity.HasOne(e => e.Dienst)
+                .WithMany()
+                .HasForeignKey(e => e.DienstId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // One-to-one relatie met VrijwilligerDetails
+            entity.HasOne(e => e.VrijwilligerDetails)
+                .WithOne(v => v.Employee)
+                .HasForeignKey<VrijwilligerDetails>(v => v.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // DistributionGroup configuratie
@@ -104,6 +122,18 @@ public class ApplicationDbContext : DbContext
                 .WithMany(s => s.ValidatieVerzoeken)
                 .HasForeignKey(v => v.SyncLogboekId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // VrijwilligerDetails configuratie
+        modelBuilder.Entity<VrijwilligerDetails>(entity =>
+        {
+            entity.HasKey(v => v.Id);
+            entity.HasIndex(v => v.EmployeeId).IsUnique();
+            entity.Property(v => v.Beschikbaarheid).HasMaxLength(200);
+            entity.Property(v => v.Specialisaties).HasMaxLength(500);
+            entity.Property(v => v.NoodContactNaam).HasMaxLength(256);
+            entity.Property(v => v.NoodContactTelefoon).HasMaxLength(50);
+            entity.Property(v => v.Opmerkingen).HasMaxLength(1000);
         });
     }
 }

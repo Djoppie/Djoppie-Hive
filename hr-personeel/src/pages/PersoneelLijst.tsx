@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Search,
   Plus,
@@ -12,14 +12,20 @@ import {
   UserPlus,
   Check,
   X,
+  AlertCircle,
+  Loader2,
 } from 'lucide-react';
-import { usePersoneel } from '../context/PersoneelContext';
-import StatusBadge from '../components/StatusBadge';
 import MedewerkerModal from '../components/MedewerkerModal';
 import type { Medewerker, ArbeidsRegime, PersoneelType, ValidatieStatus } from '../types';
+import { employeeService } from '../services/employeeService';
+import {
+  mapEmployeeToMedewerker,
+  mapMedewerkerToCreateDto,
+  mapMedewerkerToUpdateDto,
+} from '../utils/employeeMapper';
 import { alleSectoren } from '../data/mockData';
 
-type SortKey = 'volledigeNaam' | 'email' | 'sector' | 'dienst' | 'type' | 'arbeidsRegime' | 'validatieStatus';
+type SortKey = 'volledigeNaam' | 'email' | 'sector' | 'dienst' | 'functie' | 'type' | 'arbeidsRegime' | 'validatieStatus';
 type SortDir = 'asc' | 'desc';
 
 interface SortIconProps {
@@ -33,9 +39,34 @@ function SortIcon({ columnKey, sortKey, sortDir }: SortIconProps) {
   return sortDir === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />;
 }
 
-export default function PersoneelLijst() {
-  const { medewerkers, updateMedewerker, voegMedewerkerToe, verwijderMedewerker } = usePersoneel();
+// Utility function to strip MG- prefixes from group names
+function stripMGPrefix(name: string): string {
+  if (!name) return name;
+  if (name.startsWith('MG-SECTOR-')) {
+    return name.substring('MG-SECTOR-'.length);
+  }
+  if (name.startsWith('MG-')) {
+    return name.substring('MG-'.length);
+  }
+  return name;
+}
 
+// Status display configuration
+const statusConfig: Record<ValidatieStatus, { label: string; className: string }> = {
+  nieuw: { label: 'Nieuw', className: 'status-nieuw' },
+  in_review: { label: 'In Review', className: 'status-review' },
+  goedgekeurd: { label: 'Goedgekeurd', className: 'status-goedgekeurd' },
+  afgekeurd: { label: 'Afgekeurd', className: 'status-afgekeurd' },
+  aangepast: { label: 'Aangepast', className: 'status-aangepast' },
+};
+
+export default function PersoneelLijst() {
+  // State for employee data from API
+  const [medewerkers, setMedewerkers] = useState<Medewerker[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Filter and search state
   const [zoekterm, setZoekterm] = useState('');
   const [filterSector, setFilterSector] = useState('');
   const [filterType, setFilterType] = useState<PersoneelType | ''>('');
@@ -44,12 +75,34 @@ export default function PersoneelLijst() {
   const [filterActief, setFilterActief] = useState<'' | 'ja' | 'nee'>('');
   const [showFilters, setShowFilters] = useState(false);
 
+  // Sort state
   const [sortKey, setSortKey] = useState<SortKey>('volledigeNaam');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
+  // Modal and selection state
   const [modalOpen, setModalOpen] = useState(false);
   const [bewerkMedewerker, setBewerkMedewerker] = useState<Medewerker | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Fetch employees on mount
+  useEffect(() => {
+    loadEmployees();
+  }, []);
+
+  async function loadEmployees() {
+    try {
+      setLoading(true);
+      setError(null);
+      const employees = await employeeService.getEmployees();
+      const mapped = employees.map(mapEmployeeToMedewerker);
+      setMedewerkers(mapped);
+    } catch (err) {
+      console.error('Failed to load employees:', err);
+      setError(err instanceof Error ? err.message : 'Kan medewerkers niet laden');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const gefilterd = useMemo(() => {
     let result = medewerkers;
@@ -140,17 +193,45 @@ export default function PersoneelLijst() {
     });
   };
 
-  const handleSave = (data: Partial<Medewerker>) => {
-    if (bewerkMedewerker) {
-      updateMedewerker(bewerkMedewerker.id, data);
-    } else {
-      voegMedewerkerToe(data as Omit<Medewerker, 'id' | 'aanmaakDatum' | 'laatstGewijzigd'>);
+  const handleSave = async (data: Partial<Medewerker>) => {
+    try {
+      setError(null);
+      if (bewerkMedewerker) {
+        const updateDto = mapMedewerkerToUpdateDto(data);
+        const updated = await employeeService.updateEmployee(bewerkMedewerker.id, updateDto);
+        setMedewerkers(prev =>
+          prev.map(m => (m.id === bewerkMedewerker.id ? mapEmployeeToMedewerker(updated) : m))
+        );
+      } else {
+        const createDto = mapMedewerkerToCreateDto(data);
+        const created = await employeeService.createEmployee(createDto);
+        setMedewerkers(prev => [...prev, mapEmployeeToMedewerker(created)]);
+      }
+      setModalOpen(false);
+      setBewerkMedewerker(null);
+    } catch (err) {
+      console.error('Failed to save employee:', err);
+      setError(err instanceof Error ? err.message : 'Kan medewerker niet opslaan');
     }
   };
 
-  const handleDelete = (id: string) => {
-    if (window.confirm('Weet u zeker dat u deze medewerker wilt verwijderen?')) {
-      verwijderMedewerker(id);
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Weet u zeker dat u deze medewerker wilt verwijderen?')) {
+      return;
+    }
+
+    try {
+      setError(null);
+      await employeeService.deleteEmployee(id);
+      setMedewerkers(prev => prev.filter(m => m.id !== id));
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    } catch (err) {
+      console.error('Failed to delete employee:', err);
+      setError(err instanceof Error ? err.message : 'Kan medewerker niet verwijderen');
     }
   };
 
@@ -165,8 +246,34 @@ export default function PersoneelLijst() {
 
   const hasActiveFilters = filterSector || filterType || filterRegime || filterStatus || filterActief;
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="page">
+        <div className="page-header">
+          <h1>Personeelslijst</h1>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px', gap: '12px' }}>
+          <Loader2 size={24} className="spin" />
+          <span>Medewerkers laden...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="page">
+      {/* Error banner */}
+      {error && (
+        <div className="alert alert-danger">
+          <AlertCircle size={20} />
+          <span>{error}</span>
+          <button className="alert-close" onClick={() => setError(null)}>
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
       <div className="page-header">
         <div>
           <h1>Personeelslijst</h1>
@@ -275,7 +382,7 @@ export default function PersoneelLijst() {
 
       {/* Tabel */}
       <div className="table-container">
-        <table className="data-table">
+        <table className="data-table personeel-table">
           <thead>
             <tr>
               <th className="th-checkbox">
@@ -297,7 +404,9 @@ export default function PersoneelLijst() {
               <th className="sortable" onClick={() => handleSort('dienst')}>
                 Dienst <SortIcon columnKey="dienst" sortKey={sortKey} sortDir={sortDir} />
               </th>
-              <th>Functie</th>
+              <th className="sortable" onClick={() => handleSort('functie')}>
+                Functie <SortIcon columnKey="functie" sortKey={sortKey} sortDir={sortDir} />
+              </th>
               <th className="sortable" onClick={() => handleSort('arbeidsRegime')}>
                 Regime <SortIcon columnKey="arbeidsRegime" sortKey={sortKey} sortDir={sortDir} />
               </th>
@@ -313,85 +422,86 @@ export default function PersoneelLijst() {
             </tr>
           </thead>
           <tbody>
-            {gefilterd.map(m => (
-              <tr key={m.id} className={!m.actief ? 'row-inactive' : ''}>
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.has(m.id)}
-                    onChange={() => toggleSelect(m.id)}
-                  />
-                </td>
-                <td className="td-name">
-                  <span className="name-text">{m.volledigeNaam}</span>
-                  {m.opmerkingen && (
-                    <span className="name-note" title={m.opmerkingen}>
-                      *
+            {gefilterd.map(m => {
+              const statusCfg = statusConfig[m.validatieStatus] || statusConfig.nieuw;
+
+              return (
+                <tr key={m.id} className={!m.actief ? 'row-inactive' : ''}>
+                  <td className="td-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(m.id)}
+                      onChange={() => toggleSelect(m.id)}
+                    />
+                  </td>
+                  <td className="td-name">
+                    <span className="employee-name">{m.volledigeNaam}</span>
+                  </td>
+                  <td className="td-email">{m.email}</td>
+                  <td>{stripMGPrefix(m.sector)}</td>
+                  <td>{stripMGPrefix(m.dienst)}</td>
+                  <td>{m.functie || '-'}</td>
+                  <td>
+                    <span className={`regime-badge regime-${m.arbeidsRegime}`}>
+                      {m.arbeidsRegime === 'voltijds'
+                        ? 'VT'
+                        : m.arbeidsRegime === 'deeltijds'
+                        ? 'DT'
+                        : 'VW'}
                     </span>
-                  )}
-                </td>
-                <td className="td-email">{m.email}</td>
-                <td>{m.sector}</td>
-                <td>{m.dienst}</td>
-                <td>{m.functie}</td>
-                <td>
-                  <span className={`regime-tag regime-${m.arbeidsRegime}`}>
-                    {m.arbeidsRegime === 'voltijds'
-                      ? 'VT'
-                      : m.arbeidsRegime === 'deeltijds'
-                      ? 'DT'
-                      : 'VW'}
-                  </span>
-                </td>
-                <td>
-                  <span className={`type-tag type-${m.type}`}>
-                    {m.type === 'personeel'
-                      ? 'Pers.'
-                      : m.type === 'vrijwilliger'
-                      ? 'Vrij.'
-                      : m.type === 'interim'
-                      ? 'Int.'
-                      : 'Ext.'}
-                  </span>
-                </td>
-                <td>
-                  {m.actief ? (
-                    <Check size={16} className="text-success" />
-                  ) : (
-                    <X size={16} className="text-danger" />
-                  )}
-                </td>
-                <td>
-                  <StatusBadge status={m.validatieStatus} />
-                </td>
-                <td>
-                  {m.bronAD ? (
-                    <span title="Azure AD"><Cloud size={16} className="text-info" /></span>
-                  ) : (
-                    <span title="Handmatig"><UserPlus size={16} className="text-muted" /></span>
-                  )}
-                </td>
-                <td className="td-actions">
-                  <button
-                    className="icon-btn"
-                    title="Bewerken"
-                    onClick={() => {
-                      setBewerkMedewerker(m);
-                      setModalOpen(true);
-                    }}
-                  >
-                    <Edit3 size={16} />
-                  </button>
-                  <button
-                    className="icon-btn icon-btn-danger"
-                    title="Verwijderen"
-                    onClick={() => handleDelete(m.id)}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td>
+                    <span className={`type-badge type-${m.type}`}>
+                      {m.type === 'personeel'
+                        ? 'Pers.'
+                        : m.type === 'vrijwilliger'
+                        ? 'Vrij.'
+                        : m.type === 'interim'
+                        ? 'Int.'
+                        : 'Ext.'}
+                    </span>
+                  </td>
+                  <td className="td-actief">
+                    {m.actief ? (
+                      <Check size={16} className="text-success" />
+                    ) : (
+                      <X size={16} className="text-danger" />
+                    )}
+                  </td>
+                  <td>
+                    <span className={`status-text ${statusCfg.className}`}>
+                      {statusCfg.label}
+                    </span>
+                  </td>
+                  <td className="td-bron">
+                    {m.bronAD ? (
+                      <span title="Azure AD"><Cloud size={18} className="bron-icon bron-azure" /></span>
+                    ) : (
+                      <span title="Handmatig"><UserPlus size={18} className="bron-icon bron-manual" /></span>
+                    )}
+                  </td>
+                  <td className="td-actions">
+                    <button
+                      className="icon-btn"
+                      title="Bewerken"
+                      onClick={() => {
+                        setBewerkMedewerker(m);
+                        setModalOpen(true);
+                      }}
+                    >
+                      <Edit3 size={16} />
+                    </button>
+                    <button
+                      className="icon-btn icon-btn-danger"
+                      title="Verwijderen"
+                      onClick={() => handleDelete(m.id)}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
             {gefilterd.length === 0 && (
               <tr>
                 <td colSpan={12} className="empty-state">

@@ -78,7 +78,22 @@ public class GraphEmployeeService : IEmployeeService
                 e.User.Department,
                 e.User.OfficeLocation,
                 e.User.MobilePhone,
-                e.Groups
+                e.Groups,
+                IsActive: true, // Default for Graph API users
+                Bron: "AzureAD",
+                IsHandmatigToegevoegd: false,
+                EmployeeType: "Personeel", // Default type
+                ArbeidsRegime: "Voltijds", // Default regime
+                PhotoUrl: null,
+                DienstId: null,
+                DienstNaam: null,
+                StartDatum: null,
+                EindDatum: null,
+                Telefoonnummer: null,
+                VrijwilligerDetails: null,
+                CreatedAt: DateTime.UtcNow,
+                UpdatedAt: null,
+                LastSyncedAt: DateTime.UtcNow
             )).OrderBy(e => e.DisplayName);
         }
         catch (Exception ex)
@@ -129,7 +144,22 @@ public class GraphEmployeeService : IEmployeeService
                 user.Department,
                 user.OfficeLocation,
                 user.MobilePhone,
-                mgGroups
+                mgGroups,
+                IsActive: true,
+                Bron: "AzureAD",
+                IsHandmatigToegevoegd: false,
+                EmployeeType: "Personeel",
+                ArbeidsRegime: "Voltijds",
+                PhotoUrl: null,
+                DienstId: null,
+                DienstNaam: null,
+                StartDatum: null,
+                EindDatum: null,
+                Telefoonnummer: null,
+                VrijwilligerDetails: null,
+                CreatedAt: DateTime.UtcNow,
+                UpdatedAt: null,
+                LastSyncedAt: DateTime.UtcNow
             );
         }
         catch (Exception ex)
@@ -156,7 +186,11 @@ public class GraphEmployeeService : IEmployeeService
                 u.Id!,
                 u.DisplayName ?? string.Empty,
                 u.Mail ?? string.Empty,
-                u.JobTitle
+                u.JobTitle,
+                EmployeeType: "Personeel",
+                ArbeidsRegime: "Voltijds",
+                IsActive: true,
+                DienstNaam: null
             )) ?? [];
         }
         catch (Exception ex)
@@ -164,5 +198,41 @@ public class GraphEmployeeService : IEmployeeService
             _logger.LogError(ex, "Error searching employees with query '{Query}'", query);
             throw;
         }
+    }
+
+    // New CRUD methods (not implemented - GraphEmployeeService is for sync only)
+    public Task<IEnumerable<EmployeeDto>> GetAllAsync(EmployeeFilter? filter = null, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("GraphEmployeeService does not support database operations. Use EmployeeService instead.");
+    }
+
+    public Task<EmployeeDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("GraphEmployeeService does not support database operations. Use EmployeeService instead.");
+    }
+
+    public Task<EmployeeDto> CreateAsync(CreateEmployeeDto dto, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("GraphEmployeeService does not support database operations. Use EmployeeService instead.");
+    }
+
+    public Task<EmployeeDto?> UpdateAsync(Guid id, UpdateEmployeeDto dto, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("GraphEmployeeService does not support database operations. Use EmployeeService instead.");
+    }
+
+    public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("GraphEmployeeService does not support database operations. Use EmployeeService instead.");
+    }
+
+    public Task<IEnumerable<EmployeeDto>> GetByDienstAsync(Guid dienstId, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("GraphEmployeeService does not support database operations. Use EmployeeService instead.");
+    }
+
+    public Task<IEnumerable<EmployeeDto>> GetVolunteersAsync(CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("GraphEmployeeService does not support database operations. Use EmployeeService instead.");
     }
 }

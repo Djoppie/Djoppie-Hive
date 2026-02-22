@@ -78,7 +78,16 @@ public class GraphDistributionGroupService : IDistributionGroupService
                 return null;
             }
 
-            var members = await GetGroupMembersAsync(groupId, cancellationToken);
+            // Fetch members, owners, and nested groups in parallel
+            var membersTask = GetGroupMembersAsync(groupId, cancellationToken);
+            var ownersTask = GetGroupOwnersAsync(groupId, cancellationToken);
+            var nestedGroupsTask = GetNestedGroupsAsync(groupId, cancellationToken);
+
+            await Task.WhenAll(membersTask, ownersTask, nestedGroupsTask);
+
+            var members = await membersTask;
+            var owners = await ownersTask;
+            var nestedGroups = await nestedGroupsTask;
 
             return new DistributionGroupDetailDto(
                 group.Id!,
@@ -86,7 +95,9 @@ public class GraphDistributionGroupService : IDistributionGroupService
                 group.Description,
                 group.Mail ?? string.Empty,
                 members.Count(),
-                members.ToList()
+                members.ToList(),
+                owners.ToList(),
+                nestedGroups.ToList()
             );
         }
         catch (Exception ex)
@@ -116,7 +127,11 @@ public class GraphDistributionGroupService : IDistributionGroupService
                         member.Id!,
                         member.DisplayName ?? string.Empty,
                         member.Mail ?? string.Empty,
-                        member.JobTitle
+                        member.JobTitle,
+                        EmployeeType: "Personeel",
+                        ArbeidsRegime: "Voltijds",
+                        IsActive: true,
+                        DienstNaam: null
                     ));
                 }
             }
@@ -126,6 +141,83 @@ public class GraphDistributionGroupService : IDistributionGroupService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error fetching members of group {GroupId}", groupId);
+            throw;
+        }
+    }
+
+    public async Task<IEnumerable<EmployeeSummaryDto>> GetGroupOwnersAsync(string groupId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var owners = await _graphClient.Groups[groupId].Owners
+                .GetAsync(config =>
+                {
+                    config.QueryParameters.Select = ["id", "displayName", "mail", "jobTitle"];
+                }, cancellationToken);
+
+            var result = new List<EmployeeSummaryDto>();
+
+            if (owners?.Value != null)
+            {
+                foreach (var owner in owners.Value.OfType<User>())
+                {
+                    result.Add(new EmployeeSummaryDto(
+                        owner.Id!,
+                        owner.DisplayName ?? string.Empty,
+                        owner.Mail ?? string.Empty,
+                        owner.JobTitle,
+                        EmployeeType: "Personeel",
+                        ArbeidsRegime: "Voltijds",
+                        IsActive: true,
+                        DienstNaam: null
+                    ));
+                }
+            }
+
+            _logger.LogInformation("Found {OwnerCount} owners for group {GroupId}", result.Count, groupId);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching owners of group {GroupId}", groupId);
+            throw;
+        }
+    }
+
+    public async Task<IEnumerable<NestedGroupDto>> GetNestedGroupsAsync(string groupId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var members = await _graphClient.Groups[groupId].Members
+                .GetAsync(config =>
+                {
+                    config.QueryParameters.Select = ["id", "displayName", "description", "mail"];
+                }, cancellationToken);
+
+            var result = new List<NestedGroupDto>();
+
+            if (members?.Value != null)
+            {
+                // Filter for Group type members only (nested groups/diensten)
+                foreach (var member in members.Value.OfType<Group>())
+                {
+                    var memberCount = await GetMemberCountAsync(member.Id!, cancellationToken);
+                    result.Add(new NestedGroupDto(
+                        member.Id!,
+                        member.DisplayName ?? string.Empty,
+                        member.Description,
+                        member.Mail,
+                        memberCount
+                    ));
+                }
+            }
+
+            _logger.LogInformation("Found {NestedGroupCount} nested groups in group {GroupId}", result.Count, groupId);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching nested groups of group {GroupId}", groupId);
             throw;
         }
     }

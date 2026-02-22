@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -12,33 +12,54 @@ import {
   LogOut,
   User,
   MailCheck,
+  Building2,
+  Heart,
+  RefreshCw,
 } from 'lucide-react';
 import diepenbeekLogo from '../assets/diepenbeek-logo.svg';
-import { usePersoneel } from '../context/PersoneelContext';
 import { useAuth } from '../auth/AuthProvider';
+import { validatieVerzoekenApi } from '../services/api';
+import ThemeToggle from './ThemeToggle';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/personeel', icon: Users, label: 'Personeelslijst' },
+  { to: '/vrijwilligers', icon: Heart, label: 'Vrijwilligers' },
   { to: '/validatie', icon: ClipboardCheck, label: 'Validatie' },
+  { to: '/sectoren', icon: Building2, label: 'Sectoren' },
   { to: '/distributiegroepen', icon: MailCheck, label: 'Distributiegroepen' },
   { to: '/uitnodigingen', icon: Mail, label: 'Uitnodigingen' },
   { to: '/rollen', icon: Shield, label: 'Rollen & Rechten' },
+  { to: '/sync', icon: RefreshCw, label: 'Sync Geschiedenis' },
   { to: '/import', icon: CloudDownload, label: 'AD Import' },
 ];
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const { medewerkers } = usePersoneel();
+  const [teValideren, setTeValideren] = useState(0);
   const { user, logout } = useAuth();
-  
+
   const handleLogout = () => {
     logout();
   };
 
-  const teValideren = medewerkers.filter(
-    m => m.validatieStatus === 'nieuw' || m.validatieStatus === 'in_review'
-  ).length;
+  // Load validation count from API
+  useEffect(() => {
+    const loadValidatieCount = async () => {
+      try {
+        const count = await validatieVerzoekenApi.getAantal();
+        setTeValideren(count);
+      } catch (error) {
+        console.error('Failed to load validation count:', error);
+      }
+    };
+
+    loadValidatieCount();
+
+    // Refresh count every 30 seconds
+    const interval = setInterval(loadValidatieCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="app-layout">
@@ -89,6 +110,14 @@ export default function Layout() {
         </nav>
 
         <div className="sidebar-footer">
+          <div className="footer-actions">
+            <ThemeToggle />
+            {sidebarOpen && (
+              <button className="logout-btn" title="Afmelden" onClick={handleLogout}>
+                <LogOut size={18} />
+              </button>
+            )}
+          </div>
           <div className="user-info">
             <div className="user-avatar">
               <User size={18} />
@@ -102,11 +131,6 @@ export default function Layout() {
               </div>
             )}
           </div>
-          {sidebarOpen && (
-            <button className="logout-btn" title="Afmelden" onClick={handleLogout}>
-              <LogOut size={18} />
-            </button>
-          )}
         </div>
       </aside>
 
