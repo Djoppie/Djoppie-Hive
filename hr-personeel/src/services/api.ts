@@ -312,14 +312,28 @@ export const healthApi = {
 
 export const syncApi = {
   /** Start een handmatige synchronisatie vanuit Microsoft Graph */
-  uitvoeren: () => fetchWithAuth<SyncResultaat>('/sync/uitvoeren', { method: 'POST' }),
+  uitvoeren: async (): Promise<SyncResultaat> => {
+    // Use test endpoint for development
+    const response = await fetch(`${API_BASE_URL}/sync/test`, { method: 'POST' });
+    if (!response.ok) throw new Error('Failed to start sync');
+    return response.json();
+  },
 
   /** Haal de huidige of laatste sync status op */
-  getStatus: () => fetchWithAuth<SyncStatusInfo>('/sync/status'),
+  getStatus: async (): Promise<SyncStatusInfo> => {
+    // Use test endpoint for development
+    const response = await fetch(`${API_BASE_URL}/sync/test/status`);
+    if (!response.ok) throw new Error('Failed to fetch sync status');
+    return response.json();
+  },
 
   /** Haal de sync geschiedenis op */
-  getGeschiedenis: (aantal = 10) =>
-    fetchWithAuth<SyncLogboekItem[]>(`/sync/geschiedenis?aantal=${aantal}`),
+  getGeschiedenis: async (aantal = 10): Promise<SyncLogboekItem[]> => {
+    // Use test endpoint for development
+    const response = await fetch(`${API_BASE_URL}/sync/test/geschiedenis?aantal=${aantal}`);
+    if (!response.ok) throw new Error('Failed to fetch sync history');
+    return response.json();
+  },
 };
 
 export const validatieVerzoekenApi = {
@@ -352,6 +366,73 @@ export const validatieVerzoekenApi = {
     // Use test endpoint for development
     const response = await fetch(`${API_BASE_URL}/validatieverzoeken/test/aantal${params}`);
     if (!response.ok) throw new Error('Failed to fetch validation count');
+    return response.json();
+  },
+};
+
+// ============================================
+// Statistics API
+// ============================================
+
+export interface SectorStatistiek {
+  sectorNaam: string;
+  aantalMedewerkers: number;
+  aantalDiensten: number;
+}
+
+export interface VogStatistieken {
+  totaalVrijwilligers: number;
+  metGeldigeVog: number;
+  vogVerlooptBinnenkort: number;
+  vogVerlopen: number;
+  zonderVog: number;
+}
+
+export interface DashboardStatistics {
+  // Totalen
+  totaalMedewerkers: number;
+  actiefPersoneel: number;
+  inactiefPersoneel: number;
+  vrijwilligers: number;
+  interimmers: number;
+  externen: number;
+  stagiairs: number;
+
+  // Data bronnen
+  vanuitAzure: number;
+  handmatigToegevoegd: number;
+
+  // Arbeidsregime
+  voltijds: number;
+  deeltijds: number;
+  vrijwilligersRegime: number;
+
+  // Validatie
+  openValidaties: number;
+
+  // Sync info
+  laatseSyncOp: string | null;
+  laatseSyncStatus: string | null;
+  totaalSyncs: number;
+
+  // Distributiegroepen
+  totaalGroepen: number;
+  totaalSectoren: number;
+  totaalDiensten: number;
+
+  // Per sector breakdown
+  perSector: SectorStatistiek[];
+
+  // VOG statistieken
+  vogStatistieken: VogStatistieken;
+}
+
+export const statisticsApi = {
+  /** Haal dashboard statistieken op */
+  getDashboard: async (): Promise<DashboardStatistics> => {
+    // Use test endpoint for development
+    const response = await fetch(`${API_BASE_URL}/statistics/test/dashboard`);
+    if (!response.ok) throw new Error('Failed to fetch dashboard statistics');
     return response.json();
   },
 };

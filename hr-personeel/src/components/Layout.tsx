@@ -14,6 +14,7 @@ import {
   MailCheck,
   Building2,
   Heart,
+  RefreshCw,
 } from 'lucide-react';
 import diepenbeekLogo from '../assets/diepenbeek-logo.svg';
 import { useAuth } from '../auth/AuthProvider';
@@ -28,6 +29,7 @@ const navItems = [
   { to: '/distributiegroepen', icon: MailCheck, label: 'Distributiegroepen' },
   { to: '/uitnodigingen', icon: Mail, label: 'Uitnodigingen' },
   { to: '/rollen', icon: Shield, label: 'Rollen & Rechten' },
+  { to: '/sync', icon: RefreshCw, label: 'Sync Geschiedenis' },
   { to: '/import', icon: CloudDownload, label: 'AD Import' },
 ];
 

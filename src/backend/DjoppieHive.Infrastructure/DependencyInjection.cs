@@ -33,6 +33,9 @@ public static class DependencyInjection
         // Register ValidatieVerzoekService (doesn't depend on Graph)
         services.AddScoped<IValidatieVerzoekService, ValidatieVerzoekService>();
 
+        // Register StatisticsService (doesn't depend on Graph)
+        services.AddScoped<IStatisticsService, StatisticsService>();
+
         // Register database-backed EmployeeService (primary service for CRUD operations)
         services.AddScoped<EmployeeService>();
 

@@ -11,6 +11,7 @@ import ADImport from './pages/ADImport';
 import DistributieGroepen from './pages/DistributieGroepen';
 import SectorHierarchy from './pages/SectorHierarchy';
 import Vrijwilligers from './pages/Vrijwilligers';
+import SyncGeschiedenis from './pages/SyncGeschiedenis';
 
 export default function App() {
   return (
@@ -27,6 +28,7 @@ export default function App() {
               <Route path="/sectoren" element={<SectorHierarchy />} />
               <Route path="/uitnodigingen" element={<Uitnodigingen />} />
               <Route path="/rollen" element={<Rollen />} />
+              <Route path="/sync" element={<SyncGeschiedenis />} />
               <Route path="/import" element={<ADImport />} />
             </Route>
           </Routes>

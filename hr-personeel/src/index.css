@@ -2900,3 +2900,133 @@ input[type="checkbox"] {
   flex-wrap: wrap;
   gap: 4px;
 }
+
+/* ============================================
+   Dashboard Statistics Styles
+   ============================================ */
+
+.sync-status-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sync-status-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.sync-status-item:last-child {
+  border-bottom: none;
+}
+
+.sync-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.sync-value {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.vog-status-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.vog-status-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 12px;
+  border-radius: var(--border-radius);
+  background: var(--bg-main);
+  text-align: center;
+  gap: 8px;
+}
+
+.vog-status-item.vog-valid {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.vog-status-item.vog-warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.vog-status-item.vog-expired {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.vog-status-item.vog-missing {
+  background: var(--bg-main);
+  color: var(--text-muted);
+}
+
+.vog-count {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.vog-label {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.inline-icon {
+  display: inline;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
+.sector-diensten {
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: var(--border-radius);
+  font-size: 13px;
+}
+
+.alert-warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+.mt-3 {
+  margin-top: 16px;
+}
+
+.mb-4 {
+  margin-bottom: 24px;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-info {
+  color: var(--color-info);
+}
+
+/* Badge variants in table */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}

@@ -111,4 +111,34 @@ public class SyncController : ControllerBase
         var geschiedenis = await _syncService.GetSyncGeschiedenisAsync(aantal, cancellationToken);
         return Ok(geschiedenis);
     }
+
+    // ============================================
+    // TEST ENDPOINTS (geen authenticatie vereist)
+    // ============================================
+
+    /// <summary>
+    /// [TEST] Haalt sync status op zonder authenticatie.
+    /// </summary>
+    [HttpGet("test/status")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(SyncStatusDto), StatusCodes.Status200OK)]
+    public async Task<ActionResult<SyncStatusDto>> TestGetStatus(CancellationToken cancellationToken)
+    {
+        var status = await _syncService.GetSyncStatusAsync(cancellationToken);
+        return Ok(status);
+    }
+
+    /// <summary>
+    /// [TEST] Haalt sync geschiedenis op zonder authenticatie.
+    /// </summary>
+    [HttpGet("test/geschiedenis")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(IEnumerable<SyncLogboekDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IEnumerable<SyncLogboekDto>>> TestGetGeschiedenis(
+        [FromQuery] int aantal = 10,
+        CancellationToken cancellationToken = default)
+    {
+        var geschiedenis = await _syncService.GetSyncGeschiedenisAsync(aantal, cancellationToken);
+        return Ok(geschiedenis);
+    }
 }
