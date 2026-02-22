@@ -1,15 +1,19 @@
 /* ===========================================
    HR Personeelsbeheer - Gemeente Diepenbeek
    Modern, clean professional interface
+   With Neumorphic Design System
    =========================================== */
 
-/* ---------- CSS Variables ---------- */
-:root {
+/* ---------- CSS Variables - Light Theme ---------- */
+:root,
+[data-theme="light"] {
+  /* Diepenbeek Orange - Primary Brand Color */
   --color-primary: #ea580c;
   --color-primary-light: #f97316;
   --color-primary-dark: #c2410c;
   --color-primary-bg: #fff7ed;
 
+  /* Status Colors */
   --color-success: #16a34a;
   --color-success-light: #22c55e;
   --color-success-bg: #f0fdf4;
@@ -29,34 +33,119 @@
   --color-muted: #6b7280;
   --color-muted-light: #9ca3af;
 
-  --bg-main: #faf5f0;
-  --bg-card: #ffffff;
+  /* Light Theme Backgrounds */
+  --bg-main: #f0ebe5;
+  --bg-card: #f5f0ea;
+  --bg-elevated: #ffffff;
   --bg-sidebar: #1c1917;
   --bg-sidebar-hover: #292524;
   --bg-sidebar-active: #ea580c;
+  --bg-input: #f5f0ea;
 
+  /* Light Theme Text */
   --text-primary: #1c1917;
   --text-secondary: #57534e;
   --text-muted: #a8a29e;
   --text-sidebar: #d6d3d1;
   --text-sidebar-active: #ffffff;
 
-  --border-color: #e2e8f0;
-  --border-radius: 8px;
-  --border-radius-lg: 12px;
-  --border-radius-sm: 4px;
+  /* Light Theme Borders */
+  --border-color: #d6d1cb;
+  --border-color-light: #e8e4de;
 
+  /* Neumorphic Shadows - Light Theme */
+  --neu-shadow-light: #ffffff;
+  --neu-shadow-dark: rgba(166, 161, 155, 0.5);
+  --neu-shadow: 6px 6px 12px var(--neu-shadow-dark),
+                -6px -6px 12px var(--neu-shadow-light);
+  --neu-shadow-sm: 3px 3px 6px var(--neu-shadow-dark),
+                   -3px -3px 6px var(--neu-shadow-light);
+  --neu-shadow-inset: inset 3px 3px 6px var(--neu-shadow-dark),
+                      inset -3px -3px 6px var(--neu-shadow-light);
+  --neu-shadow-pressed: inset 2px 2px 5px var(--neu-shadow-dark),
+                        inset -2px -2px 5px var(--neu-shadow-light);
+
+  /* Standard Shadows */
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
   --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
   --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
 
+  /* Border Radius */
+  --border-radius: 12px;
+  --border-radius-lg: 16px;
+  --border-radius-sm: 8px;
+  --border-radius-xs: 4px;
+
+  /* Sidebar */
   --sidebar-width: 260px;
   --sidebar-collapsed: 64px;
 
+  /* Font */
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 14px;
   line-height: 1.5;
   color: var(--text-primary);
+}
+
+/* ---------- CSS Variables - Dark Theme ---------- */
+[data-theme="dark"] {
+  /* Diepenbeek Orange - Primary Brand Color (unchanged) */
+  --color-primary: #f97316;
+  --color-primary-light: #fb923c;
+  --color-primary-dark: #ea580c;
+  --color-primary-bg: #431407;
+
+  /* Status Colors - Dark Theme */
+  --color-success: #22c55e;
+  --color-success-light: #4ade80;
+  --color-success-bg: #14532d;
+
+  --color-warning: #f59e0b;
+  --color-warning-light: #fbbf24;
+  --color-warning-bg: #451a03;
+
+  --color-danger: #ef4444;
+  --color-danger-light: #f87171;
+  --color-danger-bg: #450a0a;
+
+  --color-info: #06b6d4;
+  --color-info-light: #22d3ee;
+  --color-info-bg: #083344;
+
+  --color-muted: #9ca3af;
+  --color-muted-light: #d1d5db;
+
+  /* Dark Theme Backgrounds */
+  --bg-main: #1a1a1a;
+  --bg-card: #242424;
+  --bg-elevated: #2d2d2d;
+  --bg-sidebar: #0f0f0f;
+  --bg-sidebar-hover: #1a1a1a;
+  --bg-sidebar-active: #f97316;
+  --bg-input: #2d2d2d;
+
+  /* Dark Theme Text */
+  --text-primary: #f5f5f5;
+  --text-secondary: #d4d4d4;
+  --text-muted: #737373;
+  --text-sidebar: #a3a3a3;
+  --text-sidebar-active: #ffffff;
+
+  /* Dark Theme Borders */
+  --border-color: #404040;
+  --border-color-light: #333333;
+
+  /* Neumorphic Shadows - Dark Theme */
+  --neu-shadow-light: rgba(60, 60, 60, 0.5);
+  --neu-shadow-dark: rgba(0, 0, 0, 0.7);
+  --neu-shadow: 6px 6px 12px var(--neu-shadow-dark),
+                -6px -6px 12px var(--neu-shadow-light);
+  --neu-shadow-sm: 3px 3px 6px var(--neu-shadow-dark),
+                   -3px -3px 6px var(--neu-shadow-light);
+  --neu-shadow-inset: inset 3px 3px 6px var(--neu-shadow-dark),
+                      inset -3px -3px 6px var(--neu-shadow-light);
+  --neu-shadow-pressed: inset 2px 2px 5px var(--neu-shadow-dark),
+                        inset -2px -2px 5px var(--neu-shadow-light);
 }
 
 /* ---------- Reset ---------- */
@@ -460,9 +549,23 @@ button {
 .card {
   background: var(--bg-card);
   border-radius: var(--border-radius-lg);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color);
+  box-shadow: var(--neu-shadow);
+  border: none;
   padding: 20px;
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+/* Neumorphic Card Variants */
+.card.neu-flat {
+  box-shadow: var(--neu-shadow-sm);
+}
+
+.card.neu-pressed {
+  box-shadow: var(--neu-shadow-pressed);
 }
 
 .card-title {
@@ -483,12 +586,18 @@ button {
 .stat-card {
   background: var(--bg-card);
   border-radius: var(--border-radius-lg);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color);
+  box-shadow: var(--neu-shadow-sm);
+  border: none;
   padding: 20px;
   display: flex;
   align-items: center;
   gap: 16px;
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--neu-shadow);
 }
 
 .stat-icon {
@@ -841,8 +950,8 @@ button {
 .table-container {
   background: var(--bg-card);
   border-radius: var(--border-radius-lg);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color);
+  box-shadow: var(--neu-shadow-sm);
+  border: none;
   overflow-x: auto;
 }
 
@@ -861,7 +970,7 @@ button {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-secondary);
-  background: linear-gradient(to bottom, #fafafa 0%, #f5f5f5 100%);
+  background: var(--bg-elevated);
   border-bottom: 2px solid var(--border-color);
   white-space: nowrap;
   user-select: none;
@@ -877,7 +986,7 @@ button {
 
 .data-table th.sortable:hover {
   color: var(--color-primary);
-  background: linear-gradient(to bottom, #fff7ed 0%, #ffedd5 100%);
+  background: var(--color-primary-bg);
 }
 
 .data-table th svg {
@@ -898,7 +1007,7 @@ button {
 
 .data-table td {
   padding: 14px 16px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-color-light);
   vertical-align: middle;
   transition: background-color 0.15s ease;
 }
@@ -908,8 +1017,8 @@ button {
 }
 
 .data-table tbody tr:hover {
-  background: linear-gradient(to right, rgba(249,115,22,0.03) 0%, rgba(249,115,22,0.01) 100%);
-  box-shadow: inset 2px 0 0 var(--color-primary);
+  background: var(--color-primary-bg);
+  box-shadow: inset 3px 0 0 var(--color-primary);
 }
 
 .data-table tbody tr:last-child td {
@@ -1251,90 +1360,6 @@ button {
 
 .alert-close:hover {
   opacity: 0.7;
-}
-
-/* Functieniveau tags */
-.niveau-tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 600;
-  white-space: nowrap;
-  letter-spacing: 0.01em;
-  border: 1px solid transparent;
-  transition: all 0.15s ease;
-}
-
-.niveau-algemeenDirecteur {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  color: #92400e;
-  border-color: #fcd34d;
-  box-shadow: 0 1px 2px rgba(146,64,14,0.1);
-}
-
-.niveau-sectormanager {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  color: #1e40af;
-  border-color: #93c5fd;
-  box-shadow: 0 1px 2px rgba(30,64,175,0.1);
-}
-
-.niveau-teamcoordinator {
-  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
-  color: #3730a3;
-  border-color: #a5b4fc;
-  box-shadow: 0 1px 2px rgba(55,48,163,0.1);
-}
-
-.niveau-deskundige {
-  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-  color: #065f46;
-  border-color: #6ee7b7;
-  box-shadow: 0 1px 2px rgba(6,95,70,0.1);
-}
-
-.niveau-administratiefMedewerker {
-  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-  color: #374151;
-  border-color: #d1d5db;
-  box-shadow: 0 1px 2px rgba(55,65,81,0.1);
-}
-
-.niveau-vrijwilliger {
-  background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
-  color: #9d174d;
-  border-color: #f9a8d4;
-  box-shadow: 0 1px 2px rgba(157,23,77,0.1);
-}
-
-.niveau-extern {
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-  color: #475569;
-  border-color: #cbd5e1;
-  box-shadow: 0 1px 2px rgba(71,85,105,0.1);
-}
-
-.niveau-stagiair {
-  background: linear-gradient(135deg, #ecfccb 0%, #d9f99d 100%);
-  color: #3f6212;
-  border-color: #bef264;
-  box-shadow: 0 1px 2px rgba(63,98,18,0.1);
-}
-
-.niveau-flex {
-  background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%);
-  color: #854d0e;
-  border-color: #fde047;
-  box-shadow: 0 1px 2px rgba(133,77,14,0.1);
-}
-
-.niveau-onbekend {
-  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
-  color: #6b7280;
-  border-color: #e5e7eb;
-  box-shadow: 0 1px 2px rgba(107,114,128,0.1);
 }
 
 /* ---------- Role Badges ---------- */
@@ -3589,4 +3614,177 @@ input[type="checkbox"] {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+}
+
+/* ===========================================
+   Theme Toggle - Neumorphic Design
+   =========================================== */
+
+.theme-toggle {
+  background: var(--bg-sidebar-hover);
+  border: none;
+  border-radius: 24px;
+  cursor: pointer;
+  padding: 4px;
+  width: 56px;
+  height: 32px;
+  position: relative;
+  box-shadow: inset 2px 2px 4px rgba(0,0,0,0.3),
+              inset -1px -1px 3px rgba(255,255,255,0.05);
+  transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+  background: var(--bg-sidebar-active);
+}
+
+.theme-toggle:focus {
+  outline: none;
+  box-shadow: inset 2px 2px 4px rgba(0,0,0,0.3),
+              inset -1px -1px 3px rgba(255,255,255,0.05),
+              0 0 0 2px var(--color-primary);
+}
+
+.theme-toggle-track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+}
+
+.theme-toggle-thumb {
+  position: absolute;
+  top: 50%;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-50%);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 2px 2px 4px rgba(0,0,0,0.2),
+              -1px -1px 3px rgba(255,255,255,0.1);
+}
+
+.theme-toggle-thumb.light {
+  left: 2px;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #ffffff;
+}
+
+.theme-toggle-thumb.dark {
+  left: calc(100% - 26px);
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: #ffffff;
+}
+
+.theme-toggle-icons {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px;
+  pointer-events: none;
+}
+
+.theme-toggle-icons .icon-sun {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.theme-toggle-icons .icon-moon {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Footer Actions in Sidebar */
+.footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding: 0 4px;
+}
+
+.sidebar.collapsed .footer-actions {
+  justify-content: center;
+}
+
+.sidebar.collapsed .theme-toggle {
+  width: 40px;
+  height: 28px;
+}
+
+.sidebar.collapsed .theme-toggle-thumb {
+  width: 20px;
+  height: 20px;
+}
+
+.sidebar.collapsed .theme-toggle-thumb.dark {
+  left: calc(100% - 22px);
+}
+
+.sidebar.collapsed .theme-toggle-icons {
+  display: none;
+}
+
+/* Neumorphic Button Styles */
+.btn-neu {
+  background: var(--bg-card);
+  border: none;
+  border-radius: var(--border-radius);
+  box-shadow: var(--neu-shadow-sm);
+  cursor: pointer;
+  padding: 10px 20px;
+  color: var(--text-primary);
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-neu:hover {
+  box-shadow: var(--neu-shadow);
+}
+
+.btn-neu:active {
+  box-shadow: var(--neu-shadow-pressed);
+}
+
+.btn-neu.btn-neu-primary {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: white;
+}
+
+/* Neumorphic Input Styles */
+.input-neu {
+  background: var(--bg-input);
+  border: none;
+  border-radius: var(--border-radius-sm);
+  box-shadow: var(--neu-shadow-inset);
+  padding: 12px 16px;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+}
+
+.input-neu:focus {
+  outline: none;
+  box-shadow: var(--neu-shadow-inset),
+              0 0 0 2px var(--color-primary);
+}
+
+/* Smooth theme transitions */
+body,
+.card,
+.sidebar,
+.main-content,
+.btn,
+.form-input,
+.table,
+input,
+textarea,
+select {
+  transition: background-color 0.3s ease,
+              color 0.3s ease,
+              border-color 0.3s ease,
+              box-shadow 0.3s ease;
 }

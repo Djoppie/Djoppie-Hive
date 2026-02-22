@@ -77,7 +77,6 @@ export function PersoneelProvider({ children }: { children: ReactNode }) {
         }));
         if (convertedGroups.length > 0) {
           setDistributieGroepen(convertedGroups);
-          console.log('Loaded', convertedGroups.length, 'MG- groups from API');
         }
       } catch (err) {
         console.error('Failed to fetch from API, using mock data:', err);
@@ -136,6 +135,7 @@ export function PersoneelProvider({ children }: { children: ReactNode }) {
       afdeling: data.afdeling || '',
       dienst: data.dienst || '',
       sector: data.sector || '',
+      functieniveau: data.functieniveau || 'onbekend',
       arbeidsRegime: data.arbeidsRegime || 'voltijds',
       type: data.type || 'personeel',
       actief: data.actief ?? true,

@@ -8,7 +8,7 @@ import type {
   AfhandelValidatieRequest,
 } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://localhost:7001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5014/api';
 
 // Get access token for API calls
 async function getAccessToken(): Promise<string | null> {
@@ -128,19 +128,6 @@ export interface VrijwilligerDetails {
   vogGeldigTot?: string | null;
 }
 
-// Functieniveau types matching backend API
-export type FunctieniveauAPI =
-  | 'AlgemeenDirecteur'
-  | 'Sectormanager'
-  | 'Teamcoordinator'
-  | 'Deskundige'
-  | 'AdministratiefMedewerker'
-  | 'Vrijwilliger'
-  | 'Extern'
-  | 'Stagiair'
-  | 'Flex'
-  | 'Onbekend';
-
 // Validatie status for employee records
 export type ValidatieStatusAPI = 'Nieuw' | 'InReview' | 'Goedgekeurd' | 'Afgekeurd';
 
@@ -160,7 +147,6 @@ export interface Employee {
   isHandmatigToegevoegd: boolean;
   employeeType: EmployeeType;
   arbeidsRegime: ArbeidsRegimeAPI;
-  functieniveau: FunctieniveauAPI;
   validatieStatus: ValidatieStatusAPI;
   gevalideerdDoor?: string | null;
   validatieDatum?: string | null;

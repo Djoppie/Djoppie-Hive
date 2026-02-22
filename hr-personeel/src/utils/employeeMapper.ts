@@ -60,8 +60,8 @@ export function mapEmployeeToMedewerker(employee: Employee): Medewerker {
     telefoon: employee.mobilePhone || employee.telefoonnummer || undefined,
     functie: employee.jobTitle || undefined,
     afdeling: employee.department || undefined,
-    dienst: employee.dienstNaam || employee.department || '',
-    sector: employee.department || '', // TODO: Map properly when sector data is available
+    dienst: employee.dienstNaam || '',
+    sector: employee.sectorNaam || '',
     arbeidsRegime: mapArbeidsRegimeFromAPI(employee.arbeidsRegime),
     type: mapEmployeeTypeToPersoneelType(employee.employeeType),
     actief: employee.isActive,

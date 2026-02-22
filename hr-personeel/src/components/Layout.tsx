@@ -19,6 +19,7 @@ import {
 import diepenbeekLogo from '../assets/diepenbeek-logo.svg';
 import { useAuth } from '../auth/AuthProvider';
 import { validatieVerzoekenApi } from '../services/api';
+import ThemeToggle from './ThemeToggle';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -109,6 +110,14 @@ export default function Layout() {
         </nav>
 
         <div className="sidebar-footer">
+          <div className="footer-actions">
+            <ThemeToggle />
+            {sidebarOpen && (
+              <button className="logout-btn" title="Afmelden" onClick={handleLogout}>
+                <LogOut size={18} />
+              </button>
+            )}
+          </div>
           <div className="user-info">
             <div className="user-avatar">
               <User size={18} />
@@ -122,11 +131,6 @@ export default function Layout() {
               </div>
             )}
           </div>
-          {sidebarOpen && (
-            <button className="logout-btn" title="Afmelden" onClick={handleLogout}>
-              <LogOut size={18} />
-            </button>
-          )}
         </div>
       </aside>
 
