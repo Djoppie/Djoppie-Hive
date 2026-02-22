@@ -15,7 +15,6 @@ import {
   AlertCircle,
   Loader2,
 } from 'lucide-react';
-import StatusBadge from '../components/StatusBadge';
 import MedewerkerModal from '../components/MedewerkerModal';
 import type { Medewerker, ArbeidsRegime, PersoneelType, ValidatieStatus } from '../types';
 import { employeeService } from '../services/employeeService';
@@ -26,7 +25,7 @@ import {
 } from '../utils/employeeMapper';
 import { alleSectoren } from '../data/mockData';
 
-type SortKey = 'volledigeNaam' | 'email' | 'sector' | 'dienst' | 'type' | 'arbeidsRegime' | 'validatieStatus';
+type SortKey = 'volledigeNaam' | 'email' | 'sector' | 'dienst' | 'functie' | 'type' | 'arbeidsRegime' | 'validatieStatus';
 type SortDir = 'asc' | 'desc';
 
 interface SortIconProps {
@@ -39,6 +38,27 @@ function SortIcon({ columnKey, sortKey, sortDir }: SortIconProps) {
   if (sortKey !== columnKey) return null;
   return sortDir === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />;
 }
+
+// Utility function to strip MG- prefixes from group names
+function stripMGPrefix(name: string): string {
+  if (!name) return name;
+  if (name.startsWith('MG-SECTOR-')) {
+    return name.substring('MG-SECTOR-'.length);
+  }
+  if (name.startsWith('MG-')) {
+    return name.substring('MG-'.length);
+  }
+  return name;
+}
+
+// Status display configuration
+const statusConfig: Record<ValidatieStatus, { label: string; className: string }> = {
+  nieuw: { label: 'Nieuw', className: 'status-nieuw' },
+  in_review: { label: 'In Review', className: 'status-review' },
+  goedgekeurd: { label: 'Goedgekeurd', className: 'status-goedgekeurd' },
+  afgekeurd: { label: 'Afgekeurd', className: 'status-afgekeurd' },
+  aangepast: { label: 'Aangepast', className: 'status-aangepast' },
+};
 
 export default function PersoneelLijst() {
   // State for employee data from API
@@ -177,14 +197,12 @@ export default function PersoneelLijst() {
     try {
       setError(null);
       if (bewerkMedewerker) {
-        // Update existing employee
         const updateDto = mapMedewerkerToUpdateDto(data);
         const updated = await employeeService.updateEmployee(bewerkMedewerker.id, updateDto);
         setMedewerkers(prev =>
           prev.map(m => (m.id === bewerkMedewerker.id ? mapEmployeeToMedewerker(updated) : m))
         );
       } else {
-        // Create new employee
         const createDto = mapMedewerkerToCreateDto(data);
         const created = await employeeService.createEmployee(createDto);
         setMedewerkers(prev => [...prev, mapEmployeeToMedewerker(created)]);
@@ -247,30 +265,11 @@ export default function PersoneelLijst() {
     <div className="page">
       {/* Error banner */}
       {error && (
-        <div style={{
-          padding: '12px 16px',
-          marginBottom: '16px',
-          backgroundColor: '#FEE',
-          border: '1px solid #F44336',
-          borderRadius: '4px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-        }}>
-          <AlertCircle size={20} style={{ color: '#F44336', flexShrink: 0 }} />
-          <span style={{ color: '#D32F2F', flex: 1 }}>{error}</span>
-          <button
-            onClick={() => setError(null)}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '4px',
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <X size={16} style={{ color: '#D32F2F' }} />
+        <div className="alert alert-danger">
+          <AlertCircle size={20} />
+          <span>{error}</span>
+          <button className="alert-close" onClick={() => setError(null)}>
+            <X size={16} />
           </button>
         </div>
       )}
@@ -383,7 +382,7 @@ export default function PersoneelLijst() {
 
       {/* Tabel */}
       <div className="table-container">
-        <table className="data-table">
+        <table className="data-table personeel-table">
           <thead>
             <tr>
               <th className="th-checkbox">
@@ -405,7 +404,9 @@ export default function PersoneelLijst() {
               <th className="sortable" onClick={() => handleSort('dienst')}>
                 Dienst <SortIcon columnKey="dienst" sortKey={sortKey} sortDir={sortDir} />
               </th>
-              <th>Functie</th>
+              <th className="sortable" onClick={() => handleSort('functie')}>
+                Functie <SortIcon columnKey="functie" sortKey={sortKey} sortDir={sortDir} />
+              </th>
               <th className="sortable" onClick={() => handleSort('arbeidsRegime')}>
                 Regime <SortIcon columnKey="arbeidsRegime" sortKey={sortKey} sortDir={sortDir} />
               </th>
@@ -421,85 +422,86 @@ export default function PersoneelLijst() {
             </tr>
           </thead>
           <tbody>
-            {gefilterd.map(m => (
-              <tr key={m.id} className={!m.actief ? 'row-inactive' : ''}>
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.has(m.id)}
-                    onChange={() => toggleSelect(m.id)}
-                  />
-                </td>
-                <td className="td-name">
-                  <span className="name-text">{m.volledigeNaam}</span>
-                  {m.opmerkingen && (
-                    <span className="name-note" title={m.opmerkingen}>
-                      *
+            {gefilterd.map(m => {
+              const statusCfg = statusConfig[m.validatieStatus] || statusConfig.nieuw;
+
+              return (
+                <tr key={m.id} className={!m.actief ? 'row-inactive' : ''}>
+                  <td className="td-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(m.id)}
+                      onChange={() => toggleSelect(m.id)}
+                    />
+                  </td>
+                  <td className="td-name">
+                    <span className="employee-name">{m.volledigeNaam}</span>
+                  </td>
+                  <td className="td-email">{m.email}</td>
+                  <td>{stripMGPrefix(m.sector)}</td>
+                  <td>{stripMGPrefix(m.dienst)}</td>
+                  <td>{m.functie || '-'}</td>
+                  <td>
+                    <span className={`regime-badge regime-${m.arbeidsRegime}`}>
+                      {m.arbeidsRegime === 'voltijds'
+                        ? 'VT'
+                        : m.arbeidsRegime === 'deeltijds'
+                        ? 'DT'
+                        : 'VW'}
                     </span>
-                  )}
-                </td>
-                <td className="td-email">{m.email}</td>
-                <td>{m.sector}</td>
-                <td>{m.dienst}</td>
-                <td>{m.functie}</td>
-                <td>
-                  <span className={`regime-tag regime-${m.arbeidsRegime}`}>
-                    {m.arbeidsRegime === 'voltijds'
-                      ? 'VT'
-                      : m.arbeidsRegime === 'deeltijds'
-                      ? 'DT'
-                      : 'VW'}
-                  </span>
-                </td>
-                <td>
-                  <span className={`type-tag type-${m.type}`}>
-                    {m.type === 'personeel'
-                      ? 'Pers.'
-                      : m.type === 'vrijwilliger'
-                      ? 'Vrij.'
-                      : m.type === 'interim'
-                      ? 'Int.'
-                      : 'Ext.'}
-                  </span>
-                </td>
-                <td>
-                  {m.actief ? (
-                    <Check size={16} className="text-success" />
-                  ) : (
-                    <X size={16} className="text-danger" />
-                  )}
-                </td>
-                <td>
-                  <StatusBadge status={m.validatieStatus} />
-                </td>
-                <td>
-                  {m.bronAD ? (
-                    <span title="Azure AD"><Cloud size={16} className="text-info" /></span>
-                  ) : (
-                    <span title="Handmatig"><UserPlus size={16} className="text-muted" /></span>
-                  )}
-                </td>
-                <td className="td-actions">
-                  <button
-                    className="icon-btn"
-                    title="Bewerken"
-                    onClick={() => {
-                      setBewerkMedewerker(m);
-                      setModalOpen(true);
-                    }}
-                  >
-                    <Edit3 size={16} />
-                  </button>
-                  <button
-                    className="icon-btn icon-btn-danger"
-                    title="Verwijderen"
-                    onClick={() => handleDelete(m.id)}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td>
+                    <span className={`type-badge type-${m.type}`}>
+                      {m.type === 'personeel'
+                        ? 'Pers.'
+                        : m.type === 'vrijwilliger'
+                        ? 'Vrij.'
+                        : m.type === 'interim'
+                        ? 'Int.'
+                        : 'Ext.'}
+                    </span>
+                  </td>
+                  <td className="td-actief">
+                    {m.actief ? (
+                      <Check size={16} className="text-success" />
+                    ) : (
+                      <X size={16} className="text-danger" />
+                    )}
+                  </td>
+                  <td>
+                    <span className={`status-text ${statusCfg.className}`}>
+                      {statusCfg.label}
+                    </span>
+                  </td>
+                  <td className="td-bron">
+                    {m.bronAD ? (
+                      <span title="Azure AD"><Cloud size={18} className="bron-icon bron-azure" /></span>
+                    ) : (
+                      <span title="Handmatig"><UserPlus size={18} className="bron-icon bron-manual" /></span>
+                    )}
+                  </td>
+                  <td className="td-actions">
+                    <button
+                      className="icon-btn"
+                      title="Bewerken"
+                      onClick={() => {
+                        setBewerkMedewerker(m);
+                        setModalOpen(true);
+                      }}
+                    >
+                      <Edit3 size={16} />
+                    </button>
+                    <button
+                      className="icon-btn icon-btn-danger"
+                      title="Verwijderen"
+                      onClick={() => handleDelete(m.id)}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
             {gefilterd.length === 0 && (
               <tr>
                 <td colSpan={12} className="empty-state">

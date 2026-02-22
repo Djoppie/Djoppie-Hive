@@ -428,19 +428,32 @@ button {
   justify-content: center;
   border-radius: var(--border-radius);
   color: var(--text-secondary);
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+  position: relative;
 }
 .icon-btn:hover {
   background: var(--bg-main);
   color: var(--color-primary);
+  border-color: var(--color-primary-light);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(234,88,12,0.15);
+}
+.icon-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(234,88,12,0.1);
 }
 .icon-btn-success:hover {
   background: var(--color-success-bg);
   color: var(--color-success);
+  border-color: var(--color-success);
+  box-shadow: 0 2px 4px rgba(22,163,74,0.15);
 }
 .icon-btn-danger:hover {
   background: var(--color-danger-bg);
   color: var(--color-danger);
+  border-color: var(--color-danger);
+  box-shadow: 0 2px 4px rgba(220,38,38,0.15);
 }
 
 /* ---------- Cards ---------- */
@@ -835,30 +848,36 @@ button {
 
 .data-table {
   width: 100%;
+  min-width: 1400px;
   border-collapse: collapse;
   font-size: 13px;
 }
 
 .data-table th {
   text-align: left;
-  padding: 10px 12px;
+  padding: 12px 16px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-secondary);
-  background: var(--bg-main);
-  border-bottom: 1px solid var(--border-color);
+  background: linear-gradient(to bottom, #fafafa 0%, #f5f5f5 100%);
+  border-bottom: 2px solid var(--border-color);
   white-space: nowrap;
   user-select: none;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .data-table th.sortable {
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .data-table th.sortable:hover {
   color: var(--color-primary);
+  background: linear-gradient(to bottom, #fff7ed 0%, #ffedd5 100%);
 }
 
 .data-table th svg {
@@ -867,17 +886,30 @@ button {
 }
 
 .th-checkbox {
-  width: 40px;
+  width: 48px;
+  text-align: center;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.data-table td:first-child {
+  text-align: center;
 }
 
 .data-table td {
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--border-color);
+  padding: 14px 16px;
+  border-bottom: 1px solid #f0f0f0;
   vertical-align: middle;
+  transition: background-color 0.15s ease;
+}
+
+.data-table tbody tr {
+  transition: all 0.15s ease;
 }
 
 .data-table tbody tr:hover {
-  background: rgba(249,115,22,0.04);
+  background: linear-gradient(to right, rgba(249,115,22,0.03) 0%, rgba(249,115,22,0.01) 100%);
+  box-shadow: inset 2px 0 0 var(--color-primary);
 }
 
 .data-table tbody tr:last-child td {
@@ -890,7 +922,18 @@ button {
 }
 
 .row-inactive {
-  opacity: 0.55;
+  opacity: 0.5;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(0,0,0,0.01) 10px,
+    rgba(0,0,0,0.01) 20px
+  );
+}
+
+.row-inactive:hover {
+  opacity: 0.7;
 }
 
 .row-duplicate {
@@ -898,8 +941,14 @@ button {
 }
 
 .td-name {
-  font-weight: 500;
+  font-weight: 600;
+  color: var(--text-primary);
   white-space: nowrap;
+  min-width: 180px;
+}
+
+.name-text {
+  color: var(--text-primary);
 }
 
 .name-note {
@@ -912,19 +961,42 @@ button {
 .td-email {
   color: var(--text-secondary);
   font-size: 12px;
+  font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Courier New', monospace;
+  min-width: 200px;
+}
+
+.td-sector,
+.td-dienst {
+  font-weight: 500;
+  color: var(--text-primary);
+  text-transform: capitalize;
+  min-width: 140px;
+}
+
+.td-niveau {
+  min-width: 160px;
 }
 
 .td-actions {
   display: flex;
-  gap: 2px;
+  gap: 6px;
   white-space: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 16px !important;
+  min-width: 100px;
+}
+
+.data-table td:last-child {
+  text-align: right;
 }
 
 .empty-state {
   text-align: center;
-  padding: 40px !important;
+  padding: 60px 40px !important;
   color: var(--text-muted);
   font-style: italic;
+  font-size: 14px;
 }
 
 /* ---------- Status & Type Badges ---------- */
@@ -968,21 +1040,302 @@ button {
 }
 
 .regime-tag, .type-tag {
-  display: inline-block;
-  padding: 2px 6px;
-  border-radius: var(--border-radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px;
+  border-radius: 10px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  min-width: 42px;
 }
 
-.regime-voltijds { background: #ffedd5; color: #c2410c; }
-.regime-deeltijds { background: #fef3c7; color: #b45309; }
-.regime-vrijwilliger { background: #d1fae5; color: #065f46; }
+.regime-voltijds {
+  background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
+  color: #c2410c;
+  border-color: #fdba74;
+  box-shadow: 0 1px 2px rgba(194,65,12,0.1);
+}
 
-.type-personeel { background: #ffedd5; color: #9a3412; }
-.type-vrijwilliger { background: #d1fae5; color: #065f46; }
-.type-interim { background: #fef3c7; color: #b45309; }
-.type-extern { background: #f1f5f9; color: #475569; }
+.regime-deeltijds {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #b45309;
+  border-color: #fcd34d;
+  box-shadow: 0 1px 2px rgba(180,83,9,0.1);
+}
+
+.regime-vrijwilliger {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #065f46;
+  border-color: #6ee7b7;
+  box-shadow: 0 1px 2px rgba(6,95,70,0.1);
+}
+
+.type-personeel {
+  background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
+  color: #9a3412;
+  border-color: #fdba74;
+  box-shadow: 0 1px 2px rgba(154,52,18,0.1);
+}
+
+.type-vrijwilliger {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #065f46;
+  border-color: #6ee7b7;
+  box-shadow: 0 1px 2px rgba(6,95,70,0.1);
+}
+
+.type-interim {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #b45309;
+  border-color: #fcd34d;
+  box-shadow: 0 1px 2px rgba(180,83,9,0.1);
+}
+
+.type-extern {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: #475569;
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 2px rgba(71,85,105,0.1);
+}
+
+/* ============================================
+   PersoneelLijst Specific Styles
+   ============================================ */
+
+.personeel-table .employee-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.personeel-table .td-email {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.personeel-table .td-actief {
+  text-align: center;
+}
+
+.personeel-table .td-bron {
+  text-align: center;
+}
+
+/* Regime badges (compact) */
+.regime-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 32px;
+}
+
+.regime-badge.regime-voltijds {
+  background: #16a34a;
+  color: white;
+}
+
+.regime-badge.regime-deeltijds {
+  background: #78716c;
+  color: white;
+}
+
+.regime-badge.regime-vrijwilliger {
+  background: #84cc16;
+  color: white;
+}
+
+/* Type badges (compact) */
+.type-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 38px;
+}
+
+.type-badge.type-personeel {
+  background: var(--color-primary);
+  color: white;
+}
+
+.type-badge.type-vrijwilliger {
+  background: #22c55e;
+  color: white;
+}
+
+.type-badge.type-interim {
+  background: #f59e0b;
+  color: white;
+}
+
+.type-badge.type-extern {
+  background: #6b7280;
+  color: white;
+}
+
+/* Status text (inline, not badges) */
+.status-text {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.status-text.status-nieuw {
+  color: #f59e0b;
+}
+
+.status-text.status-review {
+  color: #f97316;
+}
+
+.status-text.status-goedgekeurd {
+  color: #16a34a;
+}
+
+.status-text.status-afgekeurd {
+  color: #dc2626;
+}
+
+.status-text.status-aangepast {
+  color: #0891b2;
+}
+
+/* Bron icons */
+.bron-icon {
+  display: inline-block;
+}
+
+.bron-icon.bron-azure {
+  color: #0891b2;
+}
+
+.bron-icon.bron-manual {
+  color: var(--text-muted);
+}
+
+/* Alert styling */
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  border-radius: var(--border-radius);
+}
+
+.alert-danger {
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger);
+  color: var(--color-danger);
+}
+
+.alert-close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  color: inherit;
+}
+
+.alert-close:hover {
+  opacity: 0.7;
+}
+
+/* Functieniveau tags */
+.niveau-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.niveau-algemeenDirecteur {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  border-color: #fcd34d;
+  box-shadow: 0 1px 2px rgba(146,64,14,0.1);
+}
+
+.niveau-sectormanager {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+  border-color: #93c5fd;
+  box-shadow: 0 1px 2px rgba(30,64,175,0.1);
+}
+
+.niveau-teamcoordinator {
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+  color: #3730a3;
+  border-color: #a5b4fc;
+  box-shadow: 0 1px 2px rgba(55,48,163,0.1);
+}
+
+.niveau-deskundige {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #065f46;
+  border-color: #6ee7b7;
+  box-shadow: 0 1px 2px rgba(6,95,70,0.1);
+}
+
+.niveau-administratiefMedewerker {
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  color: #374151;
+  border-color: #d1d5db;
+  box-shadow: 0 1px 2px rgba(55,65,81,0.1);
+}
+
+.niveau-vrijwilliger {
+  background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+  color: #9d174d;
+  border-color: #f9a8d4;
+  box-shadow: 0 1px 2px rgba(157,23,77,0.1);
+}
+
+.niveau-extern {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: #475569;
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 2px rgba(71,85,105,0.1);
+}
+
+.niveau-stagiair {
+  background: linear-gradient(135deg, #ecfccb 0%, #d9f99d 100%);
+  color: #3f6212;
+  border-color: #bef264;
+  box-shadow: 0 1px 2px rgba(63,98,18,0.1);
+}
+
+.niveau-flex {
+  background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%);
+  color: #854d0e;
+  border-color: #fde047;
+  box-shadow: 0 1px 2px rgba(133,77,14,0.1);
+}
+
+.niveau-onbekend {
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  color: #6b7280;
+  border-color: #e5e7eb;
+  box-shadow: 0 1px 2px rgba(107,114,128,0.1);
+}
 
 /* ---------- Role Badges ---------- */
 .role-badge {
@@ -1156,6 +1509,173 @@ button {
 
 .sector-card-body .data-table {
   border-radius: 0;
+}
+
+/* ============================================
+   Validatie Page - New Design
+   ============================================ */
+
+.validatie-status-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.status-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  background: var(--bg-card);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.status-tab:hover {
+  background: var(--bg-main);
+  border-color: var(--color-primary-light);
+}
+
+.status-tab.active {
+  background: var(--color-primary-bg);
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+.validatie-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.validatie-sectors {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.validatie-sector-card {
+  background: var(--bg-card);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.validatie-sector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s ease;
+}
+
+.validatie-sector-header:hover {
+  background: var(--bg-main);
+}
+
+.sector-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sector-header-left h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.sector-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sector-count {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.validatie-sector-body {
+  border-top: 1px solid var(--border-color);
+  overflow-x: auto;
+}
+
+.validatie-table {
+  border-radius: 0 !important;
+  margin: 0;
+}
+
+.validatie-table th,
+.validatie-table td {
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+.validatie-table .th-checkbox,
+.validatie-table .td-checkbox {
+  width: 40px;
+  text-align: center;
+}
+
+.validatie-table .td-name {
+  font-weight: 500;
+  color: var(--color-primary);
+}
+
+.validatie-table .td-actief {
+  text-align: center;
+}
+
+.validatie-table .td-actions {
+  white-space: nowrap;
+}
+
+.validatie-table .row-inactive {
+  opacity: 0.6;
+}
+
+.validatie-table .row-inactive .td-name {
+  color: var(--text-muted);
+}
+
+/* Validatie status badges */
+.validatie-status {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.validatie-status.status-nieuw {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.validatie-status.status-review {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.validatie-status.status-goedgekeurd {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.validatie-status.status-afgekeurd {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
 }
 
 /* Detail grid */
@@ -2931,6 +3451,46 @@ input[type="checkbox"] {
 .sync-value {
   font-size: 14px;
   font-weight: 500;
+}
+
+/* Prominent Sync Card on Dashboard */
+.sync-card-prominent {
+  border: 2px solid var(--color-primary);
+  background: linear-gradient(135deg, var(--bg-card) 0%, var(--color-primary-bg) 100%);
+}
+
+.sync-card-prominent .card-title {
+  color: var(--color-primary-dark);
+}
+
+.sync-action-section {
+  padding: 16px;
+  margin: 0 -20px 16px -20px;
+  background: var(--color-primary-bg);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: center;
+}
+
+.sync-action-section .sync-knop-container {
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.sync-action-section .sync-knop {
+  padding: 12px 24px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.sync-action-section .sync-status {
+  justify-content: center;
+}
+
+.sync-action-section .sync-resultaat,
+.sync-action-section .sync-error {
+  margin-top: 8px;
 }
 
 .vog-status-grid {

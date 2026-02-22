@@ -128,6 +128,22 @@ export interface VrijwilligerDetails {
   vogGeldigTot?: string | null;
 }
 
+// Functieniveau types matching backend API
+export type FunctieniveauAPI =
+  | 'AlgemeenDirecteur'
+  | 'Sectormanager'
+  | 'Teamcoordinator'
+  | 'Deskundige'
+  | 'AdministratiefMedewerker'
+  | 'Vrijwilliger'
+  | 'Extern'
+  | 'Stagiair'
+  | 'Flex'
+  | 'Onbekend';
+
+// Validatie status for employee records
+export type ValidatieStatusAPI = 'Nieuw' | 'InReview' | 'Goedgekeurd' | 'Afgekeurd';
+
 export interface Employee {
   id: string;
   displayName: string;
@@ -144,9 +160,14 @@ export interface Employee {
   isHandmatigToegevoegd: boolean;
   employeeType: EmployeeType;
   arbeidsRegime: ArbeidsRegimeAPI;
+  functieniveau: FunctieniveauAPI;
+  validatieStatus: ValidatieStatusAPI;
+  gevalideerdDoor?: string | null;
+  validatieDatum?: string | null;
   photoUrl?: string | null;
   dienstId?: string | null;
   dienstNaam?: string | null;
+  sectorNaam?: string | null;
   startDatum?: string | null;
   eindDatum?: string | null;
   telefoonnummer?: string | null;
@@ -367,6 +388,49 @@ export const validatieVerzoekenApi = {
     const response = await fetch(`${API_BASE_URL}/validatieverzoeken/test/aantal${params}`);
     if (!response.ok) throw new Error('Failed to fetch validation count');
     return response.json();
+  },
+};
+
+// ============================================
+// Employee Validatie API
+// ============================================
+
+export interface ValidatieActieRequest {
+  status: ValidatieStatusAPI;
+  opmerkingen?: string;
+}
+
+export interface ValidatieStatistieken {
+  nieuw: number;
+  inReview: number;
+  goedgekeurd: number;
+  afgekeurd: number;
+  totaal: number;
+}
+
+export const employeeValidatieApi = {
+  /** Update de validatiestatus van een medewerker */
+  updateStatus: async (employeeId: string, request: ValidatieActieRequest): Promise<Employee> => {
+    return fetchWithAuth<Employee>(`/employees/${employeeId}/validatie`, {
+      method: 'PUT',
+      body: JSON.stringify(request),
+    });
+  },
+
+  /** Haal validatie statistieken op */
+  getStatistieken: async (): Promise<ValidatieStatistieken> => {
+    // For now, use test endpoint
+    const response = await fetch(`${API_BASE_URL}/employees/test/validatie/statistieken`);
+    if (!response.ok) throw new Error('Failed to fetch validation statistics');
+    return response.json();
+  },
+
+  /** Bulk goedkeuren van medewerkers */
+  bulkGoedkeuren: async (employeeIds: string[]): Promise<void> => {
+    return fetchWithAuth<void>('/employees/validatie/bulk-goedkeuren', {
+      method: 'POST',
+      body: JSON.stringify({ employeeIds }),
+    });
   },
 };
 

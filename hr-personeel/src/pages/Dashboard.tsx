@@ -3,8 +3,6 @@ import {
   Users,
   UserCheck,
   UserX,
-  Clock,
-  CheckCircle2,
   AlertTriangle,
   Briefcase,
   HeartHandshake,
@@ -19,6 +17,7 @@ import {
   ShieldQuestion,
 } from 'lucide-react';
 import { statisticsApi, type DashboardStatistics } from '../services/api';
+import SyncKnop from '../components/SyncKnop';
 
 export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStatistics | null>(null);
@@ -156,10 +155,13 @@ export default function Dashboard() {
 
       {/* Sync & Validatie status */}
       <div className="dashboard-grid">
-        <div className="card">
+        <div className="card sync-card-prominent">
           <h2 className="card-title">
-            <Clock size={18} /> Synchronisatie Status
+            <RefreshCw size={18} /> Synchronisatie
           </h2>
+          <div className="sync-action-section">
+            <SyncKnop onSyncComplete={() => loadStats()} />
+          </div>
           <div className="sync-status-info">
             <div className="sync-status-item">
               <span className="sync-label">Laatste sync:</span>

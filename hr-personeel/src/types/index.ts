@@ -6,6 +6,33 @@ export type ValidatieStatus = 'nieuw' | 'in_review' | 'goedgekeurd' | 'afgekeurd
 
 export type Rol = 'hr_admin' | 'diensthoofd' | 'sectormanager' | 'medewerker';
 
+// Functieniveau in de organisatiehiërarchie
+export type Functieniveau =
+  | 'algemeenDirecteur'
+  | 'sectormanager'
+  | 'teamcoordinator'
+  | 'deskundige'
+  | 'administratiefMedewerker'
+  | 'vrijwilliger'
+  | 'extern'
+  | 'stagiair'
+  | 'flex'
+  | 'onbekend';
+
+// Display names for Functieniveau
+export const functieniveauLabels: Record<Functieniveau, string> = {
+  algemeenDirecteur: 'Algemeen Directeur',
+  sectormanager: 'Sectormanager',
+  teamcoordinator: 'Teamcoördinator',
+  deskundige: 'Deskundige',
+  administratiefMedewerker: 'Administratief Medewerker',
+  vrijwilliger: 'Vrijwilliger',
+  extern: 'Extern',
+  stagiair: 'Stagiair',
+  flex: 'Flex',
+  onbekend: 'Onbekend',
+};
+
 export interface Medewerker {
   id: string;
   // Azure AD velden
@@ -21,6 +48,7 @@ export interface Medewerker {
   // HR velden
   dienst: string;
   sector: string;
+  functieniveau: Functieniveau;
   arbeidsRegime: ArbeidsRegime;
   type: PersoneelType;
   actief: boolean;
