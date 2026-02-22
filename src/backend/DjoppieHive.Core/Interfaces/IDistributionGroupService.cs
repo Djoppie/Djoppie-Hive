@@ -23,6 +23,17 @@ public interface IDistributionGroupService
     Task<IEnumerable<EmployeeSummaryDto>> GetGroupMembersAsync(string groupId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets all owners (sector managers/teamcoaches) of a distribution group.
+    /// </summary>
+    Task<IEnumerable<EmployeeSummaryDto>> GetGroupOwnersAsync(string groupId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all nested groups (diensten) within a sector group.
+    /// Returns groups that are direct members of the specified group.
+    /// </summary>
+    Task<IEnumerable<NestedGroupDto>> GetNestedGroupsAsync(string groupId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Adds a member to a distribution group.
     /// </summary>
     Task<bool> AddMemberToGroupAsync(string groupId, string userId, CancellationToken cancellationToken = default);

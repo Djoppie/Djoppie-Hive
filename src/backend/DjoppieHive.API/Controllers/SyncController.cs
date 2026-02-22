@@ -67,6 +67,27 @@ public class SyncController : ControllerBase
     }
 
     /// <summary>
+    /// Test endpoint to run sync without authentication (for debugging).
+    /// </summary>
+    [HttpPost("test")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(SyncResultaatDto), StatusCodes.Status200OK)]
+    public async Task<ActionResult<SyncResultaatDto>> TestSync(CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Test synchronisatie gestart");
+        try
+        {
+            var resultaat = await _syncService.VoerSyncUitAsync("Test-User", cancellationToken);
+            return Ok(resultaat);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Test synchronisatie mislukt");
+            return Ok(new { error = ex.Message, details = ex.ToString() });
+        }
+    }
+
+    /// <summary>
     /// Haalt de status op van de huidige of laatste synchronisatie.
     /// </summary>
     [HttpGet("status")]

@@ -67,14 +67,28 @@ public class SyncService : ISyncService
             var graphGroups = await HaalMgGroepenOpAsync(cancellationToken);
             _logger.LogInformation("Opgehaald: {Aantal} MG- groepen uit Graph API", graphGroups.Count);
 
-            // Eerste pass: Verwerk sectoren (MG-SECTOR-*)
+            // Bouw mapping van dienst EntraObjectId → sector info via Graph nested groups
+            var dienstNaarSectorMap = new Dictionary<string, string>();
+
+            // Eerste pass: Verwerk sectoren (MG-SECTOR-*) en bepaal nested groups
             var sectoren = graphGroups.Where(g =>
                 g.DisplayName?.StartsWith(SectorPrefix, StringComparison.OrdinalIgnoreCase) == true).ToList();
 
             foreach (var sector in sectoren)
             {
                 await VerwerkGroepAsync(sector, null, GroepNiveau.Sector, syncLogboek, cancellationToken);
+
+                // Haal nested groups (diensten) op die lid zijn van deze sector
+                var nestedGroups = await HaalNestedGroupsOpAsync(sector.Id!, cancellationToken);
+                foreach (var nestedGroup in nestedGroups)
+                {
+                    dienstNaarSectorMap[nestedGroup.Id!] = sector.Id!;
+                    _logger.LogDebug("Dienst {Dienst} is lid van sector {Sector}",
+                        nestedGroup.DisplayName, sector.DisplayName);
+                }
             }
+
+            _logger.LogInformation("Mapping gebouwd: {Aantal} diensten gekoppeld aan sectoren", dienstNaarSectorMap.Count);
 
             // Tweede pass: Verwerk diensten (andere MG- groepen)
             var diensten = graphGroups.Where(g =>
@@ -83,8 +97,14 @@ public class SyncService : ISyncService
 
             foreach (var dienst in diensten)
             {
-                // Probeer bovenliggende sector te vinden op basis van naamgeving
-                var bovenliggendeGroep = await ZoekBovenliggendeGroepAsync(dienst.DisplayName!, cancellationToken);
+                // Zoek bovenliggende sector via de Graph-based mapping
+                DistributionGroup? bovenliggendeGroep = null;
+                if (dienstNaarSectorMap.TryGetValue(dienst.Id!, out var sectorEntraId))
+                {
+                    bovenliggendeGroep = await _context.DistributionGroups
+                        .FirstOrDefaultAsync(g => g.EntraObjectId == sectorEntraId, cancellationToken);
+                }
+
                 await VerwerkGroepAsync(dienst, bovenliggendeGroep?.Id, GroepNiveau.Dienst, syncLogboek, cancellationToken);
             }
 
@@ -410,31 +430,38 @@ public class SyncService : ISyncService
         return nieuweMedewerker;
     }
 
-    private async Task<DistributionGroup?> ZoekBovenliggendeGroepAsync(
-        string dienstNaam,
+    /// <summary>
+    /// Haalt nested groups (diensten) op die lid zijn van een sector group.
+    /// Dit bepaalt de daadwerkelijke hiërarchie in plaats van naamgeving.
+    /// </summary>
+    private async Task<List<Group>> HaalNestedGroupsOpAsync(
+        string sectorGroupId,
         CancellationToken cancellationToken)
     {
-        // Probeer sector te bepalen op basis van naamgeving
-        // Voorbeeld: MG-Burgerzaken zou kunnen vallen onder MG-SECTOR-Burgerzaken
-        // Dit is een simplistische implementatie; verfijn indien nodig
+        var result = new List<Group>();
 
-        var sectoren = await _context.DistributionGroups
-            .Where(g => g.Niveau == GroepNiveau.Sector)
-            .ToListAsync(cancellationToken);
-
-        foreach (var sector in sectoren)
+        try
         {
-            // Haal sector suffix uit: MG-SECTOR-Organisatie -> Organisatie
-            var sectorNaam = sector.DisplayName.Replace(SectorPrefix, "", StringComparison.OrdinalIgnoreCase);
+            var response = await _graphClient.Groups[sectorGroupId].Members
+                .GetAsync(config =>
+                {
+                    config.QueryParameters.Select = ["id", "displayName", "description", "mail"];
+                }, cancellationToken);
 
-            // Controleer of dienst naam de sector bevat
-            if (dienstNaam.Contains(sectorNaam, StringComparison.OrdinalIgnoreCase))
+            if (response?.Value != null)
             {
-                return sector;
+                // Filter alleen Group type members (nested groups/diensten)
+                result.AddRange(response.Value.OfType<Group>());
             }
+
+            _logger.LogDebug("Sector {SectorId} bevat {Aantal} nested groups", sectorGroupId, result.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Kon nested groups niet ophalen voor sector {SectorId}", sectorGroupId);
         }
 
-        return null;
+        return result;
     }
 
     private async Task DetecteerVerwijderingenAsync(
