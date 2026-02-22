@@ -4,7 +4,87 @@ export type PersoneelType = 'personeel' | 'vrijwilliger' | 'interim' | 'extern';
 
 export type ValidatieStatus = 'nieuw' | 'in_review' | 'goedgekeurd' | 'afgekeurd' | 'aangepast';
 
-export type Rol = 'hr_admin' | 'diensthoofd' | 'sectormanager' | 'medewerker';
+export type Rol = 'hr_admin' | 'diensthoofd' | 'sectormanager' | 'medewerker' | 'ict_super_admin';
+
+// Role display names and descriptions
+export const rolLabels: Record<Rol, string> = {
+  hr_admin: 'HR Admin',
+  diensthoofd: 'Diensthoofd/Teamcoach',
+  sectormanager: 'Sectormanager',
+  medewerker: 'Medewerker',
+  ict_super_admin: 'ICT Super Admin',
+};
+
+// Role permissions configuration (prepared for future authorization)
+export interface RolPermissies {
+  canViewAllEmployees: boolean;
+  canEditEmployees: boolean;
+  canDeleteEmployees: boolean;
+  canValidate: boolean;
+  canManageGroups: boolean;
+  canManageSettings: boolean;
+  canExportData: boolean;
+  canViewAuditLogs: boolean;
+  scope: 'all' | 'sector' | 'dienst' | 'self';
+}
+
+export const rolPermissies: Record<Rol, RolPermissies> = {
+  ict_super_admin: {
+    canViewAllEmployees: true,
+    canEditEmployees: true,
+    canDeleteEmployees: true,
+    canValidate: true,
+    canManageGroups: true,
+    canManageSettings: true,
+    canExportData: true,
+    canViewAuditLogs: true,
+    scope: 'all',
+  },
+  hr_admin: {
+    canViewAllEmployees: true,
+    canEditEmployees: true,
+    canDeleteEmployees: true,
+    canValidate: true,
+    canManageGroups: false,
+    canManageSettings: false,
+    canExportData: true,
+    canViewAuditLogs: true,
+    scope: 'all',
+  },
+  sectormanager: {
+    canViewAllEmployees: false,
+    canEditEmployees: true,
+    canDeleteEmployees: false,
+    canValidate: true,
+    canManageGroups: false,
+    canManageSettings: false,
+    canExportData: true,
+    canViewAuditLogs: false,
+    scope: 'sector',
+  },
+  diensthoofd: {
+    canViewAllEmployees: false,
+    canEditEmployees: true,
+    canDeleteEmployees: false,
+    canValidate: true,
+    canManageGroups: false,
+    canManageSettings: false,
+    canExportData: true,
+    canViewAuditLogs: false,
+    scope: 'dienst',
+  },
+  medewerker: {
+    canViewAllEmployees: false,
+    canEditEmployees: false,
+    canDeleteEmployees: false,
+    canValidate: false,
+    canManageGroups: false,
+    canManageSettings: false,
+    canExportData: false,
+    canViewAuditLogs: false,
+    scope: 'self',
+  },
+};
 
 export interface Medewerker {
   id: string;
