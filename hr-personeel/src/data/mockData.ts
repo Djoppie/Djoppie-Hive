@@ -179,9 +179,19 @@ const sectorHoofden = sectoren.map(
   s => mockMedewerkers.find(m => m.sector === s)?.id
 ).filter((id): id is string => !!id);
 
-export const mockDistributieGroepen: DistributieGroep[] = [
-  {
+// Helper to create distribution group with computed ledenAantal
+function createDistributieGroep(
+  overrides: Omit<DistributieGroep, 'id' | 'ledenAantal'> & { ledenIds: string[] }
+): DistributieGroep {
+  return {
+    ...overrides,
     id: uuidv4(),
+    ledenAantal: overrides.ledenIds.length,
+  };
+}
+
+export const mockDistributieGroepen: DistributieGroep[] = [
+  createDistributieGroep({
     displayName: 'MG-AllePersoneel',
     emailAddress: 'mg-allepersoneel@diepenbeek.be',
     beschrijving: 'Alle actieve personeelsleden van gemeente Diepenbeek',
@@ -191,9 +201,8 @@ export const mockDistributieGroepen: DistributieGroep[] = [
     bronExchange: true,
     aanmaakDatum: '2024-01-15',
     laatstGewijzigd: '2026-01-10',
-  },
-  {
-    id: uuidv4(),
+  }),
+  createDistributieGroep({
     displayName: 'MG-AlleMedewerkers',
     emailAddress: 'mg-allemedewerkers@diepenbeek.be',
     beschrijving: 'Alle medewerkers inclusief vrijwilligers en interim',
@@ -203,9 +212,8 @@ export const mockDistributieGroepen: DistributieGroep[] = [
     bronExchange: true,
     aanmaakDatum: '2024-01-15',
     laatstGewijzigd: '2026-02-01',
-  },
-  {
-    id: uuidv4(),
+  }),
+  createDistributieGroep({
     displayName: 'MG-Diensthoofden',
     emailAddress: 'mg-diensthoofden@diepenbeek.be',
     beschrijving: 'Alle diensthoofden en sectormanagers',
@@ -215,9 +223,8 @@ export const mockDistributieGroepen: DistributieGroep[] = [
     bronExchange: true,
     aanmaakDatum: '2024-02-01',
     laatstGewijzigd: '2025-12-15',
-  },
-  {
-    id: uuidv4(),
+  }),
+  createDistributieGroep({
     displayName: 'MG-AlgemeneZaken',
     emailAddress: 'mg-algemenezaken@diepenbeek.be',
     beschrijving: 'Sector Algemene Zaken',
@@ -227,9 +234,8 @@ export const mockDistributieGroepen: DistributieGroep[] = [
     bronExchange: true,
     aanmaakDatum: '2024-03-01',
     laatstGewijzigd: '2025-11-20',
-  },
-  {
-    id: uuidv4(),
+  }),
+  createDistributieGroep({
     displayName: 'MG-Burgerzaken',
     emailAddress: 'mg-burgerzaken@diepenbeek.be',
     beschrijving: 'Sector Burgerzaken',
@@ -239,9 +245,8 @@ export const mockDistributieGroepen: DistributieGroep[] = [
     bronExchange: true,
     aanmaakDatum: '2024-03-01',
     laatstGewijzigd: '2025-11-20',
-  },
-  {
-    id: uuidv4(),
+  }),
+  createDistributieGroep({
     displayName: 'MG-Financien',
     emailAddress: 'mg-financien@diepenbeek.be',
     beschrijving: 'Sector Financiën',
@@ -251,9 +256,8 @@ export const mockDistributieGroepen: DistributieGroep[] = [
     bronExchange: true,
     aanmaakDatum: '2024-03-01',
     laatstGewijzigd: '2025-11-20',
-  },
-  {
-    id: uuidv4(),
+  }),
+  createDistributieGroep({
     displayName: 'MG-Grondgebiedzaken',
     emailAddress: 'mg-grondgebiedzaken@diepenbeek.be',
     beschrijving: 'Sector Grondgebiedzaken',
@@ -263,9 +267,8 @@ export const mockDistributieGroepen: DistributieGroep[] = [
     bronExchange: true,
     aanmaakDatum: '2024-03-01',
     laatstGewijzigd: '2025-11-20',
-  },
-  {
-    id: uuidv4(),
+  }),
+  createDistributieGroep({
     displayName: 'MG-VrijeTijd',
     emailAddress: 'mg-vrijetijd@diepenbeek.be',
     beschrijving: 'Sector Vrije Tijd',
@@ -275,9 +278,8 @@ export const mockDistributieGroepen: DistributieGroep[] = [
     bronExchange: true,
     aanmaakDatum: '2024-03-01',
     laatstGewijzigd: '2025-11-20',
-  },
-  {
-    id: uuidv4(),
+  }),
+  createDistributieGroep({
     displayName: 'MG-Welzijn',
     emailAddress: 'mg-welzijn@diepenbeek.be',
     beschrijving: 'Sector Welzijn incl. OCMW',
@@ -287,9 +289,8 @@ export const mockDistributieGroepen: DistributieGroep[] = [
     bronExchange: true,
     aanmaakDatum: '2024-03-01',
     laatstGewijzigd: '2025-11-20',
-  },
-  {
-    id: uuidv4(),
+  }),
+  createDistributieGroep({
     displayName: 'MG-ICT',
     emailAddress: 'mg-ict@diepenbeek.be',
     beschrijving: 'Sector ICT',
@@ -299,9 +300,8 @@ export const mockDistributieGroepen: DistributieGroep[] = [
     bronExchange: true,
     aanmaakDatum: '2024-03-01',
     laatstGewijzigd: '2025-11-20',
-  },
-  {
-    id: uuidv4(),
+  }),
+  createDistributieGroep({
     displayName: 'MG-TechnischeDienst',
     emailAddress: 'mg-technischedienst@diepenbeek.be',
     beschrijving: 'Sector Technische Dienst',
@@ -311,9 +311,8 @@ export const mockDistributieGroepen: DistributieGroep[] = [
     bronExchange: true,
     aanmaakDatum: '2024-03-01',
     laatstGewijzigd: '2025-11-20',
-  },
-  {
-    id: uuidv4(),
+  }),
+  createDistributieGroep({
     displayName: 'MG-Vrijwilligers',
     emailAddress: 'mg-vrijwilligers@diepenbeek.be',
     beschrijving: 'Alle vrijwilligers van gemeente Diepenbeek',
@@ -323,9 +322,8 @@ export const mockDistributieGroepen: DistributieGroep[] = [
     bronExchange: true,
     aanmaakDatum: '2024-06-01',
     laatstGewijzigd: '2026-01-15',
-  },
-  {
-    id: uuidv4(),
+  }),
+  createDistributieGroep({
     displayName: 'MG-Personeelsfeest2026',
     emailAddress: 'mg-personeelsfeest2026@diepenbeek.be',
     beschrijving: 'Uitnodigingslijst personeelsfeest 2026',
@@ -335,7 +333,7 @@ export const mockDistributieGroepen: DistributieGroep[] = [
     bronExchange: false,
     aanmaakDatum: '2026-02-10',
     laatstGewijzigd: '2026-02-10',
-  },
+  }),
 ];
 
 export const alleSectoren = sectoren;

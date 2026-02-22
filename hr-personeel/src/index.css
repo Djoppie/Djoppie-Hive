@@ -2475,6 +2475,29 @@ button {
   border-radius: 0;
 }
 
+.dg-loading,
+.dg-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 20px;
+  color: var(--text-secondary);
+}
+
+.dg-error {
+  color: var(--error);
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .dg-no-selection {
   flex: 1;
   display: flex;

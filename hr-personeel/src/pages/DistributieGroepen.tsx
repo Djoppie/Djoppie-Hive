@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Search,
   Plus,
@@ -8,17 +8,16 @@ import {
   UserMinus,
   Edit3,
   Trash2,
-
-
   Cloud,
   FolderPlus,
   X,
-
   Shield,
   Globe,
+  Loader2,
 } from 'lucide-react';
 import { usePersoneel } from '../context/PersoneelContext';
 import SyncKnop from '../components/SyncKnop';
+import { distributionGroupsApi, type EmployeeSummary } from '../services/api';
 import type { DistributieGroep, DistributieGroepType } from '../types';
 
 const typeLabels: Record<DistributieGroepType, string> = {
@@ -52,6 +51,11 @@ export default function DistributieGroepen() {
   const [ledenModalOpen, setLedenModalOpen] = useState(false);
   const [ledenZoekterm, setLedenZoekterm] = useState('');
 
+  // State for API-loaded members
+  const [apiLeden, setApiLeden] = useState<EmployeeSummary[]>([]);
+  const [ledenLoading, setLedenLoading] = useState(false);
+  const [ledenError, setLedenError] = useState<string | null>(null);
+
   const gefilterd = useMemo(() => {
     if (!zoekterm) return distributieGroepen;
     const term = zoekterm.toLowerCase();
@@ -63,7 +67,49 @@ export default function DistributieGroepen() {
     );
   }, [distributieGroepen, zoekterm]);
 
-  const geselecteerdeLeden = selectedGroep ? getGroepLeden(selectedGroep.id) : [];
+  // Fetch members from API when a group is selected
+  useEffect(() => {
+    if (!selectedGroep) {
+      setApiLeden([]);
+      return;
+    }
+
+    // For Exchange-sourced groups, fetch from API
+    if (selectedGroep.bronExchange) {
+      setLedenLoading(true);
+      setLedenError(null);
+      distributionGroupsApi.getById(selectedGroep.id)
+        .then(detail => {
+          setApiLeden(detail.members || []);
+        })
+        .catch(err => {
+          console.error('Failed to load group members:', err);
+          setLedenError('Kon leden niet laden');
+          setApiLeden([]);
+        })
+        .finally(() => {
+          setLedenLoading(false);
+        });
+    } else {
+      // For local groups, use getGroepLeden
+      setApiLeden([]);
+    }
+  }, [selectedGroep?.id, selectedGroep?.bronExchange]);
+
+  // Get members: from API for Exchange groups, from local context for manual groups
+  const geselecteerdeLeden = useMemo(() => {
+    if (!selectedGroep) return [];
+    if (selectedGroep.bronExchange) {
+      return apiLeden;
+    }
+    // For local groups, convert to EmployeeSummary format
+    return getGroepLeden(selectedGroep.id).map(m => ({
+      id: m.id,
+      displayName: m.volledigeNaam,
+      email: m.email,
+      jobTitle: m.functie || null,
+    }));
+  }, [selectedGroep, apiLeden, getGroepLeden]);
 
   const beschikbareLeden = useMemo(() => {
     if (!selectedGroep) return [];
@@ -118,6 +164,7 @@ export default function DistributieGroepen() {
       voegDistributieGroepToe({
         ...formData,
         ledenIds: [],
+        ledenAantal: 0,
         eigenaarIds: [],
         bronExchange: false,
       });
@@ -138,7 +185,7 @@ export default function DistributieGroepen() {
       // Refresh selected groep reference
       setSelectedGroep(prev => {
         if (!prev) return null;
-        return { ...prev, ledenIds: [...prev.ledenIds, medewerkerId] };
+        return { ...prev, ledenIds: [...prev.ledenIds, medewerkerId], ledenAantal: prev.ledenAantal + 1 };
       });
     }
   };
@@ -148,7 +195,7 @@ export default function DistributieGroepen() {
       verwijderLidUitGroep(selectedGroep.id, medewerkerId);
       setSelectedGroep(prev => {
         if (!prev) return null;
-        return { ...prev, ledenIds: prev.ledenIds.filter(id => id !== medewerkerId) };
+        return { ...prev, ledenIds: prev.ledenIds.filter(id => id !== medewerkerId), ledenAantal: Math.max(0, prev.ledenAantal - 1) };
       });
     }
   };
@@ -219,7 +266,7 @@ export default function DistributieGroepen() {
                     <div className="dg-group-meta">
                       <span className="dg-group-type-tag">{typeLabels[groep.type]}</span>
                       <span className="dg-group-members">
-                        <Users size={12} /> {groep.ledenIds.length}
+                        <Users size={12} /> {groep.ledenAantal}
                       </span>
                       {groep.bronExchange && (
                         <span className="dg-group-source" title="Uit Exchange">
@@ -278,49 +325,52 @@ export default function DistributieGroepen() {
               </div>
 
               <div className="dg-members-table">
-                <table className="data-table data-table-compact">
-                  <thead>
-                    <tr>
-                      <th>Naam</th>
-                      <th>E-mail</th>
-                      <th>Sector</th>
-                      <th>Dienst</th>
-                      <th>Type</th>
-                      <th style={{ width: 60 }}>Acties</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {geselecteerdeLeden.map(m => (
-                      <tr key={m.id} className={!m.actief ? 'row-inactive' : ''}>
-                        <td className="td-name">{m.volledigeNaam}</td>
-                        <td className="td-email">{m.email}</td>
-                        <td>{m.sector}</td>
-                        <td>{m.dienst}</td>
-                        <td>
-                          <span className={`type-tag type-${m.type}`}>
-                            {m.type === 'personeel' ? 'Pers.' : m.type === 'vrijwilliger' ? 'Vrij.' : m.type === 'interim' ? 'Int.' : 'Ext.'}
-                          </span>
-                        </td>
-                        <td>
-                          <button
-                            className="icon-btn icon-btn-danger"
-                            title="Verwijder uit groep"
-                            onClick={() => handleVerwijderLid(m.id)}
-                          >
-                            <UserMinus size={14} />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                    {geselecteerdeLeden.length === 0 && (
+                {ledenLoading ? (
+                  <div className="dg-loading">
+                    <Loader2 size={24} className="spin" />
+                    <span>Leden laden...</span>
+                  </div>
+                ) : ledenError ? (
+                  <div className="dg-error">
+                    <span>{ledenError}</span>
+                  </div>
+                ) : (
+                  <table className="data-table data-table-compact">
+                    <thead>
                       <tr>
-                        <td colSpan={6} className="empty-state">
-                          Deze groep heeft nog geen leden. Klik op &quot;Lid Toevoegen&quot; om leden toe te voegen.
-                        </td>
+                        <th>Naam</th>
+                        <th>E-mail</th>
+                        <th>Functie</th>
+                        <th style={{ width: 60 }}>Acties</th>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {geselecteerdeLeden.map(m => (
+                        <tr key={m.id}>
+                          <td className="td-name">{m.displayName}</td>
+                          <td className="td-email">{m.email}</td>
+                          <td>{m.jobTitle || '-'}</td>
+                          <td>
+                            <button
+                              className="icon-btn icon-btn-danger"
+                              title="Verwijder uit groep"
+                              onClick={() => handleVerwijderLid(m.id)}
+                            >
+                              <UserMinus size={14} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {geselecteerdeLeden.length === 0 && (
+                        <tr>
+                          <td colSpan={4} className="empty-state">
+                            Deze groep heeft nog geen leden. Klik op &quot;Lid Toevoegen&quot; om leden toe te voegen.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                )}
               </div>
             </>
           ) : (

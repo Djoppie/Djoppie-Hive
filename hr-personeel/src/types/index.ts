@@ -171,7 +171,8 @@ export interface DistributieGroep {
   emailAddress: string;         // bijv. "mg-allepersoneel@diepenbeek.be"
   beschrijving: string;
   type: DistributieGroepType;
-  ledenIds: string[];           // medewerker IDs
+  ledenIds: string[];           // medewerker IDs (voor lokaal beheer)
+  ledenAantal: number;          // aantal leden (van API)
   eigenaarIds: string[];        // eigenaar medewerker IDs
   bronExchange: boolean;        // uit Exchange geïmporteerd
   aanmaakDatum: string;

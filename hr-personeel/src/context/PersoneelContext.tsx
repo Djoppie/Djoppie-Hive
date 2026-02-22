@@ -70,6 +70,7 @@ export function PersoneelProvider({ children }: { children: ReactNode }) {
           beschrijving: g.description || '',
           type: 'distributionGroup' as const,
           ledenIds: [],
+          ledenAantal: g.memberCount,
           eigenaarIds: [],
           bronExchange: true,
           aanmaakDatum: new Date().toISOString().split('T')[0],
@@ -135,7 +136,6 @@ export function PersoneelProvider({ children }: { children: ReactNode }) {
       afdeling: data.afdeling || '',
       dienst: data.dienst || '',
       sector: data.sector || '',
-      functieniveau: data.functieniveau || 'onbekend',
       arbeidsRegime: data.arbeidsRegime || 'voltijds',
       type: data.type || 'personeel',
       actief: data.actief ?? true,
@@ -269,7 +269,7 @@ export function PersoneelProvider({ children }: { children: ReactNode }) {
     setDistributieGroepen(prev =>
       prev.map(g =>
         g.id === groepId && !g.ledenIds.includes(medewerkerId)
-          ? { ...g, ledenIds: [...g.ledenIds, medewerkerId], laatstGewijzigd: new Date().toISOString().split('T')[0] }
+          ? { ...g, ledenIds: [...g.ledenIds, medewerkerId], ledenAantal: g.ledenAantal + 1, laatstGewijzigd: new Date().toISOString().split('T')[0] }
           : g
       )
     );
@@ -279,7 +279,7 @@ export function PersoneelProvider({ children }: { children: ReactNode }) {
     setDistributieGroepen(prev =>
       prev.map(g =>
         g.id === groepId
-          ? { ...g, ledenIds: g.ledenIds.filter(id => id !== medewerkerId), laatstGewijzigd: new Date().toISOString().split('T')[0] }
+          ? { ...g, ledenIds: g.ledenIds.filter(id => id !== medewerkerId), ledenAantal: Math.max(0, g.ledenAantal - 1), laatstGewijzigd: new Date().toISOString().split('T')[0] }
           : g
       )
     );
