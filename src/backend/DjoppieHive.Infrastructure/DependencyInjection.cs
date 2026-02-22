@@ -32,6 +32,8 @@ public static class DependencyInjection
         // Register services
         services.AddScoped<IDistributionGroupService, GraphDistributionGroupService>();
         services.AddScoped<IEmployeeService, GraphEmployeeService>();
+        services.AddScoped<ISyncService, SyncService>();
+        services.AddScoped<IValidatieVerzoekService, ValidatieVerzoekService>();
 
         return services;
     }

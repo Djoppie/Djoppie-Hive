@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { usePersoneel } from '../context/PersoneelContext';
 import StatusBadge from '../components/StatusBadge';
+import SyncValidatieSection from '../components/SyncValidatieSection';
 import type { Medewerker, ValidatieStatus } from '../types';
 import { alleSectoren } from '../data/mockData';
 
@@ -115,6 +116,9 @@ export default function Validatie() {
           </div>
         )}
       </div>
+
+      {/* Sync validatie verzoeken */}
+      <SyncValidatieSection />
 
       {/* Status overzicht */}
       <div className="validation-stats">

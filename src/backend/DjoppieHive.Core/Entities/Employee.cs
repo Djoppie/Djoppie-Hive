@@ -1,7 +1,9 @@
+using DjoppieHive.Core.Enums;
+
 namespace DjoppieHive.Core.Entities;
 
 /// <summary>
-/// Represents an employee from MG- distribution groups in Entra ID.
+/// Representeert een medewerker uit MG- distributiegroepen in Entra ID.
 /// </summary>
 public class Employee
 {
@@ -21,6 +23,17 @@ public class Employee
     public DateTime? UpdatedAt { get; set; }
     public DateTime? LastSyncedAt { get; set; }
 
-    // Navigation properties
+    /// <summary>
+    /// Bron van deze medewerkergegevens (Azure AD of Handmatig).
+    /// </summary>
+    public GegevensBron Bron { get; set; } = GegevensBron.AzureAD;
+
+    /// <summary>
+    /// Of deze medewerker handmatig is toegevoegd in Djoppie-Hive.
+    /// </summary>
+    public bool IsHandmatigToegevoegd { get; set; } = false;
+
+    // Navigatie-eigenschappen
     public ICollection<EmployeeGroupMembership> GroupMemberships { get; set; } = [];
+    public ICollection<ValidatieVerzoek> ValidatieVerzoeken { get; set; } = [];
 }

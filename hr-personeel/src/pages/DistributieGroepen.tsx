@@ -18,6 +18,7 @@ import {
   Globe,
 } from 'lucide-react';
 import { usePersoneel } from '../context/PersoneelContext';
+import SyncKnop from '../components/SyncKnop';
 import type { DistributieGroep, DistributieGroepType } from '../types';
 
 const typeLabels: Record<DistributieGroepType, string> = {
@@ -172,6 +173,7 @@ export default function DistributieGroepen() {
           </p>
         </div>
         <div className="page-actions">
+          <SyncKnop />
           <button className="btn btn-primary" onClick={openCreateModal}>
             <Plus size={16} /> Nieuwe Groep
           </button>

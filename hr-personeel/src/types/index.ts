@@ -110,3 +110,83 @@ export interface DashboardStats {
   perRegime: Record<ArbeidsRegime, number>;
   perType: Record<PersoneelType, number>;
 }
+
+// ============================================
+// Synchronisatie types (Microsoft Graph sync)
+// ============================================
+
+/** Bron van gegevens */
+export type GegevensBron = 'AzureAD' | 'Handmatig';
+
+/** Niveau in de groepshiërarchie */
+export type GroepNiveau = 'Sector' | 'Dienst';
+
+/** Status van een sync operatie */
+export type SyncStatus = 'Bezig' | 'Voltooid' | 'Mislukt' | 'GedeeltelijkVoltooid';
+
+/** Type validatieverzoek van sync */
+export type SyncValidatieType = 'LidVerwijderd' | 'MedewerkerGedeactiveerd' | 'GroepVerwijderd' | 'GegevensConflict';
+
+/** Status van een validatieverzoek */
+export type SyncValidatieStatus = 'InAfwachting' | 'InBehandeling' | 'Goedgekeurd' | 'Afgekeurd' | 'Geescaleerd';
+
+/** Afhandelingsactie voor validatieverzoek */
+export type ValidatieAfhandeling = 'BevestigVerwijdering' | 'HandmatigHertoevoegen' | 'Negeren' | 'Escaleren';
+
+/** Resultaat van een synchronisatie operatie */
+export interface SyncResultaat {
+  syncLogboekId: string;
+  geStartOp: string;
+  voltooidOp: string;
+  status: SyncStatus;
+  groepenVerwerkt: number;
+  medewerkersToegevoegd: number;
+  medewerkersBijgewerkt: number;
+  medewerkersVerwijderd: number;
+  lidmaatschappenToegevoegd: number;
+  lidmaatschappenVerwijderd: number;
+  validatieVerzoekenAangemaakt: number;
+  foutmelding: string | null;
+}
+
+/** Huidige status van de synchronisatie */
+export interface SyncStatusInfo {
+  isSyncBezig: boolean;
+  laatsteSyncOp: string | null;
+  laatsteSyncStatus: string | null;
+  huidigeSyncId: string | null;
+}
+
+/** Logboekitem van een synchronisatie */
+export interface SyncLogboekItem {
+  id: string;
+  geStartOp: string;
+  voltooidOp: string | null;
+  status: string;
+  gestartDoor: string | null;
+  groepenVerwerkt: number;
+  medewerkersToegevoegd: number;
+  medewerkersBijgewerkt: number;
+  medewerkersVerwijderd: number;
+  validatieVerzoekenAangemaakt: number;
+}
+
+/** Validatieverzoek uit sync */
+export interface SyncValidatieVerzoek {
+  id: string;
+  type: string;
+  beschrijving: string;
+  medewerkerNaam: string | null;
+  medewerkerEmail: string | null;
+  groepNaam: string | null;
+  status: string;
+  aangemaaktOp: string;
+  toegewezenAanRol: string | null;
+  vorigeWaarde: string | null;
+}
+
+/** Request om validatie af te handelen */
+export interface AfhandelValidatieRequest {
+  afhandeling: ValidatieAfhandeling;
+  notities?: string;
+}
