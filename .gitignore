@@ -11,6 +11,8 @@ obj/
 .vs/
 *.db
 *.db-journal
+*.db-shm
+*.db-wal
 
 # Node.js
 node_modules/
