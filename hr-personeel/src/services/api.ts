@@ -80,8 +80,18 @@ export interface DistributionGroup {
   memberCount: number;
 }
 
+export interface NestedGroup {
+  id: string;
+  displayName: string;
+  description: string | null;
+  email: string | null;
+  memberCount: number;
+}
+
 export interface DistributionGroupDetail extends DistributionGroup {
   members: EmployeeSummary[];
+  owners: EmployeeSummary[];
+  nestedGroups: NestedGroup[];
 }
 
 export interface EmployeeSummary {
@@ -89,6 +99,18 @@ export interface EmployeeSummary {
   displayName: string;
   email: string;
   jobTitle: string | null;
+}
+
+// Sector with hierarchy info
+export interface SectorWithHierarchy {
+  id: string;
+  displayName: string;
+  description: string | null;
+  email: string;
+  memberCount: number;
+  owners: EmployeeSummary[];
+  nestedGroups: NestedGroup[];
+  directMembers: EmployeeSummary[];
 }
 
 export interface Employee {
