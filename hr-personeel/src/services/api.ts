@@ -1,5 +1,12 @@
 import { msalInstance } from '../auth/AuthProvider';
 import { apiRequest } from '../auth/authConfig';
+import type {
+  SyncResultaat,
+  SyncStatusInfo,
+  SyncLogboekItem,
+  SyncValidatieVerzoek,
+  AfhandelValidatieRequest,
+} from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://localhost:7001/api';
 
@@ -16,7 +23,7 @@ async function getAccessToken(): Promise<string | null> {
       account,
     });
     return response.accessToken;
-  } catch (error) {
+  } catch {
     // If silent token acquisition fails, try interactive
     try {
       const response = await msalInstance.acquireTokenPopup(apiRequest);
@@ -135,5 +142,45 @@ export const healthApi = {
     } catch {
       return false;
     }
+  },
+};
+
+// ============================================
+// Synchronisatie API
+// ============================================
+
+export const syncApi = {
+  /** Start een handmatige synchronisatie vanuit Microsoft Graph */
+  uitvoeren: () => fetchWithAuth<SyncResultaat>('/sync/uitvoeren', { method: 'POST' }),
+
+  /** Haal de huidige of laatste sync status op */
+  getStatus: () => fetchWithAuth<SyncStatusInfo>('/sync/status'),
+
+  /** Haal de sync geschiedenis op */
+  getGeschiedenis: (aantal = 10) =>
+    fetchWithAuth<SyncLogboekItem[]>(`/sync/geschiedenis?aantal=${aantal}`),
+};
+
+export const validatieVerzoekenApi = {
+  /** Haal alle openstaande validatieverzoeken op */
+  getOpenstaande: (groepId?: string) => {
+    const params = groepId ? `?groepId=${groepId}` : '';
+    return fetchWithAuth<SyncValidatieVerzoek[]>(`/validatieverzoeken${params}`);
+  },
+
+  /** Haal een specifiek validatieverzoek op */
+  getById: (id: string) => fetchWithAuth<SyncValidatieVerzoek>(`/validatieverzoeken/${id}`),
+
+  /** Handel een validatieverzoek af */
+  afhandelen: (id: string, request: AfhandelValidatieRequest) =>
+    fetchWithAuth<void>(`/validatieverzoeken/${id}/afhandelen`, {
+      method: 'POST',
+      body: JSON.stringify(request),
+    }),
+
+  /** Haal het aantal openstaande verzoeken op (voor badge) */
+  getAantal: (groepId?: string) => {
+    const params = groepId ? `?groepId=${groepId}` : '';
+    return fetchWithAuth<number>(`/validatieverzoeken/aantal${params}`);
   },
 };

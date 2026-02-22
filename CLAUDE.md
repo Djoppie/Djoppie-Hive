@@ -308,33 +308,80 @@ Local Development (develop branch)
 
 ## Business Domain: HR & Distribution Groups
 
-### MG- Distribution Groups
+### Organizational Hierarchy
 
-The organization uses **MG- prefixed distribution groups** in Microsoft Entra ID as the source of truth for personnel management:
+Gemeente Diepenbeek uses a **hierarchical structure** of MG- distribution groups in Microsoft Entra ID:
 
-- **Naming Convention**: `MG-{GroupName}` (e.g., `MG-IT-Afdeling`, `MG-HR-Team`)
-- **Purpose**: These mail-enabled distribution groups contain all persons managed in Active Directory
-- **Sync**: Groups are synced from on-premises AD to Entra ID
-- **HR Integration**: Djoppie-Hive reads and manages membership of these groups
+```
+MG-SECTOR-Organisatie              ← Sector (parent group, managed by Sector Manager)
+  ├── MG-Burgerzaken               ← Dienst (service, managed by Teamcoach)
+  ├── MG-Ruimtelijke Ordening      ← Dienst
+  └── MG-Milieu                    ← Dienst
 
-### Group Management Features
+MG-SECTOR-Vrije Tijd               ← Sector
+  ├── MG-Sport                     ← Dienst
+  ├── MG-Cultuur                   ← Dienst
+  └── MG-Jeugd                     ← Dienst
 
-1. **View Groups**: List all MG- distribution groups with member counts
-2. **View Members**: Display all members of a specific group
-3. **Add/Remove Members**: Manage group membership (with proper authorization)
-4. **Group Creation**: Create new MG- groups for departments/teams
-5. **Audit Trail**: Log all membership changes for compliance
+... (5 sectors total)
+```
+
+### Hierarchy Levels
+
+| Level | Naming Pattern | Manager Role | Example |
+|-------|---------------|--------------|---------|
+| **Sector** | `MG-SECTOR-{Name}` | Sector Manager | MG-SECTOR-Organisatie |
+| **Dienst** | `MG-{ServiceName}` | Teamcoach | MG-Burgerzaken |
+| **Medewerker** | (group member) | - | jan.janssen@diepenbeek.be |
+
+### Data Sources & Sync Direction
+
+Hive operates with **two data sources**:
+
+| Source | Icon | Description | Sync Direction |
+|--------|------|-------------|----------------|
+| **Azure (Entra ID)** | ☁️ Cloud | Members synced from MG- groups via Graph API | Azure → Hive (read-only) |
+| **Manual** | 👤 User | Members/groups created directly in Hive | Hive only (local) |
+
+**Important**: Hive does NOT write back to Azure. All Azure data is read-only. Write-back is a potential future feature.
+
+### Core Functionality
+
+1. **Sync from Entra ID** — Pull members from MG-SECTOR-* and MG-* groups via Microsoft Graph API
+2. **Map the hierarchy** — Sector → Dienst → Medewerkers
+3. **On-demand validation** — When changes are detected, Teamcoaches/Sector Managers validate
+4. **Track active/inactive** — Reflect membership reality in real-time
+5. **Distribution lists** — Use for events, communication, party invites
+6. **Local groups** — Create groups in Hive that only exist in Hive
+
+### Validation Workflow
+
+```
+Graph API detects change in MG- group
+            ↓
+    Hive notifies Teamcoach/Sector Manager
+            ↓
+    Manager validates or adjusts
+            ↓
+    Change reflected in Hive (with audit trail)
+```
+
+Teamcoaches can also make changes on-the-fly without waiting for sync triggers.
 
 ### Data Flow
 
 ```
 On-Premises AD ←→ Azure AD Connect ←→ Microsoft Entra ID
                                               ↓
-                                    Microsoft Graph API
+                                    Microsoft Graph API (read-only)
                                               ↓
                                     Djoppie-Hive API
-                                              ↓
-                                    HR Management Interface
+                                        ↓         ↓
+                              Azure Data    +    Manual Data
+                              (synced)           (local only)
+                                        ↓
+                              HR Management Interface
+                              (shows source icon for each entry)
 ```
 
 ### Group Properties
@@ -343,12 +390,14 @@ Key properties to display/manage for each MG- group:
 
 | Property | Graph API Field | Description |
 |----------|-----------------|-------------|
-| Display Name | `displayName` | Group name (MG-prefix) |
+| Display Name | `displayName` | Group name (MG-SECTOR-* or MG-*) |
 | Description | `description` | Purpose of the group |
 | Mail | `mail` | Email address for distribution |
 | Members | `members` | List of group members |
-| Owners | `owners` | Group administrators |
+| Owners | `owners` | Sector Managers / Teamcoaches |
+| Parent Group | (derived) | Sector this dienst belongs to |
 | Created | `createdDateTime` | When group was created |
+| Source | (Hive field) | Azure or Manual |
 
 ## Key Implementation Notes
 
@@ -356,24 +405,39 @@ Key properties to display/manage for each MG- group:
 
 Required permissions for MG- distribution group management:
 
+**Current (Read-Only)**:
 - `Group.Read.All` - Read all groups (required)
-- `Group.ReadWrite.All` - Manage group membership (required for full functionality)
 - `User.Read.All` - Read user profiles and photos
 - `Directory.Read.All` - Read directory data
+
+**Future (Write-Back Feature)**:
+- `Group.ReadWrite.All` - Manage group membership
 - `GroupMember.ReadWrite.All` - Add/remove group members
 
 ### Graph API Endpoints
 
-```
-# List all groups starting with MG-
-GET /groups?$filter=startswith(displayName,'MG-')
+```bash
+# List all SECTOR groups
+GET /groups?$filter=startswith(displayName,'MG-SECTOR-')
+
+# List all DIENST groups (services)
+GET /groups?$filter=startswith(displayName,'MG-') and not startswith(displayName,'MG-SECTOR-')
 
 # Get group details
 GET /groups/{group-id}
 
-# Get group members
-GET /groups/{group-id}/members
+# Get group members (with user details)
+GET /groups/{group-id}/members?$select=id,displayName,mail,jobTitle,department
 
+# Get nested groups (diensten within a sector)
+GET /groups/{sector-group-id}/members/microsoft.graph.group
+
+# Get group owners (Sector Managers / Teamcoaches)
+GET /groups/{group-id}/owners
+```
+
+**Future Write Endpoints (not currently used)**:
+```bash
 # Add member to group
 POST /groups/{group-id}/members/$ref
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { X } from 'lucide-react';
 import type { Medewerker, ArbeidsRegime, PersoneelType } from '../types';
 import { alleSectoren, alleDiensten } from '../data/mockData';
@@ -24,28 +24,29 @@ const defaultFormData = {
   opmerkingen: '',
 };
 
-export default function MedewerkerModal({ medewerker, open, onClose, onSave }: Props) {
-  const [formData, setFormData] = useState(defaultFormData);
+// Helper to compute initial form data from medewerker prop
+function getInitialFormData(medewerker: Medewerker | null | undefined) {
+  if (medewerker) {
+    return {
+      voornaam: medewerker.voornaam,
+      achternaam: medewerker.achternaam,
+      email: medewerker.email,
+      telefoon: medewerker.telefoon || '',
+      functie: medewerker.functie || '',
+      sector: medewerker.sector,
+      dienst: medewerker.dienst,
+      arbeidsRegime: medewerker.arbeidsRegime,
+      type: medewerker.type,
+      actief: medewerker.actief,
+      opmerkingen: medewerker.opmerkingen,
+    };
+  }
+  return defaultFormData;
+}
 
-  useEffect(() => {
-    if (medewerker) {
-      setFormData({
-        voornaam: medewerker.voornaam,
-        achternaam: medewerker.achternaam,
-        email: medewerker.email,
-        telefoon: medewerker.telefoon || '',
-        functie: medewerker.functie || '',
-        sector: medewerker.sector,
-        dienst: medewerker.dienst,
-        arbeidsRegime: medewerker.arbeidsRegime,
-        type: medewerker.type,
-        actief: medewerker.actief,
-        opmerkingen: medewerker.opmerkingen,
-      });
-    } else {
-      setFormData(defaultFormData);
-    }
-  }, [medewerker, open]);
+export default function MedewerkerModal({ medewerker, open, onClose, onSave }: Props) {
+  // Initialize form data from medewerker prop - parent should use key prop to reset
+  const [formData, setFormData] = useState(() => getInitialFormData(medewerker));
 
   if (!open) return null;
 

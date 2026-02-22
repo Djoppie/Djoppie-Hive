@@ -4,6 +4,7 @@ using DjoppieHive.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Graph;
 
 namespace DjoppieHive.Infrastructure;
 
@@ -29,9 +30,25 @@ public static class DependencyInjection
                 options.UseSqlServer(connectionString));
         }
 
-        // Register services
-        services.AddScoped<IDistributionGroupService, GraphDistributionGroupService>();
-        services.AddScoped<IEmployeeService, GraphEmployeeService>();
+        // Register ValidatieVerzoekService (doesn't depend on Graph)
+        services.AddScoped<IValidatieVerzoekService, ValidatieVerzoekService>();
+
+        // Register Graph-dependent services or stubs based on GraphServiceClient availability
+        var graphClientRegistered = services.Any(s => s.ServiceType == typeof(GraphServiceClient));
+        if (graphClientRegistered)
+        {
+            // Real Graph implementations
+            services.AddScoped<IDistributionGroupService, GraphDistributionGroupService>();
+            services.AddScoped<IEmployeeService, GraphEmployeeService>();
+            services.AddScoped<ISyncService, SyncService>();
+        }
+        else
+        {
+            // Stub implementations for local development without Graph credentials
+            services.AddScoped<IDistributionGroupService, StubDistributionGroupService>();
+            services.AddScoped<IEmployeeService, StubEmployeeService>();
+            services.AddScoped<ISyncService, StubSyncService>();
+        }
 
         return services;
     }
