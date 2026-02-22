@@ -110,25 +110,27 @@ export default function Layout() {
         </nav>
 
         <div className="sidebar-footer">
-          <div className="footer-actions">
+          <div className="theme-toggle-section">
             <ThemeToggle />
+          </div>
+          <div className="user-section">
+            <div className="user-info">
+              <div className="user-avatar">
+                <User size={18} />
+              </div>
+              {sidebarOpen && (
+                <div className="user-details">
+                  <span className="user-name">{user?.name || 'Gebruiker'}</span>
+                  <span className="user-role">
+                  {user?.email || ""}
+                  </span>
+                </div>
+              )}
+            </div>
             {sidebarOpen && (
               <button className="logout-btn" title="Afmelden" onClick={handleLogout}>
                 <LogOut size={18} />
               </button>
-            )}
-          </div>
-          <div className="user-info">
-            <div className="user-avatar">
-              <User size={18} />
-            </div>
-            {sidebarOpen && (
-              <div className="user-details">
-                <span className="user-name">{user?.name || 'Gebruiker'}</span>
-                <span className="user-role">
-                {user?.email || ""}
-                </span>
-              </div>
             )}
           </div>
         </div>
