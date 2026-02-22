@@ -113,17 +113,122 @@ export interface SectorWithHierarchy {
   directMembers: EmployeeSummary[];
 }
 
+// Employee types matching backend API
+export type EmployeeType = 'Personeel' | 'Vrijwilliger' | 'Interim' | 'Extern' | 'Stagiair';
+export type ArbeidsRegimeAPI = 'Voltijds' | 'Deeltijds' | 'Vrijwilliger';
+export type DataSource = 'AzureAD' | 'Handmatig';
+
+export interface VrijwilligerDetails {
+  id: string;
+  beschikbaarheid?: string | null;
+  specialisaties?: string | null;
+  noodContactNaam?: string | null;
+  noodContactTelefoon?: string | null;
+  vogDatum?: string | null;
+  vogGeldigTot?: string | null;
+}
+
 export interface Employee {
   id: string;
   displayName: string;
-  givenName: string | null;
-  surname: string | null;
+  givenName: string;
+  surname: string;
   email: string;
-  jobTitle: string | null;
-  department: string | null;
-  officeLocation: string | null;
-  mobilePhone: string | null;
+  jobTitle: string;
+  department: string;
+  officeLocation?: string | null;
+  mobilePhone?: string | null;
   groups: string[];
+  isActive: boolean;
+  bron: DataSource;
+  isHandmatigToegevoegd: boolean;
+  employeeType: EmployeeType;
+  arbeidsRegime: ArbeidsRegimeAPI;
+  photoUrl?: string | null;
+  dienstId?: string | null;
+  dienstNaam?: string | null;
+  startDatum?: string | null;
+  eindDatum?: string | null;
+  telefoonnummer?: string | null;
+  vrijwilligerDetails?: VrijwilligerDetails | null;
+  createdAt: string;
+  updatedAt?: string | null;
+  lastSyncedAt?: string | null;
+}
+
+export interface CreateEmployeeDto {
+  givenName: string;
+  surname: string;
+  email: string;
+  jobTitle?: string;
+  department?: string;
+  officeLocation?: string;
+  mobilePhone?: string;
+  employeeType: EmployeeType;
+  arbeidsRegime: ArbeidsRegimeAPI;
+  dienstId?: string;
+  startDatum?: string;
+  eindDatum?: string;
+  telefoonnummer?: string;
+  isActive?: boolean;
+}
+
+export interface UpdateEmployeeDto {
+  givenName?: string;
+  surname?: string;
+  email?: string;
+  jobTitle?: string;
+  department?: string;
+  officeLocation?: string;
+  mobilePhone?: string;
+  employeeType?: EmployeeType;
+  arbeidsRegime?: ArbeidsRegimeAPI;
+  dienstId?: string;
+  startDatum?: string;
+  eindDatum?: string;
+  telefoonnummer?: string;
+  isActive?: boolean;
+  vrijwilligerDetails?: {
+    beschikbaarheid?: string;
+    specialisaties?: string;
+    noodContactNaam?: string;
+    noodContactTelefoon?: string;
+    vogDatum?: string;
+    vogGeldigTot?: string;
+  };
+}
+
+export interface CreateVolunteerDto extends CreateEmployeeDto {
+  employeeType: 'Vrijwilliger';
+  arbeidsRegime: 'Vrijwilliger';
+  vrijwilligerDetails?: {
+    beschikbaarheid?: string;
+    specialisaties?: string;
+    noodContactNaam?: string;
+    noodContactTelefoon?: string;
+    vogDatum?: string;
+    vogGeldigTot?: string;
+  };
+}
+
+export interface UpdateVolunteerDto extends UpdateEmployeeDto {
+  vrijwilligerDetails?: {
+    beschikbaarheid?: string;
+    specialisaties?: string;
+    noodContactNaam?: string;
+    noodContactTelefoon?: string;
+    vogDatum?: string;
+    vogGeldigTot?: string;
+  };
+}
+
+export interface EmployeeFilter {
+  employeeType?: EmployeeType;
+  arbeidsRegime?: ArbeidsRegimeAPI;
+  isActive?: boolean;
+  dienstId?: string;
+  search?: string;
+  bron?: DataSource;
 }
 
 export const distributionGroupsApi = {
@@ -147,12 +252,46 @@ export const distributionGroupsApi = {
 };
 
 export const employeesApi = {
-  getAll: () => fetchWithAuth<Employee[]>('/employees'),
+  getAll: (filter?: EmployeeFilter) => {
+    const params = new URLSearchParams();
+    if (filter?.employeeType) params.append('employeeType', filter.employeeType);
+    if (filter?.arbeidsRegime) params.append('arbeidsRegime', filter.arbeidsRegime);
+    if (filter?.isActive !== undefined) params.append('isActive', filter.isActive.toString());
+    if (filter?.dienstId) params.append('dienstId', filter.dienstId);
+    if (filter?.search) params.append('search', filter.search);
+    if (filter?.bron) params.append('bron', filter.bron);
+
+    const queryString = params.toString();
+    return fetchWithAuth<Employee[]>(`/employees${queryString ? `?${queryString}` : ''}`);
+  },
 
   getById: (id: string) => fetchWithAuth<Employee>(`/employees/${id}`),
 
+  create: (dto: CreateEmployeeDto) =>
+    fetchWithAuth<Employee>('/employees', {
+      method: 'POST',
+      body: JSON.stringify(dto),
+    }),
+
+  update: (id: string, dto: UpdateEmployeeDto) =>
+    fetchWithAuth<Employee>(`/employees/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(dto),
+    }),
+
+  delete: (id: string) =>
+    fetchWithAuth<void>(`/employees/${id}`, {
+      method: 'DELETE',
+    }),
+
   search: (query: string) =>
-    fetchWithAuth<EmployeeSummary[]>(`/employees/search?q=${encodeURIComponent(query)}`),
+    fetchWithAuth<Employee[]>(`/employees/search?q=${encodeURIComponent(query)}`),
+
+  getByDienst: (dienstId: string) =>
+    fetchWithAuth<Employee[]>(`/employees/dienst/${dienstId}`),
+
+  getVolunteers: () =>
+    fetchWithAuth<Employee[]>('/employees?employeeType=Vrijwilliger'),
 };
 
 // Health check (no auth required)

@@ -13,6 +13,7 @@ import {
   User,
   MailCheck,
   Building2,
+  Heart,
 } from 'lucide-react';
 import diepenbeekLogo from '../assets/diepenbeek-logo.svg';
 import { usePersoneel } from '../context/PersoneelContext';
@@ -21,6 +22,7 @@ import { useAuth } from '../auth/AuthProvider';
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/personeel', icon: Users, label: 'Personeelslijst' },
+  { to: '/vrijwilligers', icon: Heart, label: 'Vrijwilligers' },
   { to: '/validatie', icon: ClipboardCheck, label: 'Validatie' },
   { to: '/sectoren', icon: Building2, label: 'Sectoren' },
   { to: '/distributiegroepen', icon: MailCheck, label: 'Distributiegroepen' },

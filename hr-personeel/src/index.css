@@ -66,6 +66,20 @@
   padding: 0;
 }
 
+/* ---------- Animations ---------- */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
 body {
   background: var(--bg-main);
   min-height: 100vh;
@@ -1362,6 +1376,12 @@ button {
   background: var(--color-primary);
   color: #fff;
   border-color: var(--color-primary);
+}
+
+.chip-sm {
+  padding: 2px 8px;
+  font-size: 11px;
+  border-radius: 12px;
 }
 
 /* ---------- Roles Page ---------- */
@@ -2828,4 +2848,45 @@ input[type="checkbox"] {
   .hierarchy-detail-panel {
     min-height: 500px;
   }
+}
+
+/* ===========================================
+   Vrijwilligers (Volunteers) Page
+   =========================================== */
+
+/* VOG Status Badges */
+.vog-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.vog-valid {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.vog-warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.vog-expired {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.vog-none {
+  background: var(--bg-main);
+  color: var(--text-muted);
+}
+
+/* Availability Chips */
+.availability-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 }

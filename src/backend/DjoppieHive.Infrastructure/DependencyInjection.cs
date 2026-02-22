@@ -33,20 +33,31 @@ public static class DependencyInjection
         // Register ValidatieVerzoekService (doesn't depend on Graph)
         services.AddScoped<IValidatieVerzoekService, ValidatieVerzoekService>();
 
+        // Register database-backed EmployeeService (primary service for CRUD operations)
+        services.AddScoped<EmployeeService>();
+
         // Register Graph-dependent services or stubs based on GraphServiceClient availability
         var graphClientRegistered = services.Any(s => s.ServiceType == typeof(GraphServiceClient));
         if (graphClientRegistered)
         {
             // Real Graph implementations
             services.AddScoped<IDistributionGroupService, GraphDistributionGroupService>();
-            services.AddScoped<IEmployeeService, GraphEmployeeService>();
+
+            // Use database-backed EmployeeService as primary IEmployeeService
+            // GraphEmployeeService is available for sync operations but not registered as IEmployeeService
+            services.AddScoped<IEmployeeService>(sp => sp.GetRequiredService<EmployeeService>());
+            services.AddScoped<GraphEmployeeService>(); // Available for sync if needed
+
             services.AddScoped<ISyncService, SyncService>();
         }
         else
         {
             // Stub implementations for local development without Graph credentials
             services.AddScoped<IDistributionGroupService, StubDistributionGroupService>();
-            services.AddScoped<IEmployeeService, StubEmployeeService>();
+
+            // Use database-backed EmployeeService (works with or without Graph)
+            services.AddScoped<IEmployeeService>(sp => sp.GetRequiredService<EmployeeService>());
+
             services.AddScoped<ISyncService, StubSyncService>();
         }
 

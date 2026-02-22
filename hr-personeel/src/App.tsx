@@ -10,6 +10,7 @@ import Rollen from './pages/Rollen';
 import ADImport from './pages/ADImport';
 import DistributieGroepen from './pages/DistributieGroepen';
 import SectorHierarchy from './pages/SectorHierarchy';
+import Vrijwilligers from './pages/Vrijwilligers';
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
             <Route element={<Layout />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/personeel" element={<PersoneelLijst />} />
+              <Route path="/vrijwilligers" element={<Vrijwilligers />} />
               <Route path="/validatie" element={<Validatie />} />
               <Route path="/distributiegroepen" element={<DistributieGroepen />} />
               <Route path="/sectoren" element={<SectorHierarchy />} />

@@ -127,7 +127,11 @@ public class GraphDistributionGroupService : IDistributionGroupService
                         member.Id!,
                         member.DisplayName ?? string.Empty,
                         member.Mail ?? string.Empty,
-                        member.JobTitle
+                        member.JobTitle,
+                        EmployeeType: "Personeel",
+                        ArbeidsRegime: "Voltijds",
+                        IsActive: true,
+                        DienstNaam: null
                     ));
                 }
             }
@@ -161,7 +165,11 @@ public class GraphDistributionGroupService : IDistributionGroupService
                         owner.Id!,
                         owner.DisplayName ?? string.Empty,
                         owner.Mail ?? string.Empty,
-                        owner.JobTitle
+                        owner.JobTitle,
+                        EmployeeType: "Personeel",
+                        ArbeidsRegime: "Voltijds",
+                        IsActive: true,
+                        DienstNaam: null
                     ));
                 }
             }

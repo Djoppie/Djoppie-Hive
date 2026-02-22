@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Search,
   Plus,
@@ -12,11 +12,18 @@ import {
   UserPlus,
   Check,
   X,
+  AlertCircle,
+  Loader2,
 } from 'lucide-react';
-import { usePersoneel } from '../context/PersoneelContext';
 import StatusBadge from '../components/StatusBadge';
 import MedewerkerModal from '../components/MedewerkerModal';
 import type { Medewerker, ArbeidsRegime, PersoneelType, ValidatieStatus } from '../types';
+import { employeeService } from '../services/employeeService';
+import {
+  mapEmployeeToMedewerker,
+  mapMedewerkerToCreateDto,
+  mapMedewerkerToUpdateDto,
+} from '../utils/employeeMapper';
 import { alleSectoren } from '../data/mockData';
 
 type SortKey = 'volledigeNaam' | 'email' | 'sector' | 'dienst' | 'type' | 'arbeidsRegime' | 'validatieStatus';
@@ -34,8 +41,12 @@ function SortIcon({ columnKey, sortKey, sortDir }: SortIconProps) {
 }
 
 export default function PersoneelLijst() {
-  const { medewerkers, updateMedewerker, voegMedewerkerToe, verwijderMedewerker } = usePersoneel();
+  // State for employee data from API
+  const [medewerkers, setMedewerkers] = useState<Medewerker[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  // Filter and search state
   const [zoekterm, setZoekterm] = useState('');
   const [filterSector, setFilterSector] = useState('');
   const [filterType, setFilterType] = useState<PersoneelType | ''>('');
@@ -44,12 +55,34 @@ export default function PersoneelLijst() {
   const [filterActief, setFilterActief] = useState<'' | 'ja' | 'nee'>('');
   const [showFilters, setShowFilters] = useState(false);
 
+  // Sort state
   const [sortKey, setSortKey] = useState<SortKey>('volledigeNaam');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
+  // Modal and selection state
   const [modalOpen, setModalOpen] = useState(false);
   const [bewerkMedewerker, setBewerkMedewerker] = useState<Medewerker | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Fetch employees on mount
+  useEffect(() => {
+    loadEmployees();
+  }, []);
+
+  async function loadEmployees() {
+    try {
+      setLoading(true);
+      setError(null);
+      const employees = await employeeService.getEmployees();
+      const mapped = employees.map(mapEmployeeToMedewerker);
+      setMedewerkers(mapped);
+    } catch (err) {
+      console.error('Failed to load employees:', err);
+      setError(err instanceof Error ? err.message : 'Kan medewerkers niet laden');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const gefilterd = useMemo(() => {
     let result = medewerkers;
@@ -140,17 +173,47 @@ export default function PersoneelLijst() {
     });
   };
 
-  const handleSave = (data: Partial<Medewerker>) => {
-    if (bewerkMedewerker) {
-      updateMedewerker(bewerkMedewerker.id, data);
-    } else {
-      voegMedewerkerToe(data as Omit<Medewerker, 'id' | 'aanmaakDatum' | 'laatstGewijzigd'>);
+  const handleSave = async (data: Partial<Medewerker>) => {
+    try {
+      setError(null);
+      if (bewerkMedewerker) {
+        // Update existing employee
+        const updateDto = mapMedewerkerToUpdateDto(data);
+        const updated = await employeeService.updateEmployee(bewerkMedewerker.id, updateDto);
+        setMedewerkers(prev =>
+          prev.map(m => (m.id === bewerkMedewerker.id ? mapEmployeeToMedewerker(updated) : m))
+        );
+      } else {
+        // Create new employee
+        const createDto = mapMedewerkerToCreateDto(data);
+        const created = await employeeService.createEmployee(createDto);
+        setMedewerkers(prev => [...prev, mapEmployeeToMedewerker(created)]);
+      }
+      setModalOpen(false);
+      setBewerkMedewerker(null);
+    } catch (err) {
+      console.error('Failed to save employee:', err);
+      setError(err instanceof Error ? err.message : 'Kan medewerker niet opslaan');
     }
   };
 
-  const handleDelete = (id: string) => {
-    if (window.confirm('Weet u zeker dat u deze medewerker wilt verwijderen?')) {
-      verwijderMedewerker(id);
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Weet u zeker dat u deze medewerker wilt verwijderen?')) {
+      return;
+    }
+
+    try {
+      setError(null);
+      await employeeService.deleteEmployee(id);
+      setMedewerkers(prev => prev.filter(m => m.id !== id));
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    } catch (err) {
+      console.error('Failed to delete employee:', err);
+      setError(err instanceof Error ? err.message : 'Kan medewerker niet verwijderen');
     }
   };
 
@@ -165,8 +228,53 @@ export default function PersoneelLijst() {
 
   const hasActiveFilters = filterSector || filterType || filterRegime || filterStatus || filterActief;
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="page">
+        <div className="page-header">
+          <h1>Personeelslijst</h1>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px', gap: '12px' }}>
+          <Loader2 size={24} className="spin" />
+          <span>Medewerkers laden...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="page">
+      {/* Error banner */}
+      {error && (
+        <div style={{
+          padding: '12px 16px',
+          marginBottom: '16px',
+          backgroundColor: '#FEE',
+          border: '1px solid #F44336',
+          borderRadius: '4px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+        }}>
+          <AlertCircle size={20} style={{ color: '#F44336', flexShrink: 0 }} />
+          <span style={{ color: '#D32F2F', flex: 1 }}>{error}</span>
+          <button
+            onClick={() => setError(null)}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            <X size={16} style={{ color: '#D32F2F' }} />
+          </button>
+        </div>
+      )}
+
       <div className="page-header">
         <div>
           <h1>Personeelslijst</h1>
