@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { usePersoneel } from '../context/PersoneelContext';
 import SyncKnop from '../components/SyncKnop';
-import { distributionGroupsApi, type EmployeeSummary } from '../services/api';
+import { distributionGroupsApi, employeesApi, type EmployeeSummary, type Employee } from '../services/api';
 import type { DistributieGroep, DistributieGroepType } from '../types';
 
 const typeLabels: Record<DistributieGroepType, string> = {
@@ -35,7 +35,6 @@ const typeIcons: Record<DistributieGroepType, typeof Mail> = {
 export default function DistributieGroepen() {
   const {
     distributieGroepen,
-    medewerkers,
     voegDistributieGroepToe,
     updateDistributieGroep,
     verwijderDistributieGroep,
@@ -55,6 +54,10 @@ export default function DistributieGroepen() {
   const [apiLeden, setApiLeden] = useState<EmployeeSummary[]>([]);
   const [ledenLoading, setLedenLoading] = useState(false);
   const [ledenError, setLedenError] = useState<string | null>(null);
+
+  // State for API-loaded employees (for adding members)
+  const [apiEmployees, setApiEmployees] = useState<Employee[]>([]);
+  const [employeesLoading, setEmployeesLoading] = useState(false);
 
   const gefilterd = useMemo(() => {
     if (!zoekterm) return distributieGroepen;
@@ -111,21 +114,46 @@ export default function DistributieGroepen() {
     }));
   }, [selectedGroep, apiLeden, getGroepLeden]);
 
+  // Fetch employees from API when modal opens
+  useEffect(() => {
+    if (!ledenModalOpen) return;
+
+    setEmployeesLoading(true);
+    employeesApi.getAll({ isActive: true })
+      .then(employees => {
+        setApiEmployees(employees);
+      })
+      .catch(err => {
+        console.error('Failed to load employees:', err);
+        setApiEmployees([]);
+      })
+      .finally(() => {
+        setEmployeesLoading(false);
+      });
+  }, [ledenModalOpen]);
+
+  // Filter beschikbare leden (exclude current members)
   const beschikbareLeden = useMemo(() => {
     if (!selectedGroep) return [];
-    const ledenSet = new Set(selectedGroep.ledenIds);
-    let beschikbaar = medewerkers.filter(m => !ledenSet.has(m.id) && m.actief);
+
+    // Create set of current member IDs (from API members)
+    const ledenSet = new Set(apiLeden.map(m => m.id));
+
+    // Filter API employees: exclude current members
+    let beschikbaar = apiEmployees.filter(m => !ledenSet.has(m.id) && m.isActive);
+
+    // Apply search filter
     if (ledenZoekterm) {
       const term = ledenZoekterm.toLowerCase();
       beschikbaar = beschikbaar.filter(
         m =>
-          m.volledigeNaam.toLowerCase().includes(term) ||
+          m.displayName.toLowerCase().includes(term) ||
           m.email.toLowerCase().includes(term) ||
-          m.sector.toLowerCase().includes(term)
+          (m.department?.toLowerCase().includes(term) ?? false)
       );
     }
     return beschikbaar;
-  }, [medewerkers, selectedGroep, ledenZoekterm]);
+  }, [apiEmployees, apiLeden, selectedGroep, ledenZoekterm]);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -483,49 +511,54 @@ export default function DistributieGroepen() {
               </div>
 
               <div className="dg-add-members-list">
-                <table className="data-table data-table-compact">
-                  <thead>
-                    <tr>
-                      <th>Naam</th>
-                      <th>E-mail</th>
-                      <th>Sector</th>
-                      <th>Dienst</th>
-                      <th style={{ width: 100 }}>Actie</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {beschikbareLeden.slice(0, 20).map(m => (
-                      <tr key={m.id}>
-                        <td className="td-name">{m.volledigeNaam}</td>
-                        <td className="td-email">{m.email}</td>
-                        <td>{m.sector}</td>
-                        <td>{m.dienst}</td>
-                        <td>
-                          <button
-                            className="btn btn-success btn-sm"
-                            onClick={() => handleVoegLidToe(m.id)}
-                          >
-                            <UserPlus size={12} /> Toevoegen
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                    {beschikbareLeden.length === 0 && (
+                {employeesLoading ? (
+                  <div className="dg-loading">
+                    <Loader2 size={24} className="spin" />
+                    <span>Medewerkers laden...</span>
+                  </div>
+                ) : (
+                  <table className="data-table data-table-compact">
+                    <thead>
                       <tr>
-                        <td colSpan={5} className="empty-state">
-                          Geen beschikbare medewerkers gevonden.
-                        </td>
+                        <th>Naam</th>
+                        <th>E-mail</th>
+                        <th>Functie</th>
+                        <th style={{ width: 100 }}>Actie</th>
                       </tr>
-                    )}
-                    {beschikbareLeden.length > 20 && (
-                      <tr>
-                        <td colSpan={5} className="text-muted" style={{ textAlign: 'center', padding: 12 }}>
-                          ... en {beschikbareLeden.length - 20} anderen. Gebruik de zoekbalk om te filteren.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {beschikbareLeden.slice(0, 20).map(m => (
+                        <tr key={m.id}>
+                          <td className="td-name">{m.displayName}</td>
+                          <td className="td-email">{m.email}</td>
+                          <td>{m.jobTitle || '-'}</td>
+                          <td>
+                            <button
+                              className="btn btn-success btn-sm"
+                              onClick={() => handleVoegLidToe(m.id)}
+                            >
+                              <UserPlus size={12} /> Toevoegen
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {beschikbareLeden.length === 0 && !employeesLoading && (
+                        <tr>
+                          <td colSpan={4} className="empty-state">
+                            Geen beschikbare medewerkers gevonden.
+                          </td>
+                        </tr>
+                      )}
+                      {beschikbareLeden.length > 20 && (
+                        <tr>
+                          <td colSpan={4} className="text-muted" style={{ textAlign: 'center', padding: 12 }}>
+                            ... en {beschikbareLeden.length - 20} anderen. Gebruik de zoekbalk om te filteren.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                )}
               </div>
             </div>
           </div>
