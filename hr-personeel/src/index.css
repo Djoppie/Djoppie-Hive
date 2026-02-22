@@ -1095,6 +1095,16 @@ button {
   color: var(--color-primary);
 }
 
+.validation-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+}
+
 .selection-count {
   font-size: 13px;
   color: var(--text-secondary);

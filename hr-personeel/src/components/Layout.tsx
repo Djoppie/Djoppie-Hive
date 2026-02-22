@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -16,8 +16,8 @@ import {
   Heart,
 } from 'lucide-react';
 import diepenbeekLogo from '../assets/diepenbeek-logo.svg';
-import { usePersoneel } from '../context/PersoneelContext';
 import { useAuth } from '../auth/AuthProvider';
+import { validatieVerzoekenApi } from '../services/api';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -33,16 +33,30 @@ const navItems = [
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const { medewerkers } = usePersoneel();
+  const [teValideren, setTeValideren] = useState(0);
   const { user, logout } = useAuth();
-  
+
   const handleLogout = () => {
     logout();
   };
 
-  const teValideren = medewerkers.filter(
-    m => m.validatieStatus === 'nieuw' || m.validatieStatus === 'in_review'
-  ).length;
+  // Load validation count from API
+  useEffect(() => {
+    const loadValidatieCount = async () => {
+      try {
+        const count = await validatieVerzoekenApi.getAantal();
+        setTeValideren(count);
+      } catch (error) {
+        console.error('Failed to load validation count:', error);
+      }
+    };
+
+    loadValidatieCount();
+
+    // Refresh count every 30 seconds
+    const interval = setInterval(loadValidatieCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="app-layout">

@@ -1,102 +1,115 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   CheckCircle2,
   XCircle,
-  Eye,
-  MessageSquare,
+  UserMinus,
+  UserPlus,
   Filter,
   ChevronDown,
   ChevronRight,
   AlertTriangle,
+  ArrowUp,
+  RefreshCw,
 } from 'lucide-react';
-import { usePersoneel } from '../context/PersoneelContext';
-import StatusBadge from '../components/StatusBadge';
-import SyncValidatieSection from '../components/SyncValidatieSection';
-import type { Medewerker, ValidatieStatus } from '../types';
-import { alleSectoren } from '../data/mockData';
+import { validatieVerzoekenApi } from '../services/api';
+import type { SyncValidatieVerzoek, ValidatieAfhandeling } from '../types';
 
 export default function Validatie() {
-  const { medewerkers, updateValidatieStatus, bulkValidatie } = usePersoneel();
-
-  const [filterSector, setFilterSector] = useState('');
-  const [filterStatus, setFilterStatus] = useState<ValidatieStatus | ''>('');
-  const [expandedSectors, setExpandedSectors] = useState<Set<string>>(new Set(alleSectoren));
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [opmerkingenModal, setOpmerkingenModal] = useState<{
+  const [verzoeken, setVerzoeken] = useState<SyncValidatieVerzoek[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [filterGroep, setFilterGroep] = useState('');
+  const [expandedGroepen, setExpandedGroepen] = useState<Set<string>>(new Set());
+  const [afhandelModal, setAfhandelModal] = useState<{
     open: boolean;
-    medewerkerId: string;
-    actie: ValidatieStatus;
-  }>({ open: false, medewerkerId: '', actie: 'goedgekeurd' });
-  const [opmerkingText, setOpmerkingText] = useState('');
-  const [detailMedewerker, setDetailMedewerker] = useState<Medewerker | null>(null);
+    verzoek: SyncValidatieVerzoek | null;
+    actie: ValidatieAfhandeling | null;
+  }>({ open: false, verzoek: null, actie: null });
+  const [notities, setNotities] = useState('');
 
-  const teValideren = useMemo(() => {
-    let result = medewerkers;
-    if (filterSector) result = result.filter(m => m.sector === filterSector);
-    if (filterStatus) result = result.filter(m => m.validatieStatus === filterStatus);
-    return result;
-  }, [medewerkers, filterSector, filterStatus]);
+  const laadVerzoeken = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const data = await validatieVerzoekenApi.getOpenstaande();
+      setVerzoeken(data);
+      setError(null);
+      // Automatisch alle groepen uitklappen
+      const groepen = new Set(data.map(v => v.groepNaam || 'Onbekend'));
+      setExpandedGroepen(groepen);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Fout bij ophalen verzoeken');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-  const perSector = useMemo(() => {
-    const grouped: Record<string, Medewerker[]> = {};
-    teValideren.forEach(m => {
-      if (!grouped[m.sector]) grouped[m.sector] = [];
-      grouped[m.sector].push(m);
+  useEffect(() => {
+    laadVerzoeken();
+  }, [laadVerzoeken]);
+
+  const gefilterdVerzoeken = useMemo(() => {
+    if (!filterGroep) return verzoeken;
+    return verzoeken.filter(v => v.groepNaam === filterGroep);
+  }, [verzoeken, filterGroep]);
+
+  const perGroep = useMemo(() => {
+    const grouped: Record<string, SyncValidatieVerzoek[]> = {};
+    gefilterdVerzoeken.forEach(v => {
+      const groep = v.groepNaam || 'Onbekend';
+      if (!grouped[groep]) grouped[groep] = [];
+      grouped[groep].push(v);
     });
     return grouped;
-  }, [teValideren]);
+  }, [gefilterdVerzoeken]);
 
-  const toggleSector = (sector: string) => {
-    setExpandedSectors(prev => {
+  const alleGroepen = useMemo(() => {
+    return Array.from(new Set(verzoeken.map(v => v.groepNaam || 'Onbekend'))).sort();
+  }, [verzoeken]);
+
+  const toggleGroep = (groep: string) => {
+    setExpandedGroepen(prev => {
       const next = new Set(prev);
-      if (next.has(sector)) next.delete(sector);
-      else next.add(sector);
+      if (next.has(groep)) next.delete(groep);
+      else next.add(groep);
       return next;
     });
   };
 
-  const handleGoedkeuren = (id: string) => {
-    updateValidatieStatus(id, 'goedgekeurd');
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
+  const handleAfhandelen = async () => {
+    if (!afhandelModal.verzoek || !afhandelModal.actie) return;
+
+    try {
+      await validatieVerzoekenApi.afhandelen(afhandelModal.verzoek.id, {
+        afhandeling: afhandelModal.actie,
+        notities: notities || undefined,
+      });
+      setAfhandelModal({ open: false, verzoek: null, actie: null });
+      setNotities('');
+      await laadVerzoeken();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Fout bij afhandelen');
+    }
   };
 
-  const handleAfkeurenStart = (id: string) => {
-    setOpmerkingenModal({ open: true, medewerkerId: id, actie: 'afgekeurd' });
-    setOpmerkingText('');
+  const openAfhandelModal = (verzoek: SyncValidatieVerzoek, actie: ValidatieAfhandeling) => {
+    setAfhandelModal({ open: true, verzoek, actie });
+    setNotities('');
   };
 
-  const handleOpmerkingenSubmit = () => {
-    updateValidatieStatus(
-      opmerkingenModal.medewerkerId,
-      opmerkingenModal.actie,
-      opmerkingText
-    );
-    setOpmerkingenModal({ open: false, medewerkerId: '', actie: 'goedgekeurd' });
-    setOpmerkingText('');
+  const getActieLabel = (actie: ValidatieAfhandeling) => {
+    switch (actie) {
+      case 'BevestigVerwijdering':
+        return 'Verwijdering bevestigen';
+      case 'HandmatigHertoevoegen':
+        return 'Handmatig hertoevoegen';
+      case 'Negeren':
+        return 'Negeren';
+      case 'Escaleren':
+        return 'Escaleren naar sectormanager';
+    }
   };
 
-  const handleBulkGoedkeuren = () => {
-    bulkValidatie(Array.from(selectedIds), 'goedgekeurd');
-    setSelectedIds(new Set());
-  };
-
-  const toggleSelect = (id: string) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const nieuwCount = medewerkers.filter(m => m.validatieStatus === 'nieuw').length;
-  const reviewCount = medewerkers.filter(m => m.validatieStatus === 'in_review').length;
-  const goedCount = medewerkers.filter(m => m.validatieStatus === 'goedgekeurd').length;
-  const afkeurCount = medewerkers.filter(m => m.validatieStatus === 'afgekeurd').length;
+  const totaalCount = verzoeken.length;
 
   return (
     <div className="page">
@@ -104,290 +117,223 @@ export default function Validatie() {
         <div>
           <h1>Validatie</h1>
           <p className="page-subtitle">
-            Controle en goedkeuring van personeelsgegevens door diensthoofden en sectormanagers
+            Controle en goedkeuring van lidmaatschap-wijzigingen gedetecteerd tijdens synchronisatie
           </p>
         </div>
-        {selectedIds.size > 0 && (
-          <div className="page-actions">
-            <span className="selection-count">{selectedIds.size} geselecteerd</span>
-            <button className="btn btn-success" onClick={handleBulkGoedkeuren}>
-              <CheckCircle2 size={16} /> Alles goedkeuren
-            </button>
-          </div>
-        )}
+        <div className="page-actions">
+          <button className="btn btn-secondary" onClick={laadVerzoeken} disabled={isLoading}>
+            <RefreshCw size={16} className={isLoading ? 'spinning' : ''} /> Vernieuwen
+          </button>
+        </div>
       </div>
-
-      {/* Sync validatie verzoeken */}
-      <SyncValidatieSection />
 
       {/* Status overzicht */}
-      <div className="validation-stats">
-        <button
-          className={`validation-stat-btn ${filterStatus === 'nieuw' ? 'active' : ''}`}
-          onClick={() => setFilterStatus(filterStatus === 'nieuw' ? '' : 'nieuw')}
-        >
-          <AlertTriangle size={16} />
-          <span>{nieuwCount} Nieuw</span>
-        </button>
-        <button
-          className={`validation-stat-btn ${filterStatus === 'in_review' ? 'active' : ''}`}
-          onClick={() => setFilterStatus(filterStatus === 'in_review' ? '' : 'in_review')}
-        >
-          <Eye size={16} />
-          <span>{reviewCount} In Review</span>
-        </button>
-        <button
-          className={`validation-stat-btn ${filterStatus === 'goedgekeurd' ? 'active' : ''}`}
-          onClick={() => setFilterStatus(filterStatus === 'goedgekeurd' ? '' : 'goedgekeurd')}
-        >
-          <CheckCircle2 size={16} />
-          <span>{goedCount} Goedgekeurd</span>
-        </button>
-        <button
-          className={`validation-stat-btn ${filterStatus === 'afgekeurd' ? 'active' : ''}`}
-          onClick={() => setFilterStatus(filterStatus === 'afgekeurd' ? '' : 'afgekeurd')}
-        >
-          <XCircle size={16} />
-          <span>{afkeurCount} Afgekeurd</span>
-        </button>
-      </div>
-
-      {/* Sector filter */}
-      <div className="toolbar">
-        <div className="form-group" style={{ minWidth: 200 }}>
-          <select value={filterSector} onChange={e => setFilterSector(e.target.value)}>
-            <option value="">Alle sectoren</option>
-            {alleSectoren.map(s => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-        </div>
-        <Filter size={18} className="text-muted" />
-      </div>
-
-      {/* Per sector groepering */}
-      <div className="validation-sectors">
-        {Object.entries(perSector).map(([sector, lijst]) => {
-          const expanded = expandedSectors.has(sector);
-          const sectorNieuw = lijst.filter(
-            m => m.validatieStatus === 'nieuw' || m.validatieStatus === 'in_review'
-          ).length;
-
-          return (
-            <div key={sector} className="validation-sector-card">
-              <div
-                className="sector-card-header"
-                onClick={() => toggleSector(sector)}
-              >
-                {expanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-                <h3>{sector}</h3>
-                <span className="sector-total">{lijst.length} medewerkers</span>
-                {sectorNieuw > 0 && (
-                  <span className="badge badge-warning">{sectorNieuw} te valideren</span>
-                )}
-              </div>
-
-              {expanded && (
-                <div className="sector-card-body">
-                  <table className="data-table data-table-compact">
-                    <thead>
-                      <tr>
-                        <th className="th-checkbox">
-                          <input
-                            type="checkbox"
-                            onChange={() => {
-                              const ids = lijst.map(m => m.id);
-                              const allSelected = ids.every(id => selectedIds.has(id));
-                              setSelectedIds(prev => {
-                                const next = new Set(prev);
-                                ids.forEach(id => {
-                                  if (allSelected) next.delete(id);
-                                  else next.add(id);
-                                });
-                                return next;
-                              });
-                            }}
-                            checked={lijst.length > 0 && lijst.every(m => selectedIds.has(m.id))}
-                          />
-                        </th>
-                        <th>Naam</th>
-                        <th>Dienst</th>
-                        <th>Functie</th>
-                        <th>Regime</th>
-                        <th>Type</th>
-                        <th>Actief</th>
-                        <th>Status</th>
-                        <th>Acties</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {lijst.map(m => (
-                        <tr key={m.id} className={!m.actief ? 'row-inactive' : ''}>
-                          <td>
-                            <input
-                              type="checkbox"
-                              checked={selectedIds.has(m.id)}
-                              onChange={() => toggleSelect(m.id)}
-                            />
-                          </td>
-                          <td className="td-name">{m.volledigeNaam}</td>
-                          <td>{m.dienst}</td>
-                          <td>{m.functie}</td>
-                          <td>{m.arbeidsRegime}</td>
-                          <td>{m.type}</td>
-                          <td>{m.actief ? 'Ja' : 'Nee'}</td>
-                          <td>
-                            <StatusBadge status={m.validatieStatus} />
-                          </td>
-                          <td className="td-actions">
-                            <button
-                              className="icon-btn"
-                              title="Details"
-                              onClick={() => setDetailMedewerker(m)}
-                            >
-                              <Eye size={16} />
-                            </button>
-                            {(m.validatieStatus === 'nieuw' || m.validatieStatus === 'in_review') && (
-                              <>
-                                <button
-                                  className="icon-btn icon-btn-success"
-                                  title="Goedkeuren"
-                                  onClick={() => handleGoedkeuren(m.id)}
-                                >
-                                  <CheckCircle2 size={16} />
-                                </button>
-                                <button
-                                  className="icon-btn icon-btn-danger"
-                                  title="Afkeuren"
-                                  onClick={() => handleAfkeurenStart(m.id)}
-                                >
-                                  <XCircle size={16} />
-                                </button>
-                              </>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          );
-        })}
-
-        {Object.keys(perSector).length === 0 && (
-          <div className="empty-state-card">
-            <CheckCircle2 size={48} className="text-success" />
-            <p>Geen medewerkers gevonden met de huidige filters.</p>
-          </div>
-        )}
-      </div>
-
-      {/* Detail modal */}
-      {detailMedewerker && (
-        <div className="modal-overlay" onClick={() => setDetailMedewerker(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Details: {detailMedewerker.volledigeNaam}</h2>
-              <button className="icon-btn" onClick={() => setDetailMedewerker(null)}>
-                <XCircle size={20} />
-              </button>
-            </div>
-            <div className="detail-grid">
-              <div className="detail-item">
-                <span className="detail-label">E-mail</span>
-                <span className="detail-value">{detailMedewerker.email}</span>
-              </div>
-              <div className="detail-item">
-                <span className="detail-label">Telefoon</span>
-                <span className="detail-value">{detailMedewerker.telefoon || '-'}</span>
-              </div>
-              <div className="detail-item">
-                <span className="detail-label">Sector</span>
-                <span className="detail-value">{detailMedewerker.sector}</span>
-              </div>
-              <div className="detail-item">
-                <span className="detail-label">Dienst</span>
-                <span className="detail-value">{detailMedewerker.dienst}</span>
-              </div>
-              <div className="detail-item">
-                <span className="detail-label">Functie</span>
-                <span className="detail-value">{detailMedewerker.functie || '-'}</span>
-              </div>
-              <div className="detail-item">
-                <span className="detail-label">Arbeidsregime</span>
-                <span className="detail-value">{detailMedewerker.arbeidsRegime}</span>
-              </div>
-              <div className="detail-item">
-                <span className="detail-label">Type</span>
-                <span className="detail-value">{detailMedewerker.type}</span>
-              </div>
-              <div className="detail-item">
-                <span className="detail-label">Actief</span>
-                <span className="detail-value">{detailMedewerker.actief ? 'Ja' : 'Nee'}</span>
-              </div>
-              <div className="detail-item">
-                <span className="detail-label">Bron</span>
-                <span className="detail-value">
-                  {detailMedewerker.bronAD ? 'Azure AD' : 'Handmatig toegevoegd'}
-                </span>
-              </div>
-              <div className="detail-item">
-                <span className="detail-label">Validatiestatus</span>
-                <StatusBadge status={detailMedewerker.validatieStatus} />
-              </div>
-              {detailMedewerker.validatieOpmerkingen && (
-                <div className="detail-item detail-full">
-                  <span className="detail-label">Validatie opmerkingen</span>
-                  <span className="detail-value">{detailMedewerker.validatieOpmerkingen}</span>
-                </div>
-              )}
-              {detailMedewerker.opmerkingen && (
-                <div className="detail-item detail-full">
-                  <span className="detail-label">Opmerkingen</span>
-                  <span className="detail-value">{detailMedewerker.opmerkingen}</span>
-                </div>
-              )}
+      {!isLoading && !error && (
+        <div className="validation-stats">
+          <div className="validation-stat-card">
+            <AlertTriangle size={20} className="text-warning" />
+            <div>
+              <div className="stat-value">{totaalCount}</div>
+              <div className="stat-label">Openstaande verzoeken</div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Opmerkingen modal voor afkeuren */}
-      {opmerkingenModal.open && (
-        <div className="modal-overlay" onClick={() => setOpmerkingenModal({ open: false, medewerkerId: '', actie: 'goedgekeurd' })}>
+      {/* Loading state */}
+      {isLoading && (
+        <div className="empty-state-card">
+          <RefreshCw size={48} className="spinning text-primary" />
+          <p>Validatieverzoeken laden...</p>
+        </div>
+      )}
+
+      {/* Error state */}
+      {error && (
+        <div className="empty-state-card">
+          <AlertTriangle size={48} className="text-danger" />
+          <h3>Fout bij laden</h3>
+          <p>{error}</p>
+          <button className="btn btn-primary" onClick={laadVerzoeken}>
+            Opnieuw proberen
+          </button>
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!isLoading && !error && verzoeken.length === 0 && (
+        <div className="empty-state-card">
+          <CheckCircle2 size={48} className="text-success" />
+          <h3>Geen openstaande validaties</h3>
+          <p>Er zijn momenteel geen validatieverzoeken die aandacht vereisen.</p>
+        </div>
+      )}
+
+      {/* Groep filter */}
+      {!isLoading && !error && verzoeken.length > 0 && (
+        <>
+          <div className="toolbar">
+            <div className="form-group" style={{ minWidth: 250 }}>
+              <select value={filterGroep} onChange={e => setFilterGroep(e.target.value)}>
+                <option value="">Alle distributiegroepen</option>
+                {alleGroepen.map(groep => (
+                  <option key={groep} value={groep}>{groep}</option>
+                ))}
+              </select>
+            </div>
+            <Filter size={18} className="text-muted" />
+          </div>
+
+          {/* Per groep groepering */}
+          <div className="validation-sectors">
+            {Object.entries(perGroep).map(([groep, lijst]) => {
+              const expanded = expandedGroepen.has(groep);
+
+              return (
+                <div key={groep} className="validation-sector-card">
+                  <div
+                    className="sector-card-header"
+                    onClick={() => toggleGroep(groep)}
+                  >
+                    {expanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                    <h3>{groep}</h3>
+                    <span className="badge badge-warning">{lijst.length} te valideren</span>
+                  </div>
+
+                  {expanded && (
+                    <div className="sector-card-body">
+                      <table className="data-table data-table-compact">
+                        <thead>
+                          <tr>
+                            <th>Type</th>
+                            <th>Medewerker</th>
+                            <th>E-mail</th>
+                            <th>Beschrijving</th>
+                            <th>Vorige waarde</th>
+                            <th>Aangemaakt</th>
+                            <th>Acties</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {lijst.map(v => (
+                            <tr key={v.id}>
+                              <td>
+                                <span className="sync-type-badge">
+                                  {v.type === 'LidVerwijderd' && <UserMinus size={12} />}
+                                  {v.type}
+                                </span>
+                              </td>
+                              <td className="td-name">{v.medewerkerNaam || '-'}</td>
+                              <td>{v.medewerkerEmail || '-'}</td>
+                              <td>{v.beschrijving}</td>
+                              <td>{v.vorigeWaarde || '-'}</td>
+                              <td>
+                                {new Date(v.aangemaaktOp).toLocaleDateString('nl-BE', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </td>
+                              <td className="td-actions">
+                                <button
+                                  className="icon-btn icon-btn-success"
+                                  title="Verwijdering bevestigen"
+                                  onClick={() => openAfhandelModal(v, 'BevestigVerwijdering')}
+                                >
+                                  <CheckCircle2 size={16} />
+                                </button>
+                                <button
+                                  className="icon-btn icon-btn-primary"
+                                  title="Handmatig hertoevoegen"
+                                  onClick={() => openAfhandelModal(v, 'HandmatigHertoevoegen')}
+                                >
+                                  <UserPlus size={16} />
+                                </button>
+                                <button
+                                  className="icon-btn"
+                                  title="Negeren"
+                                  onClick={() => openAfhandelModal(v, 'Negeren')}
+                                >
+                                  <XCircle size={16} />
+                                </button>
+                                <button
+                                  className="icon-btn icon-btn-warning"
+                                  title="Escaleren"
+                                  onClick={() => openAfhandelModal(v, 'Escaleren')}
+                                >
+                                  <ArrowUp size={16} />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      {/* Afhandel modal */}
+      {afhandelModal.open && afhandelModal.verzoek && (
+        <div className="modal-overlay" onClick={() => setAfhandelModal({ open: false, verzoek: null, actie: null })}>
           <div className="modal modal-sm" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>
-                <MessageSquare size={20} /> Reden van afkeuring
-              </h2>
+              <h2>{getActieLabel(afhandelModal.actie!)}</h2>
             </div>
             <div className="modal-form">
-              <div className="form-group">
-                <label htmlFor="opmerkingen">Opmerkingen *</label>
+              <div className="detail-grid">
+                <div className="detail-item">
+                  <span className="detail-label">Type</span>
+                  <span className="detail-value">{afhandelModal.verzoek.type}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Medewerker</span>
+                  <span className="detail-value">{afhandelModal.verzoek.medewerkerNaam || '-'}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">E-mail</span>
+                  <span className="detail-value">{afhandelModal.verzoek.medewerkerEmail || '-'}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Groep</span>
+                  <span className="detail-value">{afhandelModal.verzoek.groepNaam || '-'}</span>
+                </div>
+                <div className="detail-item detail-full">
+                  <span className="detail-label">Beschrijving</span>
+                  <span className="detail-value">{afhandelModal.verzoek.beschrijving}</span>
+                </div>
+                {afhandelModal.verzoek.vorigeWaarde && (
+                  <div className="detail-item detail-full">
+                    <span className="detail-label">Vorige waarde</span>
+                    <span className="detail-value">{afhandelModal.verzoek.vorigeWaarde}</span>
+                  </div>
+                )}
+              </div>
+              <div className="form-group mt-3">
+                <label htmlFor="notities">Notities (optioneel)</label>
                 <textarea
-                  id="opmerkingen"
-                  rows={4}
-                  required
-                  value={opmerkingText}
-                  onChange={e => setOpmerkingText(e.target.value)}
-                  placeholder="Geef de reden van afkeuring op..."
+                  id="notities"
+                  rows={3}
+                  value={notities}
+                  onChange={e => setNotities(e.target.value)}
+                  placeholder="Eventuele toelichting..."
                 />
               </div>
               <div className="modal-actions">
                 <button
                   className="btn btn-secondary"
-                  onClick={() => setOpmerkingenModal({ open: false, medewerkerId: '', actie: 'goedgekeurd' })}
+                  onClick={() => setAfhandelModal({ open: false, verzoek: null, actie: null })}
                 >
                   Annuleren
                 </button>
-                <button
-                  className="btn btn-danger"
-                  onClick={handleOpmerkingenSubmit}
-                  disabled={!opmerkingText.trim()}
-                >
-                  Afkeuren
+                <button className="btn btn-primary" onClick={handleAfhandelen}>
+                  Bevestigen
                 </button>
               </div>
             </div>

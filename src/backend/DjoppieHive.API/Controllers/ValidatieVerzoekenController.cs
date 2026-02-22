@@ -122,4 +122,72 @@ public class ValidatieVerzoekenController : ControllerBase
         var aantal = await _validatieService.GetOpenstaandAantalAsync(groepId, cancellationToken);
         return Ok(aantal);
     }
+
+    // ============================================
+    // TEST ENDPOINTS (geen authenticatie vereist)
+    // ============================================
+
+    /// <summary>
+    /// [TEST] Haalt alle openstaande validatieverzoeken op zonder authenticatie.
+    /// </summary>
+    [HttpGet("test")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(IEnumerable<ValidatieVerzoekDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IEnumerable<ValidatieVerzoekDto>>> TestGetOpenstaande(
+        [FromQuery] Guid? groepId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var verzoeken = await _validatieService.GetOpenstaandeVerzoekenAsync(groepId, cancellationToken);
+        return Ok(verzoeken);
+    }
+
+    /// <summary>
+    /// [TEST] Haalt het aantal openstaande validatieverzoeken op zonder authenticatie.
+    /// </summary>
+    [HttpGet("test/aantal")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
+    public async Task<ActionResult<int>> TestGetAantal(
+        [FromQuery] Guid? groepId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var aantal = await _validatieService.GetOpenstaandAantalAsync(groepId, cancellationToken);
+        return Ok(aantal);
+    }
+
+    /// <summary>
+    /// [TEST] Handelt een validatieverzoek af zonder authenticatie.
+    /// </summary>
+    [HttpPost("test/{id:guid}/afhandelen")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> TestHandelAf(
+        Guid id,
+        [FromBody] AfhandelValidatieVerzoekDto request,
+        CancellationToken cancellationToken)
+    {
+        var gebruiker = "TestGebruiker";
+
+        if (!Enum.TryParse<ValidatieAfhandeling>(request.Afhandeling, true, out var afhandeling))
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Ongeldige afhandeling",
+                Detail = $"Afhandeling '{request.Afhandeling}' is niet geldig.",
+                Status = StatusCodes.Status400BadRequest
+            });
+        }
+
+        var succes = await _validatieService.HandelAfAsync(
+            id, afhandeling, gebruiker, request.Notities, cancellationToken);
+
+        if (!succes)
+        {
+            return NotFound();
+        }
+
+        return NoContent();
+    }
 }

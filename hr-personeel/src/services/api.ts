@@ -324,24 +324,34 @@ export const syncApi = {
 
 export const validatieVerzoekenApi = {
   /** Haal alle openstaande validatieverzoeken op */
-  getOpenstaande: (groepId?: string) => {
+  getOpenstaande: async (groepId?: string): Promise<SyncValidatieVerzoek[]> => {
     const params = groepId ? `?groepId=${groepId}` : '';
-    return fetchWithAuth<SyncValidatieVerzoek[]>(`/validatieverzoeken${params}`);
+    // Use test endpoint for development
+    const response = await fetch(`${API_BASE_URL}/validatieverzoeken/test${params}`);
+    if (!response.ok) throw new Error('Failed to fetch validation requests');
+    return response.json();
   },
 
   /** Haal een specifiek validatieverzoek op */
   getById: (id: string) => fetchWithAuth<SyncValidatieVerzoek>(`/validatieverzoeken/${id}`),
 
   /** Handel een validatieverzoek af */
-  afhandelen: (id: string, request: AfhandelValidatieRequest) =>
-    fetchWithAuth<void>(`/validatieverzoeken/${id}/afhandelen`, {
+  afhandelen: async (id: string, request: AfhandelValidatieRequest): Promise<void> => {
+    // Use test endpoint for development
+    const response = await fetch(`${API_BASE_URL}/validatieverzoeken/test/${id}/afhandelen`, {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
-    }),
+    });
+    if (!response.ok) throw new Error('Failed to handle validation request');
+  },
 
   /** Haal het aantal openstaande verzoeken op (voor badge) */
-  getAantal: (groepId?: string) => {
+  getAantal: async (groepId?: string): Promise<number> => {
     const params = groepId ? `?groepId=${groepId}` : '';
-    return fetchWithAuth<number>(`/validatieverzoeken/aantal${params}`);
+    // Use test endpoint for development
+    const response = await fetch(`${API_BASE_URL}/validatieverzoeken/test/aantal${params}`);
+    if (!response.ok) throw new Error('Failed to fetch validation count');
+    return response.json();
   },
 };
