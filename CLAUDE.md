@@ -93,7 +93,7 @@ Djoppie-Hive/
 
 | App Name | Client ID | Purpose |
 |----------|-----------|---------|
-| Djoppie-Hive-Web | acc348be-b533-4402-8041-672c1cba1273 | Frontend SPA |
+| Djoppie-Hive-Web | 2ea8a14d-ea05-40cc-af35-dd482bf8e235 | Frontend SPA |
 | Djoppie-Hive-API | 2b620e06-39ee-4177-a559-76a12a79320f | Backend API |
 
 ### Tenant Information
@@ -201,7 +201,7 @@ dotnet ef database update \
 
 ```env
 VITE_API_URL=http://localhost:5014/api
-VITE_ENTRA_CLIENT_ID=acc348be-b533-4402-8041-672c1cba1273
+VITE_ENTRA_CLIENT_ID=2ea8a14d-ea05-40cc-af35-dd482bf8e235
 VITE_ENTRA_TENANT_ID=7db28d6f-d542-40c1-b529-5e5ed2aad545
 VITE_ENTRA_AUTHORITY=https://login.microsoftonline.com/7db28d6f-d542-40c1-b529-5e5ed2aad545
 VITE_ENTRA_REDIRECT_URI=http://localhost:5173
@@ -214,7 +214,7 @@ VITE_ENTRA_API_SCOPE=api://2b620e06-39ee-4177-a559-76a12a79320f/access_as_user
 
 ```env
 VITE_API_URL=https://app-djoppie-hive-dev-api.azurewebsites.net/api
-VITE_ENTRA_CLIENT_ID=acc348be-b533-4402-8041-672c1cba1273
+VITE_ENTRA_CLIENT_ID=2ea8a14d-ea05-40cc-af35-dd482bf8e235
 VITE_ENTRA_TENANT_ID=7db28d6f-d542-40c1-b529-5e5ed2aad545
 VITE_ENTRA_AUTHORITY=https://login.microsoftonline.com/7db28d6f-d542-40c1-b529-5e5ed2aad545
 VITE_ENTRA_REDIRECT_URI=https://swa-djoppie-hive-dev-ui.azurestaticapps.net
