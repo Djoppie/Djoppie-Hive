@@ -101,7 +101,48 @@ export interface EmployeeSummary {
   jobTitle: string | null;
 }
 
-// Sector with hierarchy info
+// ============================================
+// Organization Hierarchy Types (MG-iedereenpersoneel)
+// ============================================
+
+/**
+ * Complete organizational hierarchy starting from MG-iedereenpersoneel.
+ */
+export interface OrganizationHierarchy {
+  rootGroupId: string;
+  rootGroupName: string;
+  sectors: Sector[];
+  totalSectors: number;
+  totalDiensten: number;
+  totalMedewerkers: number;
+}
+
+/**
+ * A sector (MG-SECTOR-*) with its sector manager and diensten.
+ */
+export interface Sector {
+  id: string;
+  displayName: string;
+  description: string | null;
+  email: string | null;
+  sectorManager: EmployeeSummary | null;
+  diensten: Dienst[];
+  totalMedewerkers: number;
+}
+
+/**
+ * A dienst (MG-* service) within a sector, with its members.
+ */
+export interface Dienst {
+  id: string;
+  displayName: string;
+  description: string | null;
+  email: string | null;
+  medewerkers: EmployeeSummary[];
+  memberCount: number;
+}
+
+// Legacy type (kept for backwards compatibility)
 export interface SectorWithHierarchy {
   id: string;
   displayName: string;
@@ -240,6 +281,12 @@ export interface EmployeeFilter {
 
 export const distributionGroupsApi = {
   getAll: () => fetchWithAuth<DistributionGroup[]>('/distributiongroups'),
+
+  /**
+   * Gets the complete organizational hierarchy starting from MG-iedereenpersoneel.
+   * Returns all sectors, their sector managers, diensten, and medewerkers.
+   */
+  getHierarchy: () => fetchWithAuth<OrganizationHierarchy>('/distributiongroups/hierarchy'),
 
   getById: (id: string) =>
     fetchWithAuth<DistributionGroupDetail>(`/distributiongroups/${id}`),

@@ -151,6 +151,31 @@ Returns:
 
 ---
 
+### 5. Frontend Hierarchy Integration
+
+**Status:** Completed
+**Date:** 2026-02-23
+**Type:** Enhancement
+
+**Requirement:** Update the SectorHierarchy page to use the new authenticated hierarchy endpoint instead of multiple test endpoint calls.
+
+**Solution:** Added TypeScript types and updated SectorHierarchy.tsx to use the single hierarchy endpoint.
+
+**Files Modified:**
+
+| File | Changes |
+|------|---------|
+| `hr-personeel/src/services/api.ts` | Added `OrganizationHierarchy`, `Sector`, `Dienst` types and `getHierarchy()` method |
+| `hr-personeel/src/pages/SectorHierarchy.tsx` | Rewrote to use `distributionGroupsApi.getHierarchy()` |
+
+**Key Changes:**
+- Single API call fetches complete hierarchy (sectors, diensten, medewerkers)
+- Uses `fetchWithAuth` for authenticated requests
+- Displays sector managers, team coordinators, and team members in hierarchy view
+- Shows statistics: total sectors, diensten, and medewerkers
+
+---
+
 ## Pending Issues
 
 ### High Priority

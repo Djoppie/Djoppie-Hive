@@ -10,170 +10,58 @@ import {
   AlertCircle,
   User,
   Crown,
+  Network,
 } from 'lucide-react';
-import type { DistributionGroupDetail, DistributionGroup, NestedGroup, EmployeeSummary } from '../services/api';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5014/api';
-
-interface SectorData {
-  sector: DistributionGroup;
-  details: DistributionGroupDetail | null;
-  loading: boolean;
-  expanded: boolean;
-}
+import {
+  distributionGroupsApi,
+  type OrganizationHierarchy,
+  type Sector,
+  type Dienst,
+  type EmployeeSummary,
+} from '../services/api';
 
 export default function SectorHierarchy() {
-  const [sectors, setSectors] = useState<SectorData[]>([]);
+  const [hierarchy, setHierarchy] = useState<OrganizationHierarchy | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedDienst, setSelectedDienst] = useState<NestedGroup | null>(null);
-  const [selectedSectorId, setSelectedSectorId] = useState<string | null>(null);
-  const [dienstDetails, setDienstDetails] = useState<DistributionGroupDetail | null>(null);
-  const [dienstLoading, setDienstLoading] = useState(false);
+  const [expandedSectors, setExpandedSectors] = useState<Set<string>>(new Set());
+  const [selectedDienst, setSelectedDienst] = useState<Dienst | null>(null);
+  const [selectedSector, setSelectedSector] = useState<Sector | null>(null);
 
-  // Helper to check if someone is a sectormanager based on jobTitle
-  const isSectorManager = (member: EmployeeSummary): boolean => {
-    const title = member.jobTitle?.toLowerCase() || '';
-    return title.includes('sectormanager');
-  };
-
-  // Helper to check if someone is a teamcoördinator based on jobTitle
-  const isTeamCoordinator = (member: EmployeeSummary): boolean => {
-    const title = member.jobTitle?.toLowerCase() || '';
-    return title.includes('teamcoördinator') || title.includes('teamcoach') || title.includes('coordinator');
-  };
-
-  // Get sector managers from direct members (by jobTitle)
-  const getSectorManagers = (): EmployeeSummary[] => {
-    if (!selectedSectorId) return [];
-    const sector = sectors.find(s => s.sector.id === selectedSectorId);
-    if (!sector?.details) return [];
-
-    // Sectormanagers are members with "sectormanager" in their jobTitle
-    return sector.details.members.filter(m => isSectorManager(m));
-  };
-
-  // Get sector manager IDs for filtering
-  const getSectorManagerIds = (): Set<string> => {
-    return new Set(getSectorManagers().map(m => m.id));
-  };
-
-  // Get teamcoördinatoren from dienst members (by jobTitle)
-  const getTeamCoordinators = (): EmployeeSummary[] => {
-    if (!dienstDetails) return [];
-    const sectorManagerIds = getSectorManagerIds();
-
-    // Teamcoördinators are members with coordinator titles, excluding sectormanagers
-    return dienstDetails.members.filter(m =>
-      isTeamCoordinator(m) && !sectorManagerIds.has(m.id)
-    );
-  };
-
-  // Get regular team members (not sectormanager, not teamcoördinator)
-  const getTeamMembers = (): EmployeeSummary[] => {
-    if (!dienstDetails) return [];
-    const sectorManagerIds = getSectorManagerIds();
-
-    return dienstDetails.members.filter(m =>
-      !isSectorManager(m) &&
-      !isTeamCoordinator(m) &&
-      !sectorManagerIds.has(m.id)
-    );
-  };
-
-  // Get the sector name for display
-  const getSelectedSectorName = (): string => {
-    if (!selectedSectorId) return '';
-    const sector = sectors.find(s => s.sector.id === selectedSectorId);
-    return sector ? getSectorName(sector.sector.displayName) : '';
-  };
-
-  // Fetch all groups and filter sectors
+  // Fetch hierarchy on mount
   useEffect(() => {
-    fetchSectors();
+    fetchHierarchy();
   }, []);
 
-  const fetchSectors = async () => {
+  const fetchHierarchy = async () => {
     setLoading(true);
     setError(null);
     try {
-      // Use the test endpoint (no auth required)
-      const response = await fetch(`${API_BASE_URL}/distributiongroups/test`);
-      const data = await response.json();
-
-      if (data.success && data.groups) {
-        // Filter for SECTOR groups
-        const sectorGroups = data.groups.filter((g: { id: string; displayName: string; email: string }) =>
-          g.displayName.includes('SECTOR')
-        );
-
-        setSectors(sectorGroups.map((s: DistributionGroup) => ({
-          sector: s,
-          details: null,
-          loading: false,
-          expanded: false,
-        })));
-      }
+      const data = await distributionGroupsApi.getHierarchy();
+      setHierarchy(data);
     } catch (err) {
-      setError('Kan sectoren niet laden: ' + (err as Error).message);
+      const message = err instanceof Error ? err.message : 'Onbekende fout';
+      setError('Kan organisatie hiërarchie niet laden: ' + message);
     } finally {
       setLoading(false);
     }
   };
 
-  const toggleSector = async (sectorId: string) => {
-    setSectors(prev => prev.map(s => {
-      if (s.sector.id !== sectorId) return s;
-
-      // If collapsing, just toggle
-      if (s.expanded) {
-        return { ...s, expanded: false };
+  const toggleSector = (sectorId: string) => {
+    setExpandedSectors(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(sectorId)) {
+        newSet.delete(sectorId);
+      } else {
+        newSet.add(sectorId);
       }
-
-      // If expanding and no details yet, fetch them
-      if (!s.details) {
-        fetchSectorDetails(sectorId);
-      }
-
-      return { ...s, expanded: true };
-    }));
+      return newSet;
+    });
   };
 
-  const fetchSectorDetails = async (sectorId: string) => {
-    setSectors(prev => prev.map(s =>
-      s.sector.id === sectorId ? { ...s, loading: true } : s
-    ));
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/distributiongroups/test/${sectorId}`);
-      const details = await response.json();
-
-      setSectors(prev => prev.map(s =>
-        s.sector.id === sectorId ? { ...s, details, loading: false } : s
-      ));
-    } catch (err) {
-      console.error('Error fetching sector details:', err);
-      setSectors(prev => prev.map(s =>
-        s.sector.id === sectorId ? { ...s, loading: false } : s
-      ));
-    }
-  };
-
-  const selectDienst = async (dienst: NestedGroup, sectorId: string) => {
+  const selectDienst = (dienst: Dienst, sector: Sector) => {
     setSelectedDienst(dienst);
-    setSelectedSectorId(sectorId);
-    setDienstLoading(true);
-    setDienstDetails(null);
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/distributiongroups/test/${dienst.id}`);
-      const details = await response.json();
-      setDienstDetails(details);
-    } catch (err) {
-      console.error('Error fetching dienst details:', err);
-    } finally {
-      setDienstLoading(false);
-    }
+    setSelectedSector(sector);
   };
 
   const getSectorName = (displayName: string) => {
@@ -184,12 +72,30 @@ export default function SectorHierarchy() {
     return displayName.replace('MG-', '');
   };
 
+  // Helper to check if someone is a teamcoördinator based on jobTitle
+  const isTeamCoordinator = (member: EmployeeSummary): boolean => {
+    const title = member.jobTitle?.toLowerCase() || '';
+    return title.includes('teamcoördinator') || title.includes('teamcoach') || title.includes('coordinator');
+  };
+
+  // Get teamcoördinatoren from dienst members
+  const getTeamCoordinators = (): EmployeeSummary[] => {
+    if (!selectedDienst) return [];
+    return selectedDienst.medewerkers.filter(m => isTeamCoordinator(m));
+  };
+
+  // Get regular team members (not teamcoördinator)
+  const getTeamMembers = (): EmployeeSummary[] => {
+    if (!selectedDienst) return [];
+    return selectedDienst.medewerkers.filter(m => !isTeamCoordinator(m));
+  };
+
   if (loading) {
     return (
       <div className="page">
         <div className="loading-state">
           <RefreshCw className="spin" size={32} />
-          <p>Sectoren laden...</p>
+          <p>Organisatie hiërarchie laden...</p>
         </div>
       </div>
     );
@@ -201,7 +107,21 @@ export default function SectorHierarchy() {
         <div className="error-state">
           <AlertCircle size={32} />
           <p>{error}</p>
-          <button className="btn btn-primary" onClick={fetchSectors}>
+          <button className="btn btn-primary" onClick={fetchHierarchy}>
+            <RefreshCw size={16} /> Opnieuw proberen
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hierarchy) {
+    return (
+      <div className="page">
+        <div className="error-state">
+          <Network size={32} />
+          <p>MG-iedereenpersoneel groep niet gevonden in Entra ID</p>
+          <button className="btn btn-primary" onClick={fetchHierarchy}>
             <RefreshCw size={16} /> Opnieuw proberen
           </button>
         </div>
@@ -213,13 +133,13 @@ export default function SectorHierarchy() {
     <div className="page">
       <div className="page-header">
         <div>
-          <h1>Sector Hierarchie</h1>
+          <h1>Sector Hiërarchie</h1>
           <p className="page-subtitle">
-            Overzicht van sectoren, diensten en medewerkers uit Microsoft 365
+            Overzicht van {hierarchy.totalSectors} sectoren, {hierarchy.totalDiensten} diensten en {hierarchy.totalMedewerkers} medewerkers
           </p>
         </div>
         <div className="page-actions">
-          <button className="btn btn-secondary" onClick={fetchSectors}>
+          <button className="btn btn-secondary" onClick={fetchHierarchy}>
             <RefreshCw size={16} /> Vernieuwen
           </button>
         </div>
@@ -229,87 +149,72 @@ export default function SectorHierarchy() {
         {/* Left panel: Sector tree */}
         <div className="hierarchy-tree-panel">
           <div className="hierarchy-tree">
-            {sectors.map(({ sector, details, loading: sectorLoading, expanded }) => (
-              <div key={sector.id} className="sector-node">
-                <div
-                  className={`sector-header ${expanded ? 'expanded' : ''}`}
-                  onClick={() => toggleSector(sector.id)}
-                >
-                  <span className="expand-icon">
-                    {expanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-                  </span>
-                  <Building2 size={20} className="sector-icon" />
-                  <div className="sector-info">
-                    <span className="sector-name">{getSectorName(sector.displayName)}</span>
-                    {details && (
+            {hierarchy.sectors.map((sector) => {
+              const isExpanded = expandedSectors.has(sector.id);
+
+              return (
+                <div key={sector.id} className="sector-node">
+                  <div
+                    className={`sector-header ${isExpanded ? 'expanded' : ''}`}
+                    onClick={() => toggleSector(sector.id)}
+                  >
+                    <span className="expand-icon">
+                      {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                    </span>
+                    <Building2 size={20} className="sector-icon" />
+                    <div className="sector-info">
+                      <span className="sector-name">{getSectorName(sector.displayName)}</span>
                       <span className="sector-stats">
-                        {details.nestedGroups.length} diensten
-                        {details.owners.length > 0 && ` • ${details.owners.length} managers`}
+                        {sector.diensten.length} diensten • {sector.totalMedewerkers} medewerkers
                       </span>
-                    )}
+                    </div>
                   </div>
-                </div>
 
-                {expanded && (
-                  <div className="sector-content">
-                    {sectorLoading ? (
-                      <div className="loading-inline">
-                        <RefreshCw className="spin" size={14} /> Laden...
-                      </div>
-                    ) : details ? (
-                      <>
-                        {/* Sector Managers */}
-                        {details.owners.length > 0 && (
-                          <div className="managers-section">
-                            <div className="section-label">
-                              <Crown size={14} /> Sectormanagers
-                            </div>
-                            {details.owners.map(owner => (
-                              <div key={owner.id} className="manager-item">
-                                <User size={14} />
-                                <span>{owner.displayName}</span>
-                              </div>
-                            ))}
+                  {isExpanded && (
+                    <div className="sector-content">
+                      {/* Sector Manager */}
+                      {sector.sectorManager && (
+                        <div className="managers-section">
+                          <div className="section-label">
+                            <Crown size={14} /> Sectormanager
                           </div>
-                        )}
-
-                        {/* Direct members (if any) */}
-                        {details.members.length > 0 && (
-                          <div className="direct-members-section">
-                            <div className="section-label">
-                              <User size={14} /> Directe leden ({details.members.length})
-                            </div>
+                          <div className="manager-item">
+                            <User size={14} />
+                            <span>{sector.sectorManager.displayName}</span>
                           </div>
-                        )}
-
-                        {/* Diensten */}
-                        <div className="diensten-section">
-                          {details.nestedGroups.map(dienst => (
-                            <div
-                              key={dienst.id}
-                              className={`dienst-node ${selectedDienst?.id === dienst.id ? 'selected' : ''}`}
-                              onClick={(e) => { e.stopPropagation(); selectDienst(dienst, sector.id); }}
-                            >
-                              <Users size={16} className="dienst-icon" />
-                              <div className="dienst-info">
-                                <span className="dienst-name">{getDienstName(dienst.displayName)}</span>
-                                <span className="dienst-count">{dienst.memberCount} leden</span>
-                              </div>
-                            </div>
-                          ))}
                         </div>
-                      </>
-                    ) : null}
-                  </div>
-                )}
-              </div>
-            ))}
+                      )}
+
+                      {/* Diensten */}
+                      <div className="diensten-section">
+                        {sector.diensten.map(dienst => (
+                          <div
+                            key={dienst.id}
+                            className={`dienst-node ${selectedDienst?.id === dienst.id ? 'selected' : ''}`}
+                            onClick={(e) => { e.stopPropagation(); selectDienst(dienst, sector); }}
+                          >
+                            <Users size={16} className="dienst-icon" />
+                            <div className="dienst-info">
+                              <span className="dienst-name">{getDienstName(dienst.displayName)}</span>
+                              <span className="dienst-count">{dienst.memberCount} leden</span>
+                            </div>
+                          </div>
+                        ))}
+                        {sector.diensten.length === 0 && (
+                          <div className="no-diensten">Geen diensten</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
         {/* Right panel: Details */}
         <div className="hierarchy-detail-panel">
-          {selectedDienst ? (
+          {selectedDienst && selectedSector ? (
             <div className="dienst-detail">
               <div className="dienst-detail-header">
                 <Users size={24} />
@@ -332,118 +237,113 @@ export default function SectorHierarchy() {
                   <Users size={16} />
                   <span>{selectedDienst.memberCount} leden</span>
                 </div>
+                <div className="stat-badge">
+                  <Building2 size={16} />
+                  <span>Sector: {getSectorName(selectedSector.displayName)}</span>
+                </div>
               </div>
 
-              {dienstLoading ? (
-                <div className="loading-state">
-                  <RefreshCw className="spin" size={24} />
-                  <p>Leden laden...</p>
-                </div>
-              ) : dienstDetails ? (
-                <div className="dienst-hierarchy">
-                  {/* Level 1: Sectormanager(s) */}
-                  {getSectorManagers().length > 0 && (
-                    <div className="hierarchy-level level-sector">
-                      <div className="hierarchy-level-header">
-                        <div className="hierarchy-level-badge sector-badge">
-                          <Crown size={16} />
-                          <span>Sectormanager{getSectorManagers().length > 1 ? 's' : ''}</span>
-                        </div>
-                        <span className="hierarchy-level-context">
-                          Sector {getSelectedSectorName()}
-                        </span>
-                      </div>
-                      <div className="hierarchy-members">
-                        {getSectorManagers().map(manager => (
-                          <div key={manager.id} className="hierarchy-member-card sector-manager">
-                            <div className="member-avatar sector-avatar">
-                              {manager.displayName.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                            </div>
-                            <div className="member-info">
-                              <span className="member-name">{manager.displayName}</span>
-                              {manager.jobTitle && (
-                                <span className="member-title">
-                                  <Briefcase size={12} /> {manager.jobTitle}
-                                </span>
-                              )}
-                              <span className="member-email">
-                                <Mail size={12} /> {manager.email}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="hierarchy-connector" />
-                    </div>
-                  )}
-
-                  {/* Level 2: Teamcoördinator(s) */}
-                  {getTeamCoordinators().length > 0 && (
-                    <div className="hierarchy-level level-coordinator">
-                      <div className="hierarchy-level-header">
-                        <div className="hierarchy-level-badge coordinator-badge">
-                          <User size={16} />
-                          <span>Teamcoördinator{getTeamCoordinators().length > 1 ? 's' : ''}</span>
-                        </div>
-                      </div>
-                      <div className="hierarchy-members">
-                        {getTeamCoordinators().map(coordinator => (
-                          <div key={coordinator.id} className="hierarchy-member-card coordinator">
-                            <div className="member-avatar coordinator-avatar">
-                              {coordinator.displayName.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                            </div>
-                            <div className="member-info">
-                              <span className="member-name">{coordinator.displayName}</span>
-                              {coordinator.jobTitle && (
-                                <span className="member-title">
-                                  <Briefcase size={12} /> {coordinator.jobTitle}
-                                </span>
-                              )}
-                              <span className="member-email">
-                                <Mail size={12} /> {coordinator.email}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="hierarchy-connector" />
-                    </div>
-                  )}
-
-                  {/* Level 3: Teamleden */}
-                  <div className="hierarchy-level level-members">
+              <div className="dienst-hierarchy">
+                {/* Level 1: Sectormanager */}
+                {selectedSector.sectorManager && (
+                  <div className="hierarchy-level level-sector">
                     <div className="hierarchy-level-header">
-                      <div className="hierarchy-level-badge members-badge">
-                        <Users size={16} />
-                        <span>Teamleden ({getTeamMembers().length})</span>
+                      <div className="hierarchy-level-badge sector-badge">
+                        <Crown size={16} />
+                        <span>Sectormanager</span>
+                      </div>
+                      <span className="hierarchy-level-context">
+                        Sector {getSectorName(selectedSector.displayName)}
+                      </span>
+                    </div>
+                    <div className="hierarchy-members">
+                      <div className="hierarchy-member-card sector-manager">
+                        <div className="member-avatar sector-avatar">
+                          {selectedSector.sectorManager.displayName.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                        </div>
+                        <div className="member-info">
+                          <span className="member-name">{selectedSector.sectorManager.displayName}</span>
+                          {selectedSector.sectorManager.jobTitle && (
+                            <span className="member-title">
+                              <Briefcase size={12} /> {selectedSector.sectorManager.jobTitle}
+                            </span>
+                          )}
+                          <span className="member-email">
+                            <Mail size={12} /> {selectedSector.sectorManager.email}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                    <div className="hierarchy-members members-grid">
-                      {getTeamMembers().map(member => (
-                        <div key={member.id} className="hierarchy-member-card team-member">
-                          <div className="member-avatar">
-                            {member.displayName.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                    <div className="hierarchy-connector" />
+                  </div>
+                )}
+
+                {/* Level 2: Teamcoördinator(s) */}
+                {getTeamCoordinators().length > 0 && (
+                  <div className="hierarchy-level level-coordinator">
+                    <div className="hierarchy-level-header">
+                      <div className="hierarchy-level-badge coordinator-badge">
+                        <User size={16} />
+                        <span>Teamcoördinator{getTeamCoordinators().length > 1 ? 's' : ''}</span>
+                      </div>
+                    </div>
+                    <div className="hierarchy-members">
+                      {getTeamCoordinators().map(coordinator => (
+                        <div key={coordinator.id} className="hierarchy-member-card coordinator">
+                          <div className="member-avatar coordinator-avatar">
+                            {coordinator.displayName.split(' ').map(n => n[0]).join('').slice(0, 2)}
                           </div>
                           <div className="member-info">
-                            <span className="member-name">{member.displayName}</span>
-                            {member.jobTitle && (
+                            <span className="member-name">{coordinator.displayName}</span>
+                            {coordinator.jobTitle && (
                               <span className="member-title">
-                                <Briefcase size={12} /> {member.jobTitle}
+                                <Briefcase size={12} /> {coordinator.jobTitle}
                               </span>
                             )}
                             <span className="member-email">
-                              <Mail size={12} /> {member.email}
+                              <Mail size={12} /> {coordinator.email}
                             </span>
                           </div>
                         </div>
                       ))}
-                      {getTeamMembers().length === 0 && (
-                        <p className="no-members">Geen teamleden gevonden</p>
-                      )}
+                    </div>
+                    <div className="hierarchy-connector" />
+                  </div>
+                )}
+
+                {/* Level 3: Teamleden */}
+                <div className="hierarchy-level level-members">
+                  <div className="hierarchy-level-header">
+                    <div className="hierarchy-level-badge members-badge">
+                      <Users size={16} />
+                      <span>Teamleden ({getTeamMembers().length})</span>
                     </div>
                   </div>
+                  <div className="hierarchy-members members-grid">
+                    {getTeamMembers().map(member => (
+                      <div key={member.id} className="hierarchy-member-card team-member">
+                        <div className="member-avatar">
+                          {member.displayName.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                        </div>
+                        <div className="member-info">
+                          <span className="member-name">{member.displayName}</span>
+                          {member.jobTitle && (
+                            <span className="member-title">
+                              <Briefcase size={12} /> {member.jobTitle}
+                            </span>
+                          )}
+                          <span className="member-email">
+                            <Mail size={12} /> {member.email}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                    {getTeamMembers().length === 0 && (
+                      <p className="no-members">Geen teamleden gevonden</p>
+                    )}
+                  </div>
                 </div>
-              ) : null}
+              </div>
             </div>
           ) : (
             <div className="no-selection">
