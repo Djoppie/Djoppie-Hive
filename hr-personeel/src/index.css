@@ -1670,51 +1670,45 @@ button {
 }
 
 /* Validatie table column widths */
-.validatie-table .th-checkbox,
-.validatie-table .td-checkbox {
-  width: 40px;
-  text-align: center;
+.validatie-table th:nth-child(1),
+.validatie-table td:nth-child(1) {
+  width: 18%;  /* Naam */
 }
 
 .validatie-table th:nth-child(2),
 .validatie-table td:nth-child(2) {
-  width: 15%;  /* Naam */
+  width: 14%;  /* Dienst */
 }
 
 .validatie-table th:nth-child(3),
 .validatie-table td:nth-child(3) {
-  width: 12%;  /* Dienst */
+  width: 22%;  /* Functie */
 }
 
 .validatie-table th:nth-child(4),
 .validatie-table td:nth-child(4) {
-  width: 20%;  /* Functie */
+  width: 9%;  /* Regime */
 }
 
 .validatie-table th:nth-child(5),
 .validatie-table td:nth-child(5) {
-  width: 8%;  /* Regime */
+  width: 10%;  /* Type */
 }
 
 .validatie-table th:nth-child(6),
 .validatie-table td:nth-child(6) {
-  width: 9%;  /* Type */
+  width: 7%;  /* Actief */
+  text-align: center;
 }
 
 .validatie-table th:nth-child(7),
 .validatie-table td:nth-child(7) {
-  width: 6%;  /* Actief */
-  text-align: center;
+  width: 10%;  /* Status */
 }
 
 .validatie-table th:nth-child(8),
 .validatie-table td:nth-child(8) {
-  width: 10%;  /* Status */
-}
-
-.validatie-table th:nth-child(9),
-.validatie-table td:nth-child(9) {
-  width: 70px;  /* Acties */
+  width: 80px;  /* Acties */
   text-align: center;
 }
 

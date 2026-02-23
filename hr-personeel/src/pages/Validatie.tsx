@@ -48,7 +48,6 @@ export default function Validatie() {
   const [filterSector, setFilterSector] = useState('');
   const [filterStatus, setFilterStatus] = useState<ValidatieStatusAPI | ''>('');
   const [expandedSectors, setExpandedSectors] = useState<Set<string>>(new Set());
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [stats, setStats] = useState<ValidatieStatistieken | null>(null);
 
   // Modal state for viewing/editing
@@ -158,30 +157,6 @@ export default function Validatie() {
       const next = new Set(prev);
       if (next.has(sector)) next.delete(sector);
       else next.add(sector);
-      return next;
-    });
-  };
-
-  const toggleSelectAll = (_sector: string, employeeList: Employee[]) => {
-    const sectorIds = employeeList.map(e => e.id);
-    const allSelected = sectorIds.every(id => selectedIds.has(id));
-
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      if (allSelected) {
-        sectorIds.forEach(id => next.delete(id));
-      } else {
-        sectorIds.forEach(id => next.add(id));
-      }
-      return next;
-    });
-  };
-
-  const toggleSelect = (id: string) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
       return next;
     });
   };
@@ -314,7 +289,6 @@ export default function Validatie() {
           {Object.entries(perSector).map(([sector, sectorEmployees]) => {
             const expanded = expandedSectors.has(sector);
             const teValideren = teValiderenPerSector[sector] || 0;
-            const allSelected = sectorEmployees.every(e => selectedIds.has(e.id));
 
             return (
               <div key={sector} className="validatie-sector-card">
@@ -339,13 +313,6 @@ export default function Validatie() {
                     <table className="data-table validatie-table">
                       <thead>
                         <tr>
-                          <th className="th-checkbox">
-                            <input
-                              type="checkbox"
-                              checked={allSelected && sectorEmployees.length > 0}
-                              onChange={() => toggleSelectAll(sector, sectorEmployees)}
-                            />
-                          </th>
                           <th>Naam</th>
                           <th>Dienst</th>
                           <th>Functie</th>
@@ -363,13 +330,6 @@ export default function Validatie() {
 
                           return (
                             <tr key={emp.id} className={!emp.isActive ? 'row-inactive' : ''}>
-                              <td className="td-checkbox">
-                                <input
-                                  type="checkbox"
-                                  checked={selectedIds.has(emp.id)}
-                                  onChange={() => toggleSelect(emp.id)}
-                                />
-                              </td>
                               <td className="td-name">{emp.displayName}</td>
                               <td>{emp.dienstNaam || '-'}</td>
                               <td>{emp.jobTitle || '-'}</td>
