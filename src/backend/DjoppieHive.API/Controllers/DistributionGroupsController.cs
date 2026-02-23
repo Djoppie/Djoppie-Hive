@@ -33,59 +33,6 @@ public class DistributionGroupsController : ControllerBase
     }
 
     /// <summary>
-    /// Test endpoint to verify Graph API connection (no auth required for debugging).
-    /// </summary>
-    [HttpGet("test")]
-    [AllowAnonymous]
-    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
-    public async Task<ActionResult<object>> TestGraphConnection(CancellationToken cancellationToken)
-    {
-        try
-        {
-            var groups = await _groupService.GetAllGroupsAsync(cancellationToken);
-            return Ok(new {
-                success = true,
-                groupCount = groups.Count(),
-                groups = groups.Select(g => new { g.Id, g.DisplayName, g.Email })
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Graph API test failed");
-            return Ok(new {
-                success = false,
-                error = ex.Message,
-                innerError = ex.InnerException?.Message
-            });
-        }
-    }
-
-    /// <summary>
-    /// Test endpoint to get sector details with owners and nested groups (no auth for debugging).
-    /// </summary>
-    [HttpGet("test/{id}")]
-    [AllowAnonymous]
-    [ProducesResponseType(typeof(DistributionGroupDetailDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<DistributionGroupDetailDto>> TestGetById(string id, CancellationToken cancellationToken)
-    {
-        try
-        {
-            var group = await _groupService.GetGroupByIdAsync(id, cancellationToken);
-            if (group == null)
-            {
-                return NotFound(new { error = "Group not found", groupId = id });
-            }
-            return Ok(group);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error fetching group {GroupId}", id);
-            return Ok(new { error = ex.Message, groupId = id });
-        }
-    }
-
-    /// <summary>
     /// Gets a specific distribution group by ID.
     /// </summary>
     [HttpGet("{id}")]

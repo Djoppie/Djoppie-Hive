@@ -168,7 +168,7 @@ dotnet restore
 # Build solution
 dotnet build
 
-# Run API (http://localhost:5052)
+# Run API (http://localhost:5014)
 cd DjoppieHive.API
 dotnet run
 
@@ -198,8 +198,9 @@ dotnet ef database update \
 ### Local Development
 
 **Frontend** (`hr-personeel/.env.development`):
+
 ```env
-VITE_API_URL=http://localhost:5052/api
+VITE_API_URL=http://localhost:5014/api
 VITE_ENTRA_CLIENT_ID=acc348be-b533-4402-8041-672c1cba1273
 VITE_ENTRA_TENANT_ID=7db28d6f-d542-40c1-b529-5e5ed2aad545
 VITE_ENTRA_AUTHORITY=https://login.microsoftonline.com/7db28d6f-d542-40c1-b529-5e5ed2aad545
@@ -210,6 +211,7 @@ VITE_ENTRA_API_SCOPE=api://2b620e06-39ee-4177-a559-76a12a79320f/access_as_user
 ### Azure DEV Environment
 
 **Frontend** (`hr-personeel/.env.production`):
+
 ```env
 VITE_API_URL=https://app-djoppie-hive-dev-api.azurewebsites.net/api
 VITE_ENTRA_CLIENT_ID=acc348be-b533-4402-8041-672c1cba1273
@@ -332,7 +334,7 @@ MG-SECTOR-Vrije Tijd               ← Sector
 |-------|---------------|--------------|---------|
 | **Sector** | `MG-SECTOR-{Name}` | Sector Manager | MG-SECTOR-Organisatie |
 | **Dienst** | `MG-{ServiceName}` | Teamcoach | MG-Burgerzaken |
-| **Medewerker** | (group member) | - | jan.janssen@diepenbeek.be |
+| **Medewerker** | (group member) | - | <jan.janssen@diepenbeek.be> |
 
 ### Data Sources & Sync Direction
 
@@ -347,7 +349,7 @@ Hive operates with **two data sources**:
 
 ### Core Functionality
 
-1. **Sync from Entra ID** — Pull members from MG-SECTOR-* and MG-* groups via Microsoft Graph API
+1. **Sync from Entra ID** — Pull members from MG-SECTOR-*and MG-* groups via Microsoft Graph API
 2. **Map the hierarchy** — Sector → Dienst → Medewerkers
 3. **On-demand validation** — When changes are detected, Teamcoaches/Sector Managers validate
 4. **Track active/inactive** — Reflect membership reality in real-time
@@ -390,7 +392,7 @@ Key properties to display/manage for each MG- group:
 
 | Property | Graph API Field | Description |
 |----------|-----------------|-------------|
-| Display Name | `displayName` | Group name (MG-SECTOR-* or MG-*) |
+| Display Name | `displayName` | Group name (MG-SECTOR-*or MG-*) |
 | Description | `description` | Purpose of the group |
 | Mail | `mail` | Email address for distribution |
 | Members | `members` | List of group members |
@@ -406,11 +408,13 @@ Key properties to display/manage for each MG- group:
 Required permissions for MG- distribution group management:
 
 **Current (Read-Only)**:
+
 - `Group.Read.All` - Read all groups (required)
 - `User.Read.All` - Read user profiles and photos
 - `Directory.Read.All` - Read directory data
 
 **Future (Write-Back Feature)**:
+
 - `Group.ReadWrite.All` - Manage group membership
 - `GroupMember.ReadWrite.All` - Add/remove group members
 
@@ -437,6 +441,7 @@ GET /groups/{group-id}/owners
 ```
 
 **Future Write Endpoints (not currently used)**:
+
 ```bash
 # Add member to group
 POST /groups/{group-id}/members/$ref
@@ -448,6 +453,7 @@ DELETE /groups/{group-id}/members/{member-id}/$ref
 ### CORS Configuration
 
 The backend must allow:
+
 - `http://localhost:5173` (local development)
 - `https://swa-djoppie-hive-dev-ui.azurestaticapps.net` (Azure DEV)
 
@@ -455,7 +461,7 @@ The backend must allow:
 
 - **GitHub**: (to be configured)
 - **Azure DevOps**: (to be configured)
-- **Contact**: jo.wijnen@diepenbeek.be
+- **Contact**: <jo.wijnen@diepenbeek.be>
 - **Tenant**: Diepenbeek (7db28d6f-d542-40c1-b529-5e5ed2aad545)
 
 ## Related Projects

@@ -33,7 +33,6 @@ public class EmployeesController : ControllerBase
     /// <param name="bron">Filter by data source (AzureAD, Handmatig)</param>
     /// <param name="cancellationToken">Cancellation token</param>
     [HttpGet]
-    [AllowAnonymous] // Development: Remove in production
     [ProducesResponseType(typeof(IEnumerable<EmployeeDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<EmployeeDto>>> GetAll(
         [FromQuery] EmployeeType? type = null,
@@ -53,7 +52,6 @@ public class EmployeesController : ControllerBase
     /// Gets an employee by their internal database ID.
     /// </summary>
     [HttpGet("{id:guid}")]
-    [AllowAnonymous] // Development: Remove in production
     [ProducesResponseType(typeof(EmployeeDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<EmployeeDto>> GetById(Guid id, CancellationToken cancellationToken)
@@ -72,7 +70,6 @@ public class EmployeesController : ControllerBase
     /// Creates a new employee in the database.
     /// </summary>
     [HttpPost]
-    [AllowAnonymous] // Development: Remove in production
     [ProducesResponseType(typeof(EmployeeDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<EmployeeDto>> Create(
@@ -96,7 +93,6 @@ public class EmployeesController : ControllerBase
     /// Note: Azure-synced employees can only update specific fields (EmployeeType, ArbeidsRegime, DienstId, dates, phone).
     /// </summary>
     [HttpPut("{id:guid}")]
-    [AllowAnonymous] // Development: Remove in production
     [ProducesResponseType(typeof(EmployeeDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -127,7 +123,6 @@ public class EmployeesController : ControllerBase
     /// Soft deletes an employee (sets IsActive = false).
     /// </summary>
     [HttpDelete("{id:guid}")]
-    [AllowAnonymous] // Development: Remove in production
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
@@ -146,7 +141,6 @@ public class EmployeesController : ControllerBase
     /// Gets all employees belonging to a specific dienst (DistributionGroup).
     /// </summary>
     [HttpGet("dienst/{dienstId:guid}")]
-    [AllowAnonymous] // Development: Remove in production
     [ProducesResponseType(typeof(IEnumerable<EmployeeDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<EmployeeDto>>> GetByDienst(
         Guid dienstId,
@@ -160,7 +154,6 @@ public class EmployeesController : ControllerBase
     /// Gets all volunteers (employees with EmployeeType = Vrijwilliger).
     /// </summary>
     [HttpGet("vrijwilligers")]
-    [AllowAnonymous] // Development: Remove in production
     [ProducesResponseType(typeof(IEnumerable<EmployeeDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<EmployeeDto>>> GetVolunteers(CancellationToken cancellationToken)
     {
@@ -172,7 +165,6 @@ public class EmployeesController : ControllerBase
     /// Searches employees by name or email.
     /// </summary>
     [HttpGet("search")]
-    [AllowAnonymous] // Development: Remove in production
     [ProducesResponseType(typeof(IEnumerable<EmployeeSummaryDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<EmployeeSummaryDto>>> Search(
         [FromQuery] string q,

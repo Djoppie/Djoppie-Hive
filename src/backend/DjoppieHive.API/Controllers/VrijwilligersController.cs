@@ -30,7 +30,6 @@ public class VrijwilligersController : ControllerBase
     /// Gets all volunteers with their VrijwilligerDetails.
     /// </summary>
     [HttpGet]
-    [AllowAnonymous] // Development: Remove in production
     [ProducesResponseType(typeof(IEnumerable<EmployeeDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<EmployeeDto>>> GetAll(CancellationToken cancellationToken)
     {
@@ -42,7 +41,6 @@ public class VrijwilligersController : ControllerBase
     /// Gets a specific volunteer by ID with their VrijwilligerDetails.
     /// </summary>
     [HttpGet("{id:guid}")]
-    [AllowAnonymous] // Development: Remove in production
     [ProducesResponseType(typeof(EmployeeDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -68,7 +66,6 @@ public class VrijwilligersController : ControllerBase
     /// EmployeeType must be Vrijwilliger.
     /// </summary>
     [HttpPost]
-    [AllowAnonymous] // Development: Remove in production
     [ProducesResponseType(typeof(EmployeeDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<EmployeeDto>> Create(
@@ -109,7 +106,6 @@ public class VrijwilligersController : ControllerBase
     /// Note: Azure-synced volunteers can only update specific fields.
     /// </summary>
     [HttpPut("{id:guid}")]
-    [AllowAnonymous] // Development: Remove in production
     [ProducesResponseType(typeof(EmployeeDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -156,7 +152,6 @@ public class VrijwilligersController : ControllerBase
     /// Employee data remains unchanged.
     /// </summary>
     [HttpPut("{id:guid}/details")]
-    [AllowAnonymous] // Development: Remove in production
     [ProducesResponseType(typeof(EmployeeDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -198,7 +193,6 @@ public class VrijwilligersController : ControllerBase
     /// Soft deletes a volunteer (sets IsActive = false).
     /// </summary>
     [HttpDelete("{id:guid}")]
-    [AllowAnonymous] // Development: Remove in production
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -231,7 +225,6 @@ public class VrijwilligersController : ControllerBase
     /// Gets all volunteers for a specific dienst (DistributionGroup).
     /// </summary>
     [HttpGet("dienst/{dienstId:guid}")]
-    [AllowAnonymous] // Development: Remove in production
     [ProducesResponseType(typeof(IEnumerable<EmployeeDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<EmployeeDto>>> GetByDienst(
         Guid dienstId,
@@ -251,7 +244,6 @@ public class VrijwilligersController : ControllerBase
     /// Searches volunteers by name or email.
     /// </summary>
     [HttpGet("search")]
-    [AllowAnonymous] // Development: Remove in production
     [ProducesResponseType(typeof(IEnumerable<EmployeeSummaryDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<EmployeeSummaryDto>>> Search(
         [FromQuery] string q,

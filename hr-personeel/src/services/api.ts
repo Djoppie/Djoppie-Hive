@@ -319,61 +319,45 @@ export const healthApi = {
 
 export const syncApi = {
   /** Start een handmatige synchronisatie vanuit Microsoft Graph */
-  uitvoeren: async (): Promise<SyncResultaat> => {
-    // Use test endpoint for development
-    const response = await fetch(`${API_BASE_URL}/sync/test`, { method: 'POST' });
-    if (!response.ok) throw new Error('Failed to start sync');
-    return response.json();
+  uitvoeren: (): Promise<SyncResultaat> => {
+    return fetchWithAuth<SyncResultaat>('/sync/uitvoeren', { method: 'POST' });
   },
 
   /** Haal de huidige of laatste sync status op */
-  getStatus: async (): Promise<SyncStatusInfo> => {
-    // Use test endpoint for development
-    const response = await fetch(`${API_BASE_URL}/sync/test/status`);
-    if (!response.ok) throw new Error('Failed to fetch sync status');
-    return response.json();
+  getStatus: (): Promise<SyncStatusInfo> => {
+    return fetchWithAuth<SyncStatusInfo>('/sync/status');
   },
 
   /** Haal de sync geschiedenis op */
-  getGeschiedenis: async (aantal = 10): Promise<SyncLogboekItem[]> => {
-    // Use test endpoint for development
-    const response = await fetch(`${API_BASE_URL}/sync/test/geschiedenis?aantal=${aantal}`);
-    if (!response.ok) throw new Error('Failed to fetch sync history');
-    return response.json();
+  getGeschiedenis: (aantal = 10): Promise<SyncLogboekItem[]> => {
+    return fetchWithAuth<SyncLogboekItem[]>(`/sync/geschiedenis?aantal=${aantal}`);
   },
 };
 
 export const validatieVerzoekenApi = {
   /** Haal alle openstaande validatieverzoeken op */
-  getOpenstaande: async (groepId?: string): Promise<SyncValidatieVerzoek[]> => {
+  getOpenstaande: (groepId?: string): Promise<SyncValidatieVerzoek[]> => {
     const params = groepId ? `?groepId=${groepId}` : '';
-    // Use test endpoint for development
-    const response = await fetch(`${API_BASE_URL}/validatieverzoeken/test${params}`);
-    if (!response.ok) throw new Error('Failed to fetch validation requests');
-    return response.json();
+    return fetchWithAuth<SyncValidatieVerzoek[]>(`/validatieverzoeken${params}`);
   },
 
   /** Haal een specifiek validatieverzoek op */
-  getById: (id: string) => fetchWithAuth<SyncValidatieVerzoek>(`/validatieverzoeken/${id}`),
+  getById: (id: string): Promise<SyncValidatieVerzoek> => {
+    return fetchWithAuth<SyncValidatieVerzoek>(`/validatieverzoeken/${id}`);
+  },
 
   /** Handel een validatieverzoek af */
-  afhandelen: async (id: string, request: AfhandelValidatieRequest): Promise<void> => {
-    // Use test endpoint for development
-    const response = await fetch(`${API_BASE_URL}/validatieverzoeken/test/${id}/afhandelen`, {
+  afhandelen: (id: string, request: AfhandelValidatieRequest): Promise<void> => {
+    return fetchWithAuth<void>(`/validatieverzoeken/${id}/afhandelen`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
     });
-    if (!response.ok) throw new Error('Failed to handle validation request');
   },
 
   /** Haal het aantal openstaande verzoeken op (voor badge) */
-  getAantal: async (groepId?: string): Promise<number> => {
+  getAantal: (groepId?: string): Promise<number> => {
     const params = groepId ? `?groepId=${groepId}` : '';
-    // Use test endpoint for development
-    const response = await fetch(`${API_BASE_URL}/validatieverzoeken/test/aantal${params}`);
-    if (!response.ok) throw new Error('Failed to fetch validation count');
-    return response.json();
+    return fetchWithAuth<number>(`/validatieverzoeken/aantal${params}`);
   },
 };
 
@@ -396,7 +380,7 @@ export interface ValidatieStatistieken {
 
 export const employeeValidatieApi = {
   /** Update de validatiestatus van een medewerker */
-  updateStatus: async (employeeId: string, request: ValidatieActieRequest): Promise<Employee> => {
+  updateStatus: (employeeId: string, request: ValidatieActieRequest): Promise<Employee> => {
     return fetchWithAuth<Employee>(`/employees/${employeeId}/validatie`, {
       method: 'PUT',
       body: JSON.stringify(request),
@@ -404,15 +388,12 @@ export const employeeValidatieApi = {
   },
 
   /** Haal validatie statistieken op */
-  getStatistieken: async (): Promise<ValidatieStatistieken> => {
-    // For now, use test endpoint
-    const response = await fetch(`${API_BASE_URL}/employees/test/validatie/statistieken`);
-    if (!response.ok) throw new Error('Failed to fetch validation statistics');
-    return response.json();
+  getStatistieken: (): Promise<ValidatieStatistieken> => {
+    return fetchWithAuth<ValidatieStatistieken>('/employees/validatie/statistieken');
   },
 
   /** Bulk goedkeuren van medewerkers */
-  bulkGoedkeuren: async (employeeIds: string[]): Promise<void> => {
+  bulkGoedkeuren: (employeeIds: string[]): Promise<void> => {
     return fetchWithAuth<void>('/employees/validatie/bulk-goedkeuren', {
       method: 'POST',
       body: JSON.stringify({ employeeIds }),
@@ -479,10 +460,7 @@ export interface DashboardStatistics {
 
 export const statisticsApi = {
   /** Haal dashboard statistieken op */
-  getDashboard: async (): Promise<DashboardStatistics> => {
-    // Use test endpoint for development
-    const response = await fetch(`${API_BASE_URL}/statistics/test/dashboard`);
-    if (!response.ok) throw new Error('Failed to fetch dashboard statistics');
-    return response.json();
+  getDashboard: (): Promise<DashboardStatistics> => {
+    return fetchWithAuth<DashboardStatistics>('/statistics/dashboard');
   },
 };

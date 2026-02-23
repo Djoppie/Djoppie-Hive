@@ -35,22 +35,4 @@ public class StatisticsController : ControllerBase
         var stats = await _statisticsService.GetDashboardStatisticsAsync(cancellationToken);
         return Ok(stats);
     }
-
-    // ============================================
-    // TEST ENDPOINTS (geen authenticatie vereist)
-    // ============================================
-
-    /// <summary>
-    /// [TEST] Haalt dashboard statistieken op zonder authenticatie.
-    /// </summary>
-    [HttpGet("test/dashboard")]
-    [AllowAnonymous]
-    [ProducesResponseType(typeof(DashboardStatisticsDto), StatusCodes.Status200OK)]
-    public async Task<ActionResult<DashboardStatisticsDto>> TestGetDashboardStatistics(
-        CancellationToken cancellationToken)
-    {
-        _logger.LogInformation("Test dashboard statistieken ophalen");
-        var stats = await _statisticsService.GetDashboardStatisticsAsync(cancellationToken);
-        return Ok(stats);
-    }
 }
