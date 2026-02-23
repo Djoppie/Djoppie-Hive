@@ -14,6 +14,12 @@ public class StubDistributionGroupService : IDistributionGroupService
         return Task.FromResult(Enumerable.Empty<DistributionGroupDto>());
     }
 
+    public Task<OrganizationHierarchyDto?> GetOrganizationHierarchyAsync(CancellationToken cancellationToken = default)
+    {
+        // Return null when Graph API is not configured
+        return Task.FromResult<OrganizationHierarchyDto?>(null);
+    }
+
     public Task<DistributionGroupDetailDto?> GetGroupByIdAsync(string groupId, CancellationToken cancellationToken = default)
     {
         return Task.FromResult<DistributionGroupDetailDto?>(null);

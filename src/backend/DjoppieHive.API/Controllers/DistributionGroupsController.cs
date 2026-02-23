@@ -33,6 +33,29 @@ public class DistributionGroupsController : ControllerBase
     }
 
     /// <summary>
+    /// Gets the complete organizational hierarchy starting from MG-iedereenpersoneel.
+    /// Returns all sectors (MG-SECTOR-*), their sector managers, diensten (MG-*), and medewerkers.
+    /// </summary>
+    [HttpGet("hierarchy")]
+    [ProducesResponseType(typeof(OrganizationHierarchyDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<OrganizationHierarchyDto>> GetHierarchy(CancellationToken cancellationToken)
+    {
+        var hierarchy = await _groupService.GetOrganizationHierarchyAsync(cancellationToken);
+
+        if (hierarchy == null)
+        {
+            return NotFound(new { message = "Root group MG-iedereenpersoneel not found in Entra ID" });
+        }
+
+        _logger.LogInformation(
+            "Retrieved organization hierarchy: {TotalSectors} sectors, {TotalDiensten} diensten, {TotalMedewerkers} medewerkers",
+            hierarchy.TotalSectors, hierarchy.TotalDiensten, hierarchy.TotalMedewerkers);
+
+        return Ok(hierarchy);
+    }
+
+    /// <summary>
     /// Gets a specific distribution group by ID.
     /// </summary>
     [HttpGet("{id}")]

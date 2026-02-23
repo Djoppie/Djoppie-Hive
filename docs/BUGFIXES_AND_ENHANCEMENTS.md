@@ -87,6 +87,70 @@ This document tracks the progress of bug fixes and enhancements for the Djoppie-
 
 ---
 
+### 4. MG-iedereenpersoneel Hierarchy Support
+
+**Status:** Completed
+**Date:** 2026-02-23
+**Type:** Enhancement
+
+**Requirement:** The personnel overview should use `MG-iedereenpersoneel` as the root group, with `MG-SECTOR-*` groups as sectors (containing a sector manager as user member), and `MG-*` groups as diensten (containing medewerkers).
+
+**Hierarchy Structure:**
+```
+MG-iedereenpersoneel (root)
+  ├── MG-SECTOR-* (sector + sectormanager user)
+  │     ├── MG-* dienst (medewerkers)
+  │     └── MG-* dienst (medewerkers)
+  └── ...
+```
+
+**Solution:** Added hierarchy traversal support in the backend.
+
+**Files Modified:**
+
+| File | Changes |
+|------|---------|
+| `CLAUDE.md` | Updated Business Domain section with MG-iedereenpersoneel hierarchy |
+| `src/backend/DjoppieHive.Core/DTOs/DistributionGroupDto.cs` | Added `OrganizationHierarchyDto`, `SectorDto`, `DienstDto` |
+| `src/backend/DjoppieHive.Core/Interfaces/IDistributionGroupService.cs` | Added `GetOrganizationHierarchyAsync()` method |
+| `src/backend/DjoppieHive.Infrastructure/Services/GraphDistributionGroupService.cs` | Implemented hierarchy traversal from MG-iedereenpersoneel |
+| `src/backend/DjoppieHive.Infrastructure/Services/StubDistributionGroupService.cs` | Added stub implementation |
+| `src/backend/DjoppieHive.API/Controllers/DistributionGroupsController.cs` | Added `GET /api/distributiongroups/hierarchy` endpoint |
+
+**New API Endpoint:**
+```
+GET /api/distributiongroups/hierarchy
+```
+
+Returns:
+```json
+{
+  "rootGroupId": "...",
+  "rootGroupName": "MG-iedereenpersoneel",
+  "sectors": [
+    {
+      "id": "...",
+      "displayName": "MG-SECTOR-Organisatie",
+      "sectorManager": { "id": "...", "displayName": "Jan Janssen", ... },
+      "diensten": [
+        {
+          "id": "...",
+          "displayName": "MG-Burgerzaken",
+          "medewerkers": [ ... ],
+          "memberCount": 15
+        }
+      ],
+      "totalMedewerkers": 45
+    }
+  ],
+  "totalSectors": 5,
+  "totalDiensten": 23,
+  "totalMedewerkers": 150
+}
+```
+
+---
+
 ## Pending Issues
 
 ### High Priority

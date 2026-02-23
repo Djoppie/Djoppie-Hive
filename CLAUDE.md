@@ -312,29 +312,46 @@ Local Development (develop branch)
 
 ### Organizational Hierarchy
 
-Gemeente Diepenbeek uses a **hierarchical structure** of MG- distribution groups in Microsoft Entra ID:
+Gemeente Diepenbeek uses a **hierarchical structure** of MG- distribution groups in Microsoft Entra ID with `MG-iedereenpersoneel` as the root group:
 
 ```
-MG-SECTOR-Organisatie              ← Sector (parent group, managed by Sector Manager)
-  ├── MG-Burgerzaken               ← Dienst (service, managed by Teamcoach)
-  ├── MG-Ruimtelijke Ordening      ← Dienst
-  └── MG-Milieu                    ← Dienst
-
-MG-SECTOR-Vrije Tijd               ← Sector
-  ├── MG-Sport                     ← Dienst
-  ├── MG-Cultuur                   ← Dienst
-  └── MG-Jeugd                     ← Dienst
-
-... (5 sectors total)
+MG-iedereenpersoneel                    ← ROOT (alle personeel)
+  │
+  ├── MG-SECTOR-Organisatie             ← Sector (group member)
+  │     ├── [Sectormanager]             ← User member (beheert sector)
+  │     ├── MG-Burgerzaken              ← Dienst (nested group)
+  │     │     └── [Medewerkers...]      ← User members
+  │     ├── MG-Ruimtelijke Ordening     ← Dienst
+  │     │     └── [Medewerkers...]
+  │     └── MG-Milieu                   ← Dienst
+  │           └── [Medewerkers...]
+  │
+  ├── MG-SECTOR-Vrije Tijd              ← Sector
+  │     ├── [Sectormanager]
+  │     ├── MG-Sport                    ← Dienst
+  │     ├── MG-Cultuur                  ← Dienst
+  │     └── MG-Jeugd                    ← Dienst
+  │
+  └── ... (meer sectoren)
 ```
 
 ### Hierarchy Levels
 
-| Level | Naming Pattern | Manager Role | Example |
-|-------|---------------|--------------|---------|
-| **Sector** | `MG-SECTOR-{Name}` | Sector Manager | MG-SECTOR-Organisatie |
-| **Dienst** | `MG-{ServiceName}` | Teamcoach | MG-Burgerzaken |
-| **Medewerker** | (group member) | - | <jan.janssen@diepenbeek.be> |
+| Level | Naming Pattern | Manager Role | Member Type | Example |
+|-------|---------------|--------------|-------------|---------|
+| **Root** | `MG-iedereenpersoneel` | - | Groups (sectors) | MG-iedereenpersoneel |
+| **Sector** | `MG-SECTOR-{Name}` | Sector Manager (user) | Groups + 1 User | MG-SECTOR-Organisatie |
+| **Dienst** | `MG-{ServiceName}` | Teamcoach | Users (medewerkers) | MG-Burgerzaken |
+| **Medewerker** | (group member) | - | - | jan.janssen@diepenbeek.be |
+
+### Key Group: MG-iedereenpersoneel
+
+This is the **master group** for the complete personnel overview:
+
+- **Purpose**: Contains all sectors as group members
+- **Usage**: Query this group to get the full organizational hierarchy
+- **Members**: Only MG-SECTOR-* groups (no direct user members)
+- **Graph Query**: `GET /groups?$filter=displayName eq 'MG-iedereenpersoneel'`
 
 ### Data Sources & Sync Direction
 
@@ -349,12 +366,13 @@ Hive operates with **two data sources**:
 
 ### Core Functionality
 
-1. **Sync from Entra ID** — Pull members from MG-SECTOR-*and MG-* groups via Microsoft Graph API
-2. **Map the hierarchy** — Sector → Dienst → Medewerkers
-3. **On-demand validation** — When changes are detected, Teamcoaches/Sector Managers validate
-4. **Track active/inactive** — Reflect membership reality in real-time
-5. **Distribution lists** — Use for events, communication, party invites
-6. **Local groups** — Create groups in Hive that only exist in Hive
+1. **Sync from Entra ID** — Query `MG-iedereenpersoneel` to discover all sectors, then traverse hierarchy
+2. **Map the hierarchy** — MG-iedereenpersoneel → MG-SECTOR-* → MG-* diensten → Medewerkers
+3. **Identify managers** — Sector managers are user members of MG-SECTOR-* groups (not nested in diensten)
+4. **On-demand validation** — When changes are detected, Teamcoaches/Sector Managers validate
+5. **Track active/inactive** — Reflect membership reality in real-time
+6. **Distribution lists** — Use for events, communication, party invites
+7. **Local groups** — Create groups in Hive that only exist in Hive
 
 ### Validation Workflow
 
@@ -421,20 +439,36 @@ Required permissions for MG- distribution group management:
 ### Graph API Endpoints
 
 ```bash
-# List all SECTOR groups
+# ============================================
+# HIERARCHY TRAVERSAL (recommended approach)
+# ============================================
+
+# Step 1: Get root group (MG-iedereenpersoneel)
+GET /groups?$filter=displayName eq 'MG-iedereenpersoneel'
+
+# Step 2: Get sectors (group members of root)
+GET /groups/{mg-iedereenpersoneel-id}/members/microsoft.graph.group
+# Returns: MG-SECTOR-* groups
+
+# Step 3: Get sector details (members = diensten + sectormanager)
+GET /groups/{sector-id}/members
+# Returns: MG-* groups (diensten) + 1 user (sectormanager)
+
+# Step 4: Get dienst members (medewerkers)
+GET /groups/{dienst-id}/members?$select=id,displayName,mail,jobTitle,department
+
+# ============================================
+# ALTERNATIVE QUERIES
+# ============================================
+
+# List all SECTOR groups directly
 GET /groups?$filter=startswith(displayName,'MG-SECTOR-')
 
-# List all DIENST groups (services)
-GET /groups?$filter=startswith(displayName,'MG-') and not startswith(displayName,'MG-SECTOR-')
+# List all DIENST groups directly (excludes MG-SECTOR-* and MG-iedereenpersoneel)
+GET /groups?$filter=startswith(displayName,'MG-') and not startswith(displayName,'MG-SECTOR-') and displayName ne 'MG-iedereenpersoneel'
 
 # Get group details
 GET /groups/{group-id}
-
-# Get group members (with user details)
-GET /groups/{group-id}/members?$select=id,displayName,mail,jobTitle,department
-
-# Get nested groups (diensten within a sector)
-GET /groups/{sector-group-id}/members/microsoft.graph.group
 
 # Get group owners (Sector Managers / Teamcoaches)
 GET /groups/{group-id}/owners

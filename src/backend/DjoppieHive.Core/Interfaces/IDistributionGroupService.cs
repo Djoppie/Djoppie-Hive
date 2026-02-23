@@ -13,6 +13,12 @@ public interface IDistributionGroupService
     Task<IEnumerable<DistributionGroupDto>> GetAllGroupsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets the complete organizational hierarchy starting from MG-iedereenpersoneel.
+    /// Traverses: MG-iedereenpersoneel → MG-SECTOR-* (with sector managers) → MG-* diensten → medewerkers
+    /// </summary>
+    Task<OrganizationHierarchyDto?> GetOrganizationHierarchyAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets a specific distribution group by its Entra Object ID.
     /// </summary>
     Task<DistributionGroupDetailDto?> GetGroupByIdAsync(string groupId, CancellationToken cancellationToken = default);
