@@ -23,7 +23,7 @@ import {
   mapMedewerkerToCreateDto,
   mapMedewerkerToUpdateDto,
 } from '../utils/employeeMapper';
-import { alleSectoren } from '../data/mockData';
+import { distributionGroupsApi, type Sector } from '../services/api';
 
 type SortKey = 'volledigeNaam' | 'email' | 'sector' | 'dienst' | 'functie' | 'type' | 'arbeidsRegime' | 'validatieStatus';
 type SortDir = 'asc' | 'desc';
@@ -63,6 +63,7 @@ const statusConfig: Record<ValidatieStatus, { label: string; className: string }
 export default function PersoneelLijst() {
   // State for employee data from API
   const [medewerkers, setMedewerkers] = useState<Medewerker[]>([]);
+  const [sectors, setSectors] = useState<Sector[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -84,9 +85,10 @@ export default function PersoneelLijst() {
   const [bewerkMedewerker, setBewerkMedewerker] = useState<Medewerker | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  // Fetch employees on mount
+  // Fetch employees and sectors on mount
   useEffect(() => {
     loadEmployees();
+    loadSectors();
   }, []);
 
   async function loadEmployees() {
@@ -101,6 +103,16 @@ export default function PersoneelLijst() {
       setError(err instanceof Error ? err.message : 'Kan medewerkers niet laden');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadSectors() {
+    try {
+      const hierarchy = await distributionGroupsApi.getHierarchy();
+      setSectors(hierarchy.sectors);
+    } catch (err) {
+      console.error('Failed to load sectors:', err);
+      // Don't show error for sectors, just use empty list
     }
   }
 
@@ -329,8 +341,10 @@ export default function PersoneelLijst() {
               <label>Sector</label>
               <select value={filterSector} onChange={e => setFilterSector(e.target.value)}>
                 <option value="">Alle sectoren</option>
-                {alleSectoren.map(s => (
-                  <option key={s} value={s}>{s}</option>
+                {sectors.map(s => (
+                  <option key={s.id} value={stripMGPrefix(s.displayName)}>
+                    {stripMGPrefix(s.displayName)}
+                  </option>
                 ))}
               </select>
             </div>
