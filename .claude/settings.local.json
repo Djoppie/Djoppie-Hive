@@ -52,7 +52,6 @@
       "Bash(az monitor:*)",
       "Bash(pwsh:*)",
       "Bash(powershell:*)",
-
       "Skill(frontend-design)",
       "Skill(frontend-design:frontend-design)",
       "Skill(commit)",
@@ -61,12 +60,10 @@
       "Skill(code-review:code-review)",
       "Skill(feature-dev)",
       "Skill(feature-dev:feature-dev)",
-
       "Skill(full-stack-orchestration:full-stack-feature)",
       "Skill(comprehensive-review:full-review)",
       "Skill(agent-orchestration:context-manager)",
       "Skill(backend-development:feature-development)",
-
       "Skill(documentation-generation:docs-architect)",
       "Skill(documentation-generation:tutorial-engineer)",
       "Skill(documentation-generation:reference-builder)",
@@ -76,7 +73,6 @@
       "Skill(documentation-generation:changelog-automation)",
       "Skill(code-documentation:docs-architect)",
       "Skill(code-documentation:tutorial-engineer)",
-
       "Skill(cloud-infrastructure:cloud-architect)",
       "Skill(cloud-infrastructure:terraform-specialist)",
       "Skill(cloud-infrastructure:deployment-engineer)",
@@ -86,7 +82,6 @@
       "Skill(database-cloud-optimization:cloud-architect)",
       "Skill(database-migrations:sql-migrations)",
       "Skill(full-stack-orchestration:deployment-engineer)",
-
       "Skill(dotnet-contribution:dotnet-architect)",
       "Skill(backend-development:backend-architect)",
       "Skill(backend-development:tdd-orchestrator)",
@@ -100,7 +95,6 @@
       "Skill(database-design:database-architect)",
       "Skill(database-design:sql-pro)",
       "Skill(database-design:postgresql)",
-
       "Skill(javascript-typescript:typescript-pro)",
       "Skill(javascript-typescript:javascript-pro)",
       "Skill(javascript-typescript:javascript-testing-patterns)",
@@ -115,7 +109,6 @@
       "Skill(developer-essentials:debugging-strategies)",
       "Skill(developer-essentials:error-handling-patterns)",
       "Skill(developer-essentials:code-review-excellence)",
-
       "Skill(security-scanning:security-auditor)",
       "Skill(security-scanning:threat-modeling-expert)",
       "Skill(security-scanning:security-sast)",
@@ -132,16 +125,18 @@
       "Skill(comprehensive-review:security-auditor)",
       "Skill(comprehensive-review:architect-review)",
       "Skill(comprehensive-review:code-reviewer)",
-
       "Skill(framework-migration:legacy-modernize)",
       "Skill(framework-migration:angular-migration)",
       "Skill(framework-migration:database-migration)",
       "Skill(framework-migration:dependency-upgrade)",
       "Skill(framework-migration:react-modernization)",
-
       "Skill(codebase-cleanup:code-reviewer)",
       "Skill(codebase-cleanup:test-automator)",
-      "Skill(code-refactoring:code-reviewer)"
+      "Skill(code-refactoring:code-reviewer)",
+      "Bash(gh pr view:*)",
+      "Bash(dotnet ef:*)",
+      "Bash(timeout 15 dotnet run:*)",
+      "Bash(npm audit:*)"
     ]
   }
 }

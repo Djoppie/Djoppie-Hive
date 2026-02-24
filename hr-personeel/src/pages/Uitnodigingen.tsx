@@ -1,9 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Plus,
   Send,
   Trash2,
-
   Users,
   Calendar,
   Mail,
@@ -11,103 +10,212 @@ import {
   Megaphone,
   GraduationCap,
   MessageCircle,
-
   Eye,
   X,
+  RefreshCw,
+  AlertCircle,
 } from 'lucide-react';
-import { usePersoneel } from '../context/PersoneelContext';
-import type { Uitnodiging, UitnodigingFilter, PersoneelType, ArbeidsRegime } from '../types';
-import { alleSectoren } from '../data/mockData';
+import { eventsApi, distributionGroupsApi } from '../services/api';
+import type {
+  EventDTO,
+  EventDetailDTO,
+  EventTypeAPI,
+  EventFilterCriteria,
+  CreateEventRequest,
+  EventRecipientsPreview,
+} from '../types';
 
-const typeIcons = {
-  personeelsfeest: PartyPopper,
-  vergadering: Users,
-  training: GraduationCap,
-  communicatie: Megaphone,
-  overig: MessageCircle,
+const typeIcons: Record<EventTypeAPI, typeof PartyPopper> = {
+  Personeelsfeest: PartyPopper,
+  Vergadering: Users,
+  Training: GraduationCap,
+  Communicatie: Megaphone,
+  Overig: MessageCircle,
 };
 
-const typeLabels = {
-  personeelsfeest: 'Personeelsfeest',
-  vergadering: 'Vergadering',
-  training: 'Training',
-  communicatie: 'Communicatie',
-  overig: 'Overig',
+const typeLabels: Record<EventTypeAPI, string> = {
+  Personeelsfeest: 'Personeelsfeest',
+  Vergadering: 'Vergadering',
+  Training: 'Training',
+  Communicatie: 'Communicatie',
+  Overig: 'Overig',
 };
+
+interface DistributionGroupOption {
+  id: string;
+  displayName: string;
+  memberCount: number;
+}
 
 export default function Uitnodigingen() {
-  const { uitnodigingen, maakUitnodiging, updateUitnodiging, verstuurUitnodiging, getGefilterdeOntvangers, distributieGroepen } =
-    usePersoneel();
+  const [events, setEvents] = useState<EventDTO[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [distributionGroups, setDistributionGroups] = useState<DistributionGroupOption[]>([]);
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [previewId, setPreviewId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
+  const [previewEvent, setPreviewEvent] = useState<EventDetailDTO | null>(null);
+  const [recipientPreview, setRecipientPreview] = useState<EventRecipientsPreview | null>(null);
+
+  const [formData, setFormData] = useState<{
+    titel: string;
+    beschrijving: string;
+    datum: string;
+    type: EventTypeAPI;
+    filterCriteria: EventFilterCriteria;
+    distributieGroepId: string;
+  }>({
     titel: '',
     beschrijving: '',
     datum: '',
-    type: 'personeelsfeest' as Uitnodiging['type'],
-    filters: {
+    type: 'Personeelsfeest',
+    filterCriteria: {
       alleenActief: true,
-      sectoren: [] as string[],
-      types: [] as PersoneelType[],
-      regimes: [] as ArbeidsRegime[],
-    } as UitnodigingFilter,
+      sectoren: [],
+      employeeTypes: [],
+      arbeidsRegimes: [],
+    },
+    distributieGroepId: '',
   });
 
-  const handleCreate = () => {
-    maakUitnodiging({
-      ...formData,
-      ontvangers: getGefilterdeOntvangers(formData.filters).map(m => m.id),
-      status: 'concept',
-    });
-    setModalOpen(false);
+  // Load events and distribution groups on mount
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // Update recipient preview when filters change
+  useEffect(() => {
+    if (modalOpen) {
+      updateRecipientPreview();
+    }
+  }, [formData.filterCriteria, formData.distributieGroepId, modalOpen]);
+
+  const loadData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [eventsData, groupsData] = await Promise.all([
+        eventsApi.getAll(),
+        distributionGroupsApi.getAll(),
+      ]);
+      setEvents(eventsData);
+      setDistributionGroups(groupsData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Kon gegevens niet laden');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateRecipientPreview = async () => {
+    try {
+      const preview = await eventsApi.previewOntvangers(
+        formData.filterCriteria,
+        formData.distributieGroepId || undefined
+      );
+      setRecipientPreview(preview);
+    } catch {
+      setRecipientPreview(null);
+    }
+  };
+
+  const handleCreate = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const request: CreateEventRequest = {
+        titel: formData.titel,
+        beschrijving: formData.beschrijving,
+        datum: formData.datum,
+        type: formData.type,
+        filterCriteria: formData.distributieGroepId ? undefined : formData.filterCriteria,
+        distributieGroepId: formData.distributieGroepId || undefined,
+      };
+
+      await eventsApi.create(request);
+      await loadData();
+
+      setModalOpen(false);
+      resetForm();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Kon event niet aanmaken');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerstuur = async (id: string) => {
+    if (!window.confirm('Weet u zeker dat u deze uitnodiging wilt versturen?')) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await eventsApi.versturen(id);
+      await loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Kon event niet versturen');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Weet u zeker dat u deze uitnodiging wilt annuleren?')) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await eventsApi.annuleren(id);
+      await loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Kon event niet annuleren');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleShowPreview = async (id: string) => {
+    try {
+      const detail = await eventsApi.getById(id);
+      setPreviewEvent(detail);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Kon preview niet laden');
+    }
+  };
+
+  const resetForm = () => {
     setFormData({
       titel: '',
       beschrijving: '',
       datum: '',
-      type: 'personeelsfeest',
-      filters: { alleenActief: true, sectoren: [], types: [], regimes: [] },
+      type: 'Personeelsfeest',
+      filterCriteria: { alleenActief: true, sectoren: [], employeeTypes: [], arbeidsRegimes: [] },
+      distributieGroepId: '',
+    });
+    setRecipientPreview(null);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('nl-BE', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
   };
 
-  const handleVerstuur = (id: string) => {
-    if (window.confirm('Weet u zeker dat u deze uitnodiging wilt versturen?')) {
-      verstuurUitnodiging(id);
-    }
-  };
-
-  const handleDelete = (id: string) => {
-    if (window.confirm('Weet u zeker dat u deze uitnodiging wilt verwijderen?')) {
-      updateUitnodiging(id, { status: 'geannuleerd' });
-    }
-  };
-
-  const ontvangerCount = getGefilterdeOntvangers(formData.filters).length;
-  const previewUitnodiging = uitnodigingen.find(u => u.id === previewId);
-
-  const toggleSectorFilter = (sector: string) => {
-    setFormData(prev => ({
-      ...prev,
-      filters: {
-        ...prev.filters,
-        sectoren: prev.filters.sectoren?.includes(sector)
-          ? prev.filters.sectoren.filter(s => s !== sector)
-          : [...(prev.filters.sectoren || []), sector],
-      },
-    }));
-  };
-
-  const toggleTypeFilter = (type: PersoneelType) => {
-    setFormData(prev => ({
-      ...prev,
-      filters: {
-        ...prev.filters,
-        types: prev.filters.types?.includes(type)
-          ? prev.filters.types.filter(t => t !== type)
-          : [...(prev.filters.types || []), type],
-      },
-    }));
-  };
+  if (loading && events.length === 0) {
+    return (
+      <div className="page">
+        <div className="loading-state">
+          <RefreshCw className="spin" size={32} />
+          <p>Evenementen laden...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page">
@@ -125,45 +233,49 @@ export default function Uitnodigingen() {
         </div>
       </div>
 
-      {/* Bestaande uitnodigingen */}
+      {/* Error message */}
+      {error && (
+        <div className="alert alert-error">
+          <AlertCircle size={18} />
+          <span>{error}</span>
+          <button className="btn btn-sm" onClick={() => setError(null)}>Sluiten</button>
+        </div>
+      )}
+
+      {/* Event cards */}
       <div className="invitations-grid">
-        {uitnodigingen.map(u => {
-          const Icon = typeIcons[u.type];
-          const ontvangers = getGefilterdeOntvangers(u.filters);
+        {events.map(event => {
+          const Icon = typeIcons[event.type];
           return (
-            <div key={u.id} className={`invitation-card invitation-${u.status}`}>
+            <div key={event.id} className={`invitation-card invitation-${event.status.toLowerCase()}`}>
               <div className="invitation-header">
                 <div className="invitation-icon">
                   <Icon size={24} />
                 </div>
                 <div className="invitation-meta">
-                  <span className={`invitation-status status-${u.status}`}>
-                    {u.status === 'concept'
-                      ? 'Concept'
-                      : u.status === 'verstuurd'
-                      ? 'Verstuurd'
-                      : 'Geannuleerd'}
+                  <span className={`invitation-status status-${event.status.toLowerCase()}`}>
+                    {event.status}
                   </span>
-                  <span className="invitation-type">{typeLabels[u.type]}</span>
+                  <span className="invitation-type">{typeLabels[event.type]}</span>
                 </div>
               </div>
 
-              <h3 className="invitation-title">{u.titel}</h3>
-              <p className="invitation-desc">{u.beschrijving}</p>
+              <h3 className="invitation-title">{event.titel}</h3>
+              <p className="invitation-desc">{event.beschrijving}</p>
 
               <div className="invitation-details">
                 <div className="invitation-detail">
                   <Calendar size={14} />
-                  <span>{u.datum}</span>
+                  <span>{formatDate(event.datum)}</span>
                 </div>
                 <div className="invitation-detail">
                   <Users size={14} />
-                  <span>{ontvangers.length} ontvangers</span>
+                  <span>{event.aantalDeelnemers} ontvangers</span>
                 </div>
-                {u.verstuurdOp && (
+                {event.verstuurdOp && (
                   <div className="invitation-detail">
                     <Mail size={14} />
-                    <span>Verstuurd op {u.verstuurdOp}</span>
+                    <span>Verstuurd op {formatDate(event.verstuurdOp)}</span>
                   </div>
                 )}
               </div>
@@ -172,22 +284,24 @@ export default function Uitnodigingen() {
                 <button
                   className="icon-btn"
                   title="Voorbeeld"
-                  onClick={() => setPreviewId(u.id)}
+                  onClick={() => handleShowPreview(event.id)}
                 >
                   <Eye size={16} />
                 </button>
-                {u.status === 'concept' && (
+                {event.status === 'Concept' && (
                   <>
                     <button
                       className="btn btn-success btn-sm"
-                      onClick={() => handleVerstuur(u.id)}
+                      onClick={() => handleVerstuur(event.id)}
+                      disabled={loading}
                     >
                       <Send size={14} /> Versturen
                     </button>
                     <button
                       className="icon-btn icon-btn-danger"
                       title="Annuleren"
-                      onClick={() => handleDelete(u.id)}
+                      onClick={() => handleDelete(event.id)}
+                      disabled={loading}
                     >
                       <Trash2 size={16} />
                     </button>
@@ -198,7 +312,7 @@ export default function Uitnodigingen() {
           );
         })}
 
-        {uitnodigingen.length === 0 && (
+        {events.length === 0 && (
           <div className="empty-state-card">
             <Mail size={48} className="text-muted" />
             <p>Nog geen uitnodigingen aangemaakt.</p>
@@ -210,12 +324,12 @@ export default function Uitnodigingen() {
       </div>
 
       {/* Preview modal */}
-      {previewUitnodiging && (
-        <div className="modal-overlay" onClick={() => setPreviewId(null)}>
+      {previewEvent && (
+        <div className="modal-overlay" onClick={() => setPreviewEvent(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Voorbeeld: {previewUitnodiging.titel}</h2>
-              <button className="icon-btn" onClick={() => setPreviewId(null)}>
+              <h2>Voorbeeld: {previewEvent.titel}</h2>
+              <button className="icon-btn" onClick={() => setPreviewEvent(null)}>
                 <X size={20} />
               </button>
             </div>
@@ -225,35 +339,33 @@ export default function Uitnodigingen() {
                   <strong>Van:</strong> hr@diepenbeek.be
                 </div>
                 <div className="preview-email-header">
-                  <strong>Aan:</strong> {getGefilterdeOntvangers(previewUitnodiging.filters).length} ontvangers
+                  <strong>Aan:</strong> {previewEvent.deelnemers.length} ontvangers
                 </div>
                 <div className="preview-email-header">
-                  <strong>Onderwerp:</strong> {previewUitnodiging.titel}
+                  <strong>Onderwerp:</strong> {previewEvent.titel}
                 </div>
                 <hr />
                 <div className="preview-email-body">
                   <p>Beste collega,</p>
-                  <p>{previewUitnodiging.beschrijving}</p>
+                  <p>{previewEvent.beschrijving}</p>
                   <p>
-                    <strong>Datum:</strong> {previewUitnodiging.datum}
+                    <strong>Datum:</strong> {formatDate(previewEvent.datum)}
                   </p>
                   <p>Met vriendelijke groeten,<br />HR Gemeente Diepenbeek</p>
                 </div>
               </div>
 
-              <h3 style={{ marginTop: '1.5rem' }}>Ontvangers ({getGefilterdeOntvangers(previewUitnodiging.filters).length})</h3>
+              <h3 style={{ marginTop: '1.5rem' }}>Ontvangers ({previewEvent.deelnemers.length})</h3>
               <div className="preview-recipients">
-                {getGefilterdeOntvangers(previewUitnodiging.filters)
-                  .slice(0, 10)
-                  .map(m => (
-                    <div key={m.id} className="preview-recipient">
-                      <span>{m.volledigeNaam}</span>
-                      <span className="text-muted">{m.email}</span>
-                    </div>
-                  ))}
-                {getGefilterdeOntvangers(previewUitnodiging.filters).length > 10 && (
+                {previewEvent.deelnemers.slice(0, 10).map(d => (
+                  <div key={d.employeeId} className="preview-recipient">
+                    <span>{d.displayName}</span>
+                    <span className="text-muted">{d.email}</span>
+                  </div>
+                ))}
+                {previewEvent.deelnemers.length > 10 && (
                   <p className="text-muted">
-                    ... en {getGefilterdeOntvangers(previewUitnodiging.filters).length - 10} anderen
+                    ... en {previewEvent.deelnemers.length - 10} anderen
                   </p>
                 )}
               </div>
@@ -262,13 +374,13 @@ export default function Uitnodigingen() {
         </div>
       )}
 
-      {/* Nieuwe uitnodiging modal */}
+      {/* Create modal */}
       {modalOpen && (
-        <div className="modal-overlay" onClick={() => setModalOpen(false)}>
+        <div className="modal-overlay" onClick={() => { setModalOpen(false); resetForm(); }}>
           <div className="modal modal-lg" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>Nieuwe Uitnodiging</h2>
-              <button className="icon-btn" onClick={() => setModalOpen(false)}>
+              <button className="icon-btn" onClick={() => { setModalOpen(false); resetForm(); }}>
                 <X size={20} />
               </button>
             </div>
@@ -290,15 +402,13 @@ export default function Uitnodigingen() {
                   <select
                     id="type"
                     value={formData.type}
-                    onChange={e =>
-                      setFormData(prev => ({ ...prev, type: e.target.value as Uitnodiging['type'] }))
-                    }
+                    onChange={e => setFormData(prev => ({ ...prev, type: e.target.value as EventTypeAPI }))}
                   >
-                    <option value="personeelsfeest">Personeelsfeest</option>
-                    <option value="vergadering">Vergadering</option>
-                    <option value="training">Training</option>
-                    <option value="communicatie">Communicatie</option>
-                    <option value="overig">Overig</option>
+                    <option value="Personeelsfeest">Personeelsfeest</option>
+                    <option value="Vergadering">Vergadering</option>
+                    <option value="Training">Training</option>
+                    <option value="Communicatie">Communicatie</option>
+                    <option value="Overig">Overig</option>
                   </select>
                 </div>
               </div>
@@ -321,9 +431,7 @@ export default function Uitnodigingen() {
                   rows={4}
                   required
                   value={formData.beschrijving}
-                  onChange={e =>
-                    setFormData(prev => ({ ...prev, beschrijving: e.target.value }))
-                  }
+                  onChange={e => setFormData(prev => ({ ...prev, beschrijving: e.target.value }))}
                   placeholder="Beschrijf het evenement of de communicatie..."
                 />
               </div>
@@ -333,102 +441,69 @@ export default function Uitnodigingen() {
               <div className="form-group">
                 <label>Distributiegroep (MG-)</label>
                 <select
-                  value={formData.filters.distributieGroepIds?.[0] || ''}
+                  value={formData.distributieGroepId}
                   onChange={e => {
                     const val = e.target.value;
                     setFormData(prev => ({
                       ...prev,
-                      filters: {
-                        ...prev.filters,
-                        distributieGroepIds: val ? [val] : [],
-                        // Reset other filters when selecting a distribution group
-                        ...(val ? { sectoren: [], types: [], regimes: [] } : {}),
-                      },
+                      distributieGroepId: val,
+                      filterCriteria: val
+                        ? { alleenActief: true }
+                        : prev.filterCriteria,
                     }));
                   }}
                 >
                   <option value="">-- Handmatig filteren (geen groep) --</option>
-                  {distributieGroepen.map(g => (
+                  {distributionGroups.map(g => (
                     <option key={g.id} value={g.id}>
-                      {g.displayName} ({g.ledenIds.length} leden) &mdash; {g.emailAddress}
+                      {g.displayName} ({g.memberCount} leden)
                     </option>
                   ))}
                 </select>
                 <span className="form-hint">
-                  Selecteer een mailgroep om alle leden als ontvanger te gebruiken, of filter handmatig hieronder
+                  Selecteer een mailgroep om alle leden als ontvanger te gebruiken
                 </span>
               </div>
 
-              {!formData.filters.distributieGroepIds?.length && (
-                <>
-                  <div className="form-group">
-                    <label className="checkbox-label">
-                      <input
-                        type="checkbox"
-                        checked={formData.filters.alleenActief ?? true}
-                        onChange={e =>
-                          setFormData(prev => ({
-                            ...prev,
-                            filters: { ...prev.filters, alleenActief: e.target.checked },
-                          }))
-                        }
-                      />
-                      Alleen actieve medewerkers
-                    </label>
-                  </div>
-
-                  <div className="form-group">
-                    <label>Sectoren</label>
-                    <div className="chip-list">
-                      {alleSectoren.map(s => (
-                        <button
-                          key={s}
-                          type="button"
-                          className={`chip ${formData.filters.sectoren?.includes(s) ? 'chip-active' : ''}`}
-                          onClick={() => toggleSectorFilter(s)}
-                        >
-                          {s}
-                        </button>
-                      ))}
-                    </div>
-                    <span className="form-hint">
-                      Geen selectie = alle sectoren
-                    </span>
-                  </div>
-
-                  <div className="form-group">
-                    <label>Type medewerker</label>
-                    <div className="chip-list">
-                      {(['personeel', 'vrijwilliger', 'interim', 'extern'] as PersoneelType[]).map(t => (
-                        <button
-                          key={t}
-                          type="button"
-                          className={`chip ${formData.filters.types?.includes(t) ? 'chip-active' : ''}`}
-                          onClick={() => toggleTypeFilter(t)}
-                        >
-                          {t === 'personeel' ? 'Personeel' : t === 'vrijwilliger' ? 'Vrijwilliger' : t === 'interim' ? 'Interim' : 'Extern'}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </>
+              {!formData.distributieGroepId && (
+                <div className="form-group">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={formData.filterCriteria.alleenActief ?? true}
+                      onChange={e =>
+                        setFormData(prev => ({
+                          ...prev,
+                          filterCriteria: { ...prev.filterCriteria, alleenActief: e.target.checked },
+                        }))
+                      }
+                    />
+                    Alleen actieve medewerkers
+                  </label>
+                </div>
               )}
 
               <div className="recipient-preview">
                 <Users size={18} />
-                <strong>{ontvangerCount}</strong> ontvangers op basis van de huidige filters
+                <strong>{recipientPreview?.totaalAantal ?? 0}</strong> ontvangers op basis van de huidige filters
               </div>
 
               <div className="modal-actions">
-                <button className="btn btn-secondary" onClick={() => setModalOpen(false)}>
+                <button className="btn btn-secondary" onClick={() => { setModalOpen(false); resetForm(); }}>
                   Annuleren
                 </button>
                 <button
                   className="btn btn-primary"
                   onClick={handleCreate}
-                  disabled={!formData.titel || !formData.datum || !formData.beschrijving}
+                  disabled={!formData.titel || !formData.datum || !formData.beschrijving || loading}
                 >
-                  Uitnodiging Aanmaken
+                  {loading ? (
+                    <>
+                      <RefreshCw size={16} className="spin" /> Aanmaken...
+                    </>
+                  ) : (
+                    'Uitnodiging Aanmaken'
+                  )}
                 </button>
               </div>
             </div>

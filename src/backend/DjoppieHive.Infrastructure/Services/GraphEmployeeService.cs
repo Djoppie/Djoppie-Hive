@@ -237,4 +237,9 @@ public class GraphEmployeeService : IEmployeeService
     {
         throw new NotImplementedException("GraphEmployeeService does not support database operations. Use EmployeeService instead.");
     }
+
+    public Task<GdprExportDto?> ExportPersonalDataAsync(Guid employeeId, string exportedBy, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("GraphEmployeeService does not support database operations. Use EmployeeService instead.");
+    }
 }

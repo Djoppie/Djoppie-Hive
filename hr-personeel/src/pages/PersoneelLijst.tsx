@@ -4,16 +4,32 @@ import {
   Plus,
   Download,
   Filter,
+  Eye,
   Edit3,
   Trash2,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
   Cloud,
   UserPlus,
+  User,
+  Briefcase,
+  Building2,
   Check,
   X,
   AlertCircle,
   Loader2,
+  FileJson,
+  Star,
+  Clock,
+  Clock3,
+  Heart,
+  CheckCircle,
+  XCircle,
+  RefreshCw,
 } from 'lucide-react';
 import MedewerkerModal from '../components/MedewerkerModal';
 import type { Medewerker, ArbeidsRegime, PersoneelType, ValidatieStatus } from '../types';
@@ -23,7 +39,8 @@ import {
   mapMedewerkerToCreateDto,
   mapMedewerkerToUpdateDto,
 } from '../utils/employeeMapper';
-import { distributionGroupsApi, type Sector } from '../services/api';
+import { distributionGroupsApi, employeesApi, type Sector } from '../services/api';
+import { useUserRole } from '../context/UserRoleContext';
 
 type SortKey = 'volledigeNaam' | 'email' | 'sector' | 'dienst' | 'functie' | 'type' | 'arbeidsRegime' | 'validatieStatus';
 type SortDir = 'asc' | 'desc';
@@ -51,21 +68,40 @@ function stripMGPrefix(name: string): string {
   return name;
 }
 
-// Status display configuration
-const statusConfig: Record<ValidatieStatus, { label: string; className: string }> = {
-  nieuw: { label: 'Nieuw', className: 'status-nieuw' },
-  in_review: { label: 'In Review', className: 'status-review' },
-  goedgekeurd: { label: 'Goedgekeurd', className: 'status-goedgekeurd' },
-  afgekeurd: { label: 'Afgekeurd', className: 'status-afgekeurd' },
-  aangepast: { label: 'Aangepast', className: 'status-aangepast' },
+// Status display configuration with icons
+const statusConfig: Record<ValidatieStatus, { label: string; className: string; Icon: typeof Star }> = {
+  nieuw: { label: 'Nieuw', className: 'status-nieuw', Icon: Star },
+  in_review: { label: 'In Review', className: 'status-review', Icon: Clock },
+  goedgekeurd: { label: 'Goedgekeurd', className: 'status-goedgekeurd', Icon: CheckCircle },
+  afgekeurd: { label: 'Afgekeurd', className: 'status-afgekeurd', Icon: XCircle },
+  aangepast: { label: 'Aangepast', className: 'status-aangepast', Icon: RefreshCw },
+};
+
+// Regime display configuration with icons
+const regimeConfig: Record<ArbeidsRegime, { label: string; className: string; Icon: typeof Clock }> = {
+  voltijds: { label: 'Voltijds', className: 'regime-voltijds', Icon: Clock },
+  deeltijds: { label: 'Deeltijds', className: 'regime-deeltijds', Icon: Clock3 },
+  vrijwilliger: { label: 'Vrijwilliger', className: 'regime-vrijwilliger', Icon: Heart },
+};
+
+// Type display configuration with icons
+const typeConfig: Record<PersoneelType, { label: string; className: string; Icon: typeof User }> = {
+  personeel: { label: 'Personeel', className: 'type-personeel', Icon: User },
+  vrijwilliger: { label: 'Vrijwilliger', className: 'type-vrijwilliger', Icon: Heart },
+  interim: { label: 'Interim', className: 'type-interim', Icon: Briefcase },
+  extern: { label: 'Extern', className: 'type-extern', Icon: Building2 },
 };
 
 export default function PersoneelLijst() {
+  const { hasAnyRole } = useUserRole();
+  const canExportGdpr = hasAnyRole('ict_super_admin', 'hr_admin');
+
   // State for employee data from API
   const [medewerkers, setMedewerkers] = useState<Medewerker[]>([]);
   const [sectors, setSectors] = useState<Sector[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [exportingId, setExportingId] = useState<string | null>(null);
 
   // Filter and search state
   const [zoekterm, setZoekterm] = useState('');
@@ -83,7 +119,13 @@ export default function PersoneelLijst() {
   // Modal and selection state
   const [modalOpen, setModalOpen] = useState(false);
   const [bewerkMedewerker, setBewerkMedewerker] = useState<Medewerker | null>(null);
+  const [viewOnly, setViewOnly] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+  const itemsPerPageOptions = [10, 25, 50, 100];
 
   // Fetch employees and sectors on mount
   useEffect(() => {
@@ -146,6 +188,24 @@ export default function PersoneelLijst() {
 
     return result;
   }, [medewerkers, zoekterm, filterSector, filterType, filterRegime, filterStatus, filterActief, sortKey, sortDir]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [zoekterm, filterSector, filterType, filterRegime, filterStatus, filterActief]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(gefilterd.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedData = gefilterd.slice(startIndex, endIndex);
+
+  // Ensure current page is valid when data changes
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -254,6 +314,19 @@ export default function PersoneelLijst() {
     setFilterStatus('');
     setFilterActief('');
     setZoekterm('');
+  };
+
+  const handleExportGdpr = async (id: string) => {
+    try {
+      setExportingId(id);
+      setError(null);
+      await employeesApi.exportGdprData(id);
+    } catch (err) {
+      console.error('Failed to export GDPR data:', err);
+      setError(err instanceof Error ? err.message : 'Kan GDPR export niet uitvoeren');
+    } finally {
+      setExportingId(null);
+    }
   };
 
   const hasActiveFilters = filterSector || filterType || filterRegime || filterStatus || filterActief;
@@ -399,14 +472,14 @@ export default function PersoneelLijst() {
         <table className="data-table personeel-table">
           <thead>
             <tr>
-              <th className="th-checkbox">
+              <th className="th-checkbox th-checkbox-sticky">
                 <input
                   type="checkbox"
                   checked={selectedIds.size === gefilterd.length && gefilterd.length > 0}
                   onChange={toggleSelectAll}
                 />
               </th>
-              <th className="sortable" onClick={() => handleSort('volledigeNaam')}>
+              <th className="sortable th-name-sticky" onClick={() => handleSort('volledigeNaam')}>
                 Naam <SortIcon columnKey="volledigeNaam" sortKey={sortKey} sortDir={sortDir} />
               </th>
               <th className="sortable" onClick={() => handleSort('email')}>
@@ -421,73 +494,78 @@ export default function PersoneelLijst() {
               <th className="sortable" onClick={() => handleSort('functie')}>
                 Functie <SortIcon columnKey="functie" sortKey={sortKey} sortDir={sortDir} />
               </th>
-              <th className="sortable" onClick={() => handleSort('arbeidsRegime')}>
+              <th className="sortable th-symbol" onClick={() => handleSort('arbeidsRegime')}>
                 Regime <SortIcon columnKey="arbeidsRegime" sortKey={sortKey} sortDir={sortDir} />
               </th>
-              <th className="sortable" onClick={() => handleSort('type')}>
+              <th className="sortable th-symbol" onClick={() => handleSort('type')}>
                 Type <SortIcon columnKey="type" sortKey={sortKey} sortDir={sortDir} />
               </th>
-              <th>Actief</th>
-              <th className="sortable" onClick={() => handleSort('validatieStatus')}>
+              <th className="th-symbol">Actief</th>
+              <th className="sortable th-symbol" onClick={() => handleSort('validatieStatus')}>
                 Status <SortIcon columnKey="validatieStatus" sortKey={sortKey} sortDir={sortDir} />
               </th>
-              <th>Bron</th>
+              <th className="th-symbol">Bron</th>
               <th>Acties</th>
             </tr>
           </thead>
           <tbody>
-            {gefilterd.map(m => {
+            {paginatedData.map(m => {
               const statusCfg = statusConfig[m.validatieStatus] || statusConfig.nieuw;
 
               return (
                 <tr key={m.id} className={!m.actief ? 'row-inactive' : ''}>
-                  <td className="td-checkbox">
+                  <td className="td-checkbox td-checkbox-sticky">
                     <input
                       type="checkbox"
                       checked={selectedIds.has(m.id)}
                       onChange={() => toggleSelect(m.id)}
                     />
                   </td>
-                  <td className="td-name">
+                  <td className="td-name td-name-sticky">
                     <span className="employee-name">{m.volledigeNaam}</span>
                   </td>
                   <td className="td-email">{m.email}</td>
                   <td>{stripMGPrefix(m.sector)}</td>
                   <td>{stripMGPrefix(m.dienst)}</td>
                   <td>{m.functie || '-'}</td>
-                  <td>
-                    <span className={`regime-badge regime-${m.arbeidsRegime}`}>
-                      {m.arbeidsRegime === 'voltijds'
-                        ? 'VT'
-                        : m.arbeidsRegime === 'deeltijds'
-                        ? 'DT'
-                        : 'VW'}
-                    </span>
+                  <td className="td-symbol">
+                    {(() => {
+                      const config = regimeConfig[m.arbeidsRegime];
+                      const IconComponent = config.Icon;
+                      return (
+                        <span className={`regime-icon ${config.className}`} title={config.label}>
+                          <IconComponent size={18} />
+                        </span>
+                      );
+                    })()}
                   </td>
-                  <td>
-                    <span className={`type-badge type-${m.type}`}>
-                      {m.type === 'personeel'
-                        ? 'Pers.'
-                        : m.type === 'vrijwilliger'
-                        ? 'Vrij.'
-                        : m.type === 'interim'
-                        ? 'Int.'
-                        : 'Ext.'}
-                    </span>
+                  <td className="td-symbol">
+                    {(() => {
+                      const config = typeConfig[m.type];
+                      const IconComponent = config.Icon;
+                      return (
+                        <span className={`type-icon ${config.className}`} title={config.label}>
+                          <IconComponent size={18} />
+                        </span>
+                      );
+                    })()}
                   </td>
-                  <td className="td-actief">
+                  <td className="td-symbol">
                     {m.actief ? (
                       <Check size={16} className="text-success" />
                     ) : (
                       <X size={16} className="text-danger" />
                     )}
                   </td>
-                  <td>
-                    <span className={`status-text ${statusCfg.className}`}>
-                      {statusCfg.label}
+                  <td className="td-symbol">
+                    <span
+                      className={`status-icon ${statusCfg.className}`}
+                      title={statusCfg.label}
+                    >
+                      <statusCfg.Icon size={14} />
                     </span>
                   </td>
-                  <td className="td-bron">
+                  <td className="td-symbol">
                     {m.bronAD ? (
                       <span title="Azure AD"><Cloud size={18} className="bron-icon bron-azure" /></span>
                     ) : (
@@ -497,14 +575,40 @@ export default function PersoneelLijst() {
                   <td className="td-actions">
                     <button
                       className="icon-btn"
+                      title="Bekijken"
+                      onClick={() => {
+                        setBewerkMedewerker(m);
+                        setViewOnly(true);
+                        setModalOpen(true);
+                      }}
+                    >
+                      <Eye size={16} />
+                    </button>
+                    <button
+                      className="icon-btn"
                       title="Bewerken"
                       onClick={() => {
                         setBewerkMedewerker(m);
+                        setViewOnly(false);
                         setModalOpen(true);
                       }}
                     >
                       <Edit3 size={16} />
                     </button>
+                    {canExportGdpr && (
+                      <button
+                        className="icon-btn"
+                        title="GDPR Export"
+                        onClick={() => handleExportGdpr(m.id)}
+                        disabled={exportingId === m.id}
+                      >
+                        {exportingId === m.id ? (
+                          <Loader2 size={16} className="spin" />
+                        ) : (
+                          <FileJson size={16} />
+                        )}
+                      </button>
+                    )}
                     <button
                       className="icon-btn icon-btn-danger"
                       title="Verwijderen"
@@ -516,7 +620,7 @@ export default function PersoneelLijst() {
                 </tr>
               );
             })}
-            {gefilterd.length === 0 && (
+            {paginatedData.length === 0 && (
               <tr>
                 <td colSpan={12} className="empty-state">
                   Geen medewerkers gevonden met de huidige filters.
@@ -527,6 +631,66 @@ export default function PersoneelLijst() {
         </table>
       </div>
 
+      {/* Paginatie */}
+      {gefilterd.length > 0 && (
+        <div className="pagination">
+          <div className="pagination-info">
+            <span>
+              {startIndex + 1}-{Math.min(endIndex, gefilterd.length)} van {gefilterd.length}
+            </span>
+            <select
+              value={itemsPerPage}
+              onChange={e => {
+                setItemsPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="pagination-select"
+            >
+              {itemsPerPageOptions.map(n => (
+                <option key={n} value={n}>{n} per pagina</option>
+              ))}
+            </select>
+          </div>
+          <div className="pagination-controls">
+            <button
+              className="pagination-btn"
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+              title="Eerste pagina"
+            >
+              <ChevronsLeft size={18} />
+            </button>
+            <button
+              className="pagination-btn"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              title="Vorige pagina"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <span className="pagination-pages">
+              Pagina {currentPage} van {totalPages || 1}
+            </span>
+            <button
+              className="pagination-btn"
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages || totalPages === 0}
+              title="Volgende pagina"
+            >
+              <ChevronRight size={18} />
+            </button>
+            <button
+              className="pagination-btn"
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages || totalPages === 0}
+              title="Laatste pagina"
+            >
+              <ChevronsRight size={18} />
+            </button>
+          </div>
+        </div>
+      )}
+
       <MedewerkerModal
         key={bewerkMedewerker?.id ?? "new"}
         medewerker={bewerkMedewerker}
@@ -534,8 +698,10 @@ export default function PersoneelLijst() {
         onClose={() => {
           setModalOpen(false);
           setBewerkMedewerker(null);
+          setViewOnly(false);
         }}
         onSave={handleSave}
+        viewOnly={viewOnly}
       />
     </div>
   );

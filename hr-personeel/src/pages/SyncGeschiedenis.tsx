@@ -6,14 +6,14 @@ import {
   AlertTriangle,
   Clock,
   Play,
-  Users,
   UserPlus,
   UserMinus,
   Edit3,
   FileWarning,
   Layers,
 } from 'lucide-react';
-import { syncApi, type SyncLogboekItem, type SyncStatusInfo } from '../services/api';
+import { syncApi } from '../services/api';
+import type { SyncLogboekItem, SyncStatusInfo } from '../types';
 
 export default function SyncGeschiedenis() {
   const [geschiedenis, setGeschiedenis] = useState<SyncLogboekItem[]>([]);

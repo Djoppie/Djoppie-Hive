@@ -498,4 +498,128 @@ public class SyncService : ISyncService
             logboek.ValidatieVerzoekenAangemaakt,
             logboek.Foutmelding);
     }
+
+    public async Task<SyncPreviewDto> GetSyncPreviewAsync(CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Sync preview gestart");
+
+        // Haal alle MG- groepen op uit Graph
+        var graphGroups = await HaalMgGroepenOpAsync(cancellationToken);
+        _logger.LogInformation("Preview: {Aantal} MG- groepen gevonden", graphGroups.Count);
+
+        // Haal bestaande groepen en medewerkers op
+        var bestaandeGroepen = await _context.DistributionGroups
+            .Select(g => g.EntraObjectId)
+            .ToListAsync(cancellationToken);
+        var bestaandeGroepenSet = new HashSet<string>(bestaandeGroepen);
+
+        var bestaandeMedewerkers = await _context.Employees
+            .Select(e => new { e.EntraObjectId, e.Id })
+            .ToListAsync(cancellationToken);
+        var bestaandeMedewerkersDict = bestaandeMedewerkers
+            .Where(e => !string.IsNullOrEmpty(e.EntraObjectId))
+            .ToDictionary(e => e.EntraObjectId, e => e.Id);
+
+        // Verzamel alle unieke gebruikers uit alle groepen
+        var alleGebruikers = new Dictionary<string, ADUserPreviewDto>();
+        var groepPreviews = new List<ADGroupPreviewDto>();
+
+        foreach (var graphGroup in graphGroups)
+        {
+            var niveau = graphGroup.DisplayName?.StartsWith(SectorPrefix, StringComparison.OrdinalIgnoreCase) == true
+                ? "Sector"
+                : "Dienst";
+
+            // Haal leden op
+            var members = await HaalGroepLedenVoorPreviewAsync(graphGroup.Id!, cancellationToken);
+            var userMembers = members.Where(m => m is User).Cast<User>().ToList();
+
+            groepPreviews.Add(new ADGroupPreviewDto(
+                graphGroup.Id!,
+                graphGroup.DisplayName ?? string.Empty,
+                graphGroup.Description,
+                graphGroup.Mail,
+                niveau,
+                userMembers.Count,
+                bestaandeGroepenSet.Contains(graphGroup.Id!)
+            ));
+
+            // Voeg gebruikers toe aan de collectie
+            foreach (var user in userMembers)
+            {
+                if (string.IsNullOrEmpty(user.Id) || alleGebruikers.ContainsKey(user.Id))
+                    continue;
+
+                var bestaatAl = bestaandeMedewerkersDict.TryGetValue(user.Id, out var bestaandeId);
+
+                alleGebruikers[user.Id] = new ADUserPreviewDto(
+                    user.Id,
+                    user.DisplayName ?? string.Empty,
+                    user.GivenName,
+                    user.Surname,
+                    user.Mail ?? string.Empty,
+                    user.JobTitle,
+                    user.Department,
+                    user.MobilePhone,
+                    user.AccountEnabled ?? true,
+                    bestaatAl,
+                    bestaatAl ? bestaandeId : null
+                );
+            }
+        }
+
+        var gebruikersList = alleGebruikers.Values.ToList();
+
+        var statistieken = new SyncPreviewStatisticsDto(
+            TotaalGebruikers: gebruikersList.Count,
+            ActieveGebruikers: gebruikersList.Count(u => u.AccountEnabled),
+            InactieveGebruikers: gebruikersList.Count(u => !u.AccountEnabled),
+            NieuweGebruikers: gebruikersList.Count(u => !u.BestaatAl),
+            BestaandeGebruikers: gebruikersList.Count(u => u.BestaatAl),
+            TotaalGroepen: groepPreviews.Count,
+            NieuweGroepen: groepPreviews.Count(g => !g.BestaatAl),
+            BestaandeGroepen: groepPreviews.Count(g => g.BestaatAl)
+        );
+
+        _logger.LogInformation(
+            "Preview voltooid: {TotaalGebruikers} gebruikers ({Nieuw} nieuw), {TotaalGroepen} groepen ({NieuwGroepen} nieuw)",
+            statistieken.TotaalGebruikers,
+            statistieken.NieuweGebruikers,
+            statistieken.TotaalGroepen,
+            statistieken.NieuweGroepen);
+
+        return new SyncPreviewDto(
+            gebruikersList,
+            groepPreviews,
+            statistieken,
+            DateTime.UtcNow
+        );
+    }
+
+    private async Task<List<DirectoryObject>> HaalGroepLedenVoorPreviewAsync(
+        string groupId,
+        CancellationToken cancellationToken)
+    {
+        var result = new List<DirectoryObject>();
+
+        try
+        {
+            var response = await _graphClient.Groups[groupId].Members
+                .GetAsync(config =>
+                {
+                    config.QueryParameters.Select = ["id", "displayName", "mail", "givenName", "surname", "jobTitle", "department", "mobilePhone", "accountEnabled"];
+                }, cancellationToken);
+
+            if (response?.Value != null)
+            {
+                result.AddRange(response.Value);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Kon leden niet ophalen voor groep {GroupId}", groupId);
+        }
+
+        return result;
+    }
 }

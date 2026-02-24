@@ -1,3 +1,4 @@
+using DjoppieHive.API.Authorization;
 using DjoppieHive.Core.DTOs;
 using DjoppieHive.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -5,19 +6,27 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DjoppieHive.API.Controllers;
 
+/// <summary>
+/// Beheer van MG- distributiegroepen uit Microsoft 365.
+/// Biedt inzicht in de organisatiehierarchie met sectoren en diensten.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+[Tags("Distributiegroepen")]
 public class DistributionGroupsController : ControllerBase
 {
     private readonly IDistributionGroupService _groupService;
+    private readonly IUserContextService _userContext;
     private readonly ILogger<DistributionGroupsController> _logger;
 
     public DistributionGroupsController(
         IDistributionGroupService groupService,
+        IUserContextService userContext,
         ILogger<DistributionGroupsController> logger)
     {
         _groupService = groupService;
+        _userContext = userContext;
         _logger = logger;
     }
 
@@ -86,10 +95,13 @@ public class DistributionGroupsController : ControllerBase
 
     /// <summary>
     /// Adds a member to a distribution group.
+    /// Requires: CanManageGroups (ICT Admin only)
     /// </summary>
     [HttpPost("{id}/members/{userId}")]
+    [Authorize(Policy = PolicyNames.CanManageGroups)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> AddMember(string id, string userId, CancellationToken cancellationToken)
     {
         var success = await _groupService.AddMemberToGroupAsync(id, userId, cancellationToken);
@@ -107,10 +119,13 @@ public class DistributionGroupsController : ControllerBase
 
     /// <summary>
     /// Removes a member from a distribution group.
+    /// Requires: CanManageGroups (ICT Admin only)
     /// </summary>
     [HttpDelete("{id}/members/{userId}")]
+    [Authorize(Policy = PolicyNames.CanManageGroups)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> RemoveMember(string id, string userId, CancellationToken cancellationToken)
     {
         var success = await _groupService.RemoveMemberFromGroupAsync(id, userId, cancellationToken);

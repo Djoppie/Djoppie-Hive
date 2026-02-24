@@ -6,6 +6,19 @@ import type {
   SyncLogboekItem,
   SyncValidatieVerzoek,
   AfhandelValidatieRequest,
+  SyncPreview,
+  EventDTO,
+  EventDetailDTO,
+  CreateEventRequest,
+  UpdateEventRequest,
+  EventFilterCriteria,
+  EventRecipientsPreview,
+  EventStatusAPI,
+  AuditLogDTO,
+  AuditLogPagedResponse,
+  AuditLogFilter,
+  AuditFilterOptions,
+  AuditEntityType,
 } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5014/api';
@@ -348,6 +361,54 @@ export const employeesApi = {
 
   getVolunteers: () =>
     fetchWithAuth<Employee[]>('/employees?employeeType=Vrijwilliger'),
+
+  /** Export all personal data for GDPR compliance (Article 15) */
+  exportGdprData: async (id: string): Promise<void> => {
+    const token = await getAccessToken();
+    if (!token) {
+      throw new Error('Niet aangemeld. Log opnieuw in.');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/employees/${id}/export`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Sessie verlopen. Log opnieuw in.');
+      }
+      if (response.status === 403) {
+        throw new Error('Geen toegang tot deze functie.');
+      }
+      const errorText = await response.text();
+      throw new Error(errorText || `API Error: ${response.status}`);
+    }
+
+    // Get the JSON data and trigger download
+    const data = await response.json();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+
+    // Get filename from Content-Disposition header or generate one
+    const contentDisposition = response.headers.get('Content-Disposition');
+    let filename = `GDPR_Export_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename="(.+)"/);
+      if (match) {
+        filename = match[1];
+      }
+    }
+
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  },
 };
 
 // Health check (no auth required)
@@ -380,6 +441,11 @@ export const syncApi = {
   /** Haal de sync geschiedenis op */
   getGeschiedenis: (aantal = 10): Promise<SyncLogboekItem[]> => {
     return fetchWithAuth<SyncLogboekItem[]>(`/sync/geschiedenis?aantal=${aantal}`);
+  },
+
+  /** Haal een preview op van wat er gesynchroniseerd zou worden (voor AD Import) */
+  getPreview: (): Promise<SyncPreview> => {
+    return fetchWithAuth<SyncPreview>('/sync/preview');
   },
 };
 
@@ -511,5 +577,209 @@ export const statisticsApi = {
   /** Haal dashboard statistieken op */
   getDashboard: (): Promise<DashboardStatistics> => {
     return fetchWithAuth<DashboardStatistics>('/statistics/dashboard');
+  },
+};
+
+// ============================================
+// User Roles API
+// ============================================
+
+export interface UserRole {
+  id: string;
+  entraObjectId: string;
+  email: string;
+  displayName: string;
+  role: string;
+  roleDisplayName: string;
+  sectorId: string | null;
+  sectorNaam: string | null;
+  dienstId: string | null;
+  dienstNaam: string | null;
+  isActive: boolean;
+  createdAt: string;
+  createdBy: string | null;
+  updatedAt: string | null;
+  updatedBy: string | null;
+}
+
+export interface CreateUserRoleDto {
+  entraObjectId: string;
+  email: string;
+  displayName: string;
+  role: string;
+  sectorId?: string;
+  dienstId?: string;
+}
+
+export interface UpdateUserRoleDto {
+  role?: string;
+  sectorId?: string;
+  dienstId?: string;
+  isActive?: boolean;
+}
+
+export interface UserSearchResult {
+  entraObjectId: string;
+  displayName: string;
+  email: string;
+  jobTitle: string | null;
+  department: string | null;
+  hasExistingRole: boolean;
+  existingRoles: string[] | null;
+}
+
+export interface RoleDefinition {
+  id: string;
+  displayName: string;
+  description: string;
+  scope: string;
+  permissions: string[];
+}
+
+export const userRolesApi = {
+  /** Haal alle gebruikersrollen op */
+  getAll: (): Promise<UserRole[]> => {
+    return fetchWithAuth<UserRole[]>('/userroles');
+  },
+
+  /** Haal een specifieke rol op */
+  getById: (id: string): Promise<UserRole> => {
+    return fetchWithAuth<UserRole>(`/userroles/${id}`);
+  },
+
+  /** Haal rollen voor een specifieke gebruiker op */
+  getByUserId: (entraObjectId: string): Promise<UserRole[]> => {
+    return fetchWithAuth<UserRole[]>(`/userroles/user/${entraObjectId}`);
+  },
+
+  /** Maak een nieuwe roltoewijzing aan */
+  create: (dto: CreateUserRoleDto): Promise<UserRole> => {
+    return fetchWithAuth<UserRole>('/userroles', {
+      method: 'POST',
+      body: JSON.stringify(dto),
+    });
+  },
+
+  /** Update een roltoewijzing */
+  update: (id: string, dto: UpdateUserRoleDto): Promise<UserRole> => {
+    return fetchWithAuth<UserRole>(`/userroles/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(dto),
+    });
+  },
+
+  /** Verwijder een roltoewijzing */
+  delete: (id: string): Promise<void> => {
+    return fetchWithAuth<void>(`/userroles/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  /** Zoek gebruikers voor roltoekenning */
+  searchUsers: (query: string): Promise<UserSearchResult[]> => {
+    return fetchWithAuth<UserSearchResult[]>(`/userroles/search/users?q=${encodeURIComponent(query)}`);
+  },
+
+  /** Haal rol definities op */
+  getDefinitions: (): Promise<RoleDefinition[]> => {
+    return fetchWithAuth<RoleDefinition[]>('/userroles/definitions');
+  },
+};
+
+// ============================================
+// Events API (Uitnodigingen)
+// ============================================
+
+export const eventsApi = {
+  /** Haal alle events op */
+  getAll: (status?: EventStatusAPI): Promise<EventDTO[]> => {
+    const params = status ? `?status=${status}` : '';
+    return fetchWithAuth<EventDTO[]>(`/events${params}`);
+  },
+
+  /** Haal een specifiek event op met deelnemers */
+  getById: (id: string): Promise<EventDetailDTO> => {
+    return fetchWithAuth<EventDetailDTO>(`/events/${id}`);
+  },
+
+  /** Maak een nieuw event aan */
+  create: (dto: CreateEventRequest): Promise<EventDTO> => {
+    return fetchWithAuth<EventDTO>('/events', {
+      method: 'POST',
+      body: JSON.stringify(dto),
+    });
+  },
+
+  /** Werk een event bij */
+  update: (id: string, dto: UpdateEventRequest): Promise<EventDTO> => {
+    return fetchWithAuth<EventDTO>(`/events/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(dto),
+    });
+  },
+
+  /** Verstuur een event */
+  versturen: (id: string): Promise<EventDTO> => {
+    return fetchWithAuth<EventDTO>(`/events/${id}/versturen`, {
+      method: 'POST',
+    });
+  },
+
+  /** Annuleer een event */
+  annuleren: (id: string): Promise<EventDTO> => {
+    return fetchWithAuth<EventDTO>(`/events/${id}/annuleren`, {
+      method: 'POST',
+    });
+  },
+
+  /** Verwijder een event */
+  delete: (id: string): Promise<void> => {
+    return fetchWithAuth<void>(`/events/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  /** Preview van ontvangers op basis van filters */
+  previewOntvangers: (
+    filters: EventFilterCriteria,
+    distributieGroepId?: string
+  ): Promise<EventRecipientsPreview> => {
+    const params = distributieGroepId ? `?distributieGroepId=${distributieGroepId}` : '';
+    return fetchWithAuth<EventRecipientsPreview>(`/events/preview-ontvangers${params}`, {
+      method: 'POST',
+      body: JSON.stringify(filters),
+    });
+  },
+};
+
+// ============================================
+// Audit API - GDPR Audit Logs
+// ============================================
+
+export const auditApi = {
+  /** Haal audit logs op met filters en paginering */
+  getLogs: (filter: AuditLogFilter = {}): Promise<AuditLogPagedResponse> => {
+    const params = new URLSearchParams();
+    if (filter.fromDate) params.append('fromDate', filter.fromDate);
+    if (filter.toDate) params.append('toDate', filter.toDate);
+    if (filter.userId) params.append('userId', filter.userId);
+    if (filter.action) params.append('action', filter.action);
+    if (filter.entityType) params.append('entityType', filter.entityType);
+    if (filter.entityId) params.append('entityId', filter.entityId);
+    if (filter.pageNumber) params.append('pageNumber', filter.pageNumber.toString());
+    if (filter.pageSize) params.append('pageSize', filter.pageSize.toString());
+
+    const queryString = params.toString();
+    return fetchWithAuth<AuditLogPagedResponse>(`/audit${queryString ? `?${queryString}` : ''}`);
+  },
+
+  /** Haal audit geschiedenis op voor een specifieke entiteit */
+  getEntityHistory: (entityType: AuditEntityType, entityId: string): Promise<AuditLogDTO[]> => {
+    return fetchWithAuth<AuditLogDTO[]>(`/audit/entity/${entityType}/${entityId}`);
+  },
+
+  /** Haal beschikbare filter opties op */
+  getFilterOptions: (): Promise<AuditFilterOptions> => {
+    return fetchWithAuth<AuditFilterOptions>('/audit/options');
   },
 };

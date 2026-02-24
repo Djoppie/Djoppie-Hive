@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.*" />
+    <PackageReference Include="FluentValidation.AspNetCore" Version="11.*" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.*">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
@@ -22,6 +23,9 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>1a906545-8a0c-498d-9f1d-ddc628ba8e5f</UserSecretsId>
+    <!-- Enable XML documentation for Swagger -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
 </Project>

@@ -1,3 +1,4 @@
+using DjoppieHive.API.Authorization;
 using DjoppieHive.Core.DTOs;
 using DjoppieHive.Core.Enums;
 using DjoppieHive.Core.Interfaces;
@@ -7,11 +8,15 @@ using Microsoft.AspNetCore.Mvc;
 namespace DjoppieHive.API.Controllers;
 
 /// <summary>
-/// Controller voor het beheren van validatieverzoeken.
+/// Validatie van wijzigingen door teamcoaches en sectormanagers.
+/// Biedt workflow ondersteuning voor het goedkeuren van
+/// medewerkerwijzigingen en groepslidmaatschappen.
+/// Vereist minimaal Diensthoofd rol.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
+[Authorize(Policy = PolicyNames.CanValidate)]
+[Tags("Validatie")]
 public class ValidatieVerzoekenController : ControllerBase
 {
     private readonly IValidatieVerzoekService _validatieService;

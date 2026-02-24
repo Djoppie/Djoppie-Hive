@@ -271,3 +271,200 @@ export interface AfhandelValidatieRequest {
   afhandeling: ValidatieAfhandeling;
   notities?: string;
 }
+
+// ============================================
+// Sync Preview types (voor AD Import pagina)
+// ============================================
+
+/** Preview van een gebruiker uit Azure AD/Entra ID */
+export interface ADUserPreview {
+  id: string;
+  displayName: string;
+  givenName: string | null;
+  surname: string | null;
+  email: string;
+  jobTitle: string | null;
+  department: string | null;
+  mobilePhone: string | null;
+  accountEnabled: boolean;
+  bestaatAl: boolean;
+  bestaandeMedewerkerId: string | null;
+}
+
+/** Preview van een groep uit Azure AD/Entra ID */
+export interface ADGroupPreview {
+  id: string;
+  displayName: string;
+  description: string | null;
+  email: string | null;
+  niveau: string;
+  aantalLeden: number;
+  bestaatAl: boolean;
+}
+
+/** Statistieken voor de sync preview */
+export interface SyncPreviewStatistics {
+  totaalGebruikers: number;
+  actieveGebruikers: number;
+  inactieveGebruikers: number;
+  nieuweGebruikers: number;
+  bestaandeGebruikers: number;
+  totaalGroepen: number;
+  nieuweGroepen: number;
+  bestaandeGroepen: number;
+}
+
+/** Volledige preview van wat er gesynchroniseerd zou worden */
+export interface SyncPreview {
+  gebruikers: ADUserPreview[];
+  groepen: ADGroupPreview[];
+  statistieken: SyncPreviewStatistics;
+  opgehaaldOp: string;
+}
+
+// ============================================
+// Event types (voor Uitnodigingen pagina)
+// ============================================
+
+export type EventTypeAPI = 'Personeelsfeest' | 'Vergadering' | 'Training' | 'Communicatie' | 'Overig';
+export type EventStatusAPI = 'Concept' | 'Verstuurd' | 'Geannuleerd';
+
+/** Filter criteria voor event ontvangers */
+export interface EventFilterCriteria {
+  alleenActief?: boolean;
+  sectoren?: string[];
+  employeeTypes?: string[];
+  arbeidsRegimes?: string[];
+  distributieGroepId?: string;
+}
+
+/** Event DTO */
+export interface EventDTO {
+  id: string;
+  titel: string;
+  beschrijving: string;
+  datum: string;
+  type: EventTypeAPI;
+  status: EventStatusAPI;
+  filterCriteria?: EventFilterCriteria;
+  distributieGroepId?: string;
+  distributieGroepNaam?: string;
+  aantalDeelnemers: number;
+  aangemaaktDoor?: string;
+  aangemaaktOp: string;
+  verstuurdOp?: string;
+  verstuurdDoor?: string;
+}
+
+/** Deelnemer aan een event */
+export interface EventParticipantDTO {
+  employeeId: string;
+  displayName: string;
+  email: string;
+  jobTitle?: string;
+  department?: string;
+  emailVerstuurd: boolean;
+  emailVerstuurdOp?: string;
+}
+
+/** Event detail DTO met deelnemers */
+export interface EventDetailDTO extends Omit<EventDTO, 'aantalDeelnemers'> {
+  deelnemers: EventParticipantDTO[];
+}
+
+/** Request voor aanmaken event */
+export interface CreateEventRequest {
+  titel: string;
+  beschrijving: string;
+  datum: string;
+  type: EventTypeAPI;
+  filterCriteria?: EventFilterCriteria;
+  distributieGroepId?: string;
+}
+
+/** Request voor bijwerken event */
+export interface UpdateEventRequest {
+  titel?: string;
+  beschrijving?: string;
+  datum?: string;
+  type?: EventTypeAPI;
+  filterCriteria?: EventFilterCriteria;
+  distributieGroepId?: string;
+}
+
+/** Preview van event ontvangers */
+export interface EventRecipientsPreview {
+  totaalAantal: number;
+  voorbeeldOntvangers: EventParticipantDTO[];
+}
+
+// ============================================
+// Audit types (voor Audit Log pagina)
+// ============================================
+
+export type AuditAction =
+  | 'Create'
+  | 'Update'
+  | 'Delete'
+  | 'View'
+  | 'Login'
+  | 'Logout'
+  | 'Export'
+  | 'Sync'
+  | 'Send'
+  | 'AccessDenied';
+
+export type AuditEntityType =
+  | 'Employee'
+  | 'DistributionGroup'
+  | 'EmployeeGroupMembership'
+  | 'UserRole'
+  | 'Event'
+  | 'EventParticipant'
+  | 'ValidatieVerzoek'
+  | 'SyncLogboek'
+  | 'System';
+
+/** Audit log entry */
+export interface AuditLogDTO {
+  id: string;
+  userId: string | null;
+  userEmail: string | null;
+  userDisplayName: string | null;
+  action: AuditAction;
+  entityType: AuditEntityType;
+  entityId: string | null;
+  entityDescription: string | null;
+  oldValues: string | null;
+  newValues: string | null;
+  timestamp: string;
+  ipAddress: string | null;
+  additionalInfo: string | null;
+}
+
+/** Gepagineerde response voor audit logs */
+export interface AuditLogPagedResponse {
+  items: AuditLogDTO[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+/** Filter parameters voor audit logs */
+export interface AuditLogFilter {
+  fromDate?: string;
+  toDate?: string;
+  userId?: string;
+  action?: AuditAction;
+  entityType?: AuditEntityType;
+  entityId?: string;
+  pageNumber?: number;
+  pageSize?: number;
+}
+
+/** Filter opties voor audit logs */
+export interface AuditFilterOptions {
+  actions: string[];
+  entityTypes: string[];
+}

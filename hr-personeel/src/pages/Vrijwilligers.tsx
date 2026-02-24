@@ -4,10 +4,15 @@ import {
   Plus,
   Download,
   Filter,
+  Eye,
   Edit3,
   Trash2,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
   Heart,
   Check,
   X,
@@ -96,7 +101,13 @@ export default function Vrijwilligers() {
   // Modal and selection state
   const [modalOpen, setModalOpen] = useState(false);
   const [bewerkVrijwilliger, setBewerkVrijwilliger] = useState<Employee | null>(null);
+  const [viewOnly, setViewOnly] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+  const itemsPerPageOptions = [10, 25, 50, 100];
 
   // Fetch volunteers on mount
   useEffect(() => {
@@ -166,6 +177,24 @@ export default function Vrijwilligers() {
     return result;
   }, [vrijwilligers, zoekterm, filterDienst, filterVOG, filterActief, sortKey, sortDir]);
 
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [zoekterm, filterDienst, filterVOG, filterActief]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(gefilterd.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedData = gefilterd.slice(startIndex, endIndex);
+
+  // Ensure current page is valid when data changes
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
+
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
       setSortDir(prev => (prev === 'asc' ? 'desc' : 'asc'));
@@ -177,7 +206,7 @@ export default function Vrijwilligers() {
 
   const handleExportCSV = () => {
     const headers = [
-      'Naam', 'E-mail', 'Telefoon', 'Dienst', 'Beschikbaarheid', 'Specialisaties',
+      'Naam', 'E-mail', 'Telefoon', 'Groep', 'Beschikbaarheid', 'Specialisaties',
       'Noodcontact Naam', 'Noodcontact Telefoon', 'VOG Datum', 'VOG Geldig Tot', 'Actief',
     ];
     const rows = gefilterd.map(v => [
@@ -396,7 +425,7 @@ export default function Vrijwilligers() {
           <Search size={18} />
           <input
             type="text"
-            placeholder="Zoek op naam, e-mail, dienst of specialisaties..."
+            placeholder="Zoek op naam, e-mail, groep of specialisaties..."
             value={zoekterm}
             onChange={e => setZoekterm(e.target.value)}
           />
@@ -419,9 +448,9 @@ export default function Vrijwilligers() {
         <div className="filters-panel">
           <div className="filters-grid">
             <div className="form-group">
-              <label>Dienst</label>
+              <label>Groep</label>
               <select value={filterDienst} onChange={e => setFilterDienst(e.target.value)}>
-                <option value="">Alle diensten</option>
+                <option value="">Alle groepen</option>
                 {diensten.map(d => (
                   <option key={d || ''} value={d || ''}>{d}</option>
                 ))}
@@ -459,21 +488,21 @@ export default function Vrijwilligers() {
         <table className="data-table">
           <thead>
             <tr>
-              <th className="th-checkbox">
+              <th className="th-checkbox th-checkbox-sticky">
                 <input
                   type="checkbox"
                   checked={selectedIds.size === gefilterd.length && gefilterd.length > 0}
                   onChange={toggleSelectAll}
                 />
               </th>
-              <th className="sortable" onClick={() => handleSort('displayName')}>
+              <th className="sortable th-name-sticky" onClick={() => handleSort('displayName')}>
                 Naam <SortIcon columnKey="displayName" sortKey={sortKey} sortDir={sortDir} />
               </th>
               <th className="sortable" onClick={() => handleSort('email')}>
                 E-mail <SortIcon columnKey="email" sortKey={sortKey} sortDir={sortDir} />
               </th>
               <th className="sortable" onClick={() => handleSort('dienstNaam')}>
-                Dienst <SortIcon columnKey="dienstNaam" sortKey={sortKey} sortDir={sortDir} />
+                Groep <SortIcon columnKey="dienstNaam" sortKey={sortKey} sortDir={sortDir} />
               </th>
               <th className="sortable" onClick={() => handleSort('beschikbaarheid')}>
                 Beschikbaarheid <SortIcon columnKey="beschikbaarheid" sortKey={sortKey} sortDir={sortDir} />
@@ -482,21 +511,21 @@ export default function Vrijwilligers() {
               <th className="sortable" onClick={() => handleSort('vogGeldigTot')}>
                 VOG Status <SortIcon columnKey="vogGeldigTot" sortKey={sortKey} sortDir={sortDir} />
               </th>
-              <th>Actief</th>
+              <th className="th-symbol">Actief</th>
               <th>Acties</th>
             </tr>
           </thead>
           <tbody>
-            {gefilterd.map(v => (
+            {paginatedData.map(v => (
               <tr key={v.id} className={!v.isActive ? 'row-inactive' : ''}>
-                <td>
+                <td className="td-checkbox-sticky">
                   <input
                     type="checkbox"
                     checked={selectedIds.has(v.id)}
                     onChange={() => toggleSelect(v.id)}
                   />
                 </td>
-                <td className="td-name">
+                <td className="td-name td-name-sticky">
                   <span className="name-text">{v.displayName}</span>
                 </td>
                 <td className="td-email">{v.email}</td>
@@ -526,7 +555,7 @@ export default function Vrijwilligers() {
                     </div>
                   )}
                 </td>
-                <td>
+                <td className="td-symbol">
                   {v.isActive ? (
                     <Check size={16} className="text-success" />
                   ) : (
@@ -536,9 +565,21 @@ export default function Vrijwilligers() {
                 <td className="td-actions">
                   <button
                     className="icon-btn"
+                    title="Bekijken"
+                    onClick={() => {
+                      setBewerkVrijwilliger(v);
+                      setViewOnly(true);
+                      setModalOpen(true);
+                    }}
+                  >
+                    <Eye size={16} />
+                  </button>
+                  <button
+                    className="icon-btn"
                     title="Bewerken"
                     onClick={() => {
                       setBewerkVrijwilliger(v);
+                      setViewOnly(false);
                       setModalOpen(true);
                     }}
                   >
@@ -554,7 +595,7 @@ export default function Vrijwilligers() {
                 </td>
               </tr>
             ))}
-            {gefilterd.length === 0 && (
+            {paginatedData.length === 0 && (
               <tr>
                 <td colSpan={9} className="empty-state">
                   Geen vrijwilligers gevonden met de huidige filters.
@@ -565,6 +606,66 @@ export default function Vrijwilligers() {
         </table>
       </div>
 
+      {/* Paginatie */}
+      {gefilterd.length > 0 && (
+        <div className="pagination">
+          <div className="pagination-info">
+            <span>
+              {startIndex + 1}-{Math.min(endIndex, gefilterd.length)} van {gefilterd.length}
+            </span>
+            <select
+              value={itemsPerPage}
+              onChange={e => {
+                setItemsPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="pagination-select"
+            >
+              {itemsPerPageOptions.map(n => (
+                <option key={n} value={n}>{n} per pagina</option>
+              ))}
+            </select>
+          </div>
+          <div className="pagination-controls">
+            <button
+              className="pagination-btn"
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+              title="Eerste pagina"
+            >
+              <ChevronsLeft size={18} />
+            </button>
+            <button
+              className="pagination-btn"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              title="Vorige pagina"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <span className="pagination-pages">
+              Pagina {currentPage} van {totalPages || 1}
+            </span>
+            <button
+              className="pagination-btn"
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages || totalPages === 0}
+              title="Volgende pagina"
+            >
+              <ChevronRight size={18} />
+            </button>
+            <button
+              className="pagination-btn"
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages || totalPages === 0}
+              title="Laatste pagina"
+            >
+              <ChevronsRight size={18} />
+            </button>
+          </div>
+        </div>
+      )}
+
       <VrijwilligerModal
         key={bewerkVrijwilliger?.id ?? "new"}
         vrijwilliger={bewerkVrijwilliger}
@@ -572,8 +673,10 @@ export default function Vrijwilligers() {
         onClose={() => {
           setModalOpen(false);
           setBewerkVrijwilliger(null);
+          setViewOnly(false);
         }}
         onSave={handleSave}
+        viewOnly={viewOnly}
       />
     </div>
   );

@@ -60,4 +60,10 @@ public interface IEmployeeService
     /// Includes VrijwilligerDetails if available.
     /// </summary>
     Task<IEnumerable<EmployeeDto>> GetVolunteersAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Exports all personal data for a specific employee (GDPR Article 15).
+    /// Includes: personal data, group memberships, event participations, audit logs, roles.
+    /// </summary>
+    Task<GdprExportDto?> ExportPersonalDataAsync(Guid employeeId, string exportedBy, CancellationToken cancellationToken = default);
 }

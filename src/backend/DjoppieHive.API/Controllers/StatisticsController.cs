@@ -6,11 +6,13 @@ using Microsoft.AspNetCore.Mvc;
 namespace DjoppieHive.API.Controllers;
 
 /// <summary>
-/// Controller voor dashboard statistieken.
+/// Dashboard statistieken en rapportage.
+/// Biedt inzicht in aantallen medewerkers, sync status en andere KPI's.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+[Tags("Statistieken")]
 public class StatisticsController : ControllerBase
 {
     private readonly IStatisticsService _statisticsService;

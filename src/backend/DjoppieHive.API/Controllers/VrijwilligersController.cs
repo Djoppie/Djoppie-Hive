@@ -7,12 +7,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace DjoppieHive.API.Controllers;
 
 /// <summary>
-/// Controller for managing volunteers (vrijwilligers).
-/// Volunteers are employees with EmployeeType = Vrijwilliger and have additional VrijwilligerDetails.
+/// Beheer van vrijwilligers en hun specifieke gegevens.
+/// Vrijwilligers zijn medewerkers met EmployeeType = Vrijwilliger
+/// en hebben extra VrijwilligerDetails (rijbewijs, beschikbaarheid, etc.).
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+[Tags("Vrijwilligers")]
 public class VrijwilligersController : ControllerBase
 {
     private readonly IEmployeeService _employeeService;

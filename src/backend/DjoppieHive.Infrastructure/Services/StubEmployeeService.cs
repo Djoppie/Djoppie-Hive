@@ -61,4 +61,9 @@ public class StubEmployeeService : IEmployeeService
     {
         throw new NotImplementedException("StubEmployeeService does not support database operations. Use EmployeeService instead.");
     }
+
+    public Task<GdprExportDto?> ExportPersonalDataAsync(Guid employeeId, string exportedBy, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("StubEmployeeService does not support database operations. Use EmployeeService instead.");
+    }
 }
