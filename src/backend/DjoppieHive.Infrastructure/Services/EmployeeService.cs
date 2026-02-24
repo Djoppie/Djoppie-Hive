@@ -122,6 +122,12 @@ public class EmployeeService : IEmployeeService
                     query = query.Where(e => e.DienstId == filter.DienstId.Value);
                 }
 
+                if (filter.SectorId.HasValue)
+                {
+                    // Filter by sector: employees whose dienst belongs to the specified sector
+                    query = query.Where(e => e.Dienst != null && e.Dienst.BovenliggendeGroepId == filter.SectorId.Value);
+                }
+
                 if (filter.Bron.HasValue)
                 {
                     query = query.Where(e => e.Bron == filter.Bron.Value);

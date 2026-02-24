@@ -29,6 +29,7 @@ public class EmployeesController : ControllerBase
     /// <param name="regime">Filter by arbeidsregime (Voltijds, Deeltijds, Vrijwilliger)</param>
     /// <param name="isActive">Filter by active status (true/false)</param>
     /// <param name="dienstId">Filter by dienst (DistributionGroup) ID</param>
+    /// <param name="sectorId">Filter by sector (parent group of dienst) ID</param>
     /// <param name="searchTerm">Search term for name or email</param>
     /// <param name="bron">Filter by data source (AzureAD, Handmatig)</param>
     /// <param name="cancellationToken">Cancellation token</param>
@@ -39,11 +40,12 @@ public class EmployeesController : ControllerBase
         [FromQuery] ArbeidsRegime? regime = null,
         [FromQuery] bool? isActive = null,
         [FromQuery] Guid? dienstId = null,
+        [FromQuery] Guid? sectorId = null,
         [FromQuery] string? searchTerm = null,
         [FromQuery] GegevensBron? bron = null,
         CancellationToken cancellationToken = default)
     {
-        var filter = new EmployeeFilter(type, regime, isActive, dienstId, searchTerm, bron);
+        var filter = new EmployeeFilter(type, regime, isActive, dienstId, sectorId, searchTerm, bron);
         var employees = await _employeeService.GetAllAsync(filter, cancellationToken);
         return Ok(employees);
     }

@@ -15,13 +15,59 @@ public class SyncController : ControllerBase
 {
     private readonly ISyncService _syncService;
     private readonly ILogger<SyncController> _logger;
+    private readonly IWebHostEnvironment _environment;
 
     public SyncController(
         ISyncService syncService,
-        ILogger<SyncController> logger)
+        ILogger<SyncController> logger,
+        IWebHostEnvironment environment)
     {
         _syncService = syncService;
         _logger = logger;
+        _environment = environment;
+    }
+
+    /// <summary>
+    /// DEV ONLY: Start een synchronisatie zonder authenticatie.
+    /// </summary>
+    [HttpPost("dev/uitvoeren")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(SyncResultaatDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ApiExplorerSettings(IgnoreApi = true)]
+    public async Task<ActionResult<SyncResultaatDto>> VoerDevSyncUit(CancellationToken cancellationToken)
+    {
+        if (!_environment.IsDevelopment())
+        {
+            return Forbid();
+        }
+
+        _logger.LogWarning("DEV sync gestart (geen authenticatie)");
+
+        try
+        {
+            var resultaat = await _syncService.VoerSyncUitAsync("DEV-SYNC", cancellationToken);
+            return Ok(resultaat);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new ProblemDetails
+            {
+                Title = "Synchronisatie al bezig",
+                Detail = ex.Message,
+                Status = StatusCodes.Status409Conflict
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "DEV sync mislukt");
+            return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
+            {
+                Title = "Synchronisatie mislukt",
+                Detail = ex.Message,
+                Status = StatusCodes.Status500InternalServerError
+            });
+        }
     }
 
     /// <summary>

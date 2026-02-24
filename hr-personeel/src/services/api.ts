@@ -275,6 +275,7 @@ export interface EmployeeFilter {
   arbeidsRegime?: ArbeidsRegimeAPI;
   isActive?: boolean;
   dienstId?: string;
+  sectorId?: string;
   search?: string;
   bron?: DataSource;
 }
@@ -308,11 +309,12 @@ export const distributionGroupsApi = {
 export const employeesApi = {
   getAll: (filter?: EmployeeFilter) => {
     const params = new URLSearchParams();
-    if (filter?.employeeType) params.append('employeeType', filter.employeeType);
-    if (filter?.arbeidsRegime) params.append('arbeidsRegime', filter.arbeidsRegime);
+    if (filter?.employeeType) params.append('type', filter.employeeType);
+    if (filter?.arbeidsRegime) params.append('regime', filter.arbeidsRegime);
     if (filter?.isActive !== undefined) params.append('isActive', filter.isActive.toString());
     if (filter?.dienstId) params.append('dienstId', filter.dienstId);
-    if (filter?.search) params.append('search', filter.search);
+    if (filter?.sectorId) params.append('sectorId', filter.sectorId);
+    if (filter?.search) params.append('searchTerm', filter.search);
     if (filter?.bron) params.append('bron', filter.bron);
 
     const queryString = params.toString();

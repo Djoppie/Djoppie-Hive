@@ -27,6 +27,11 @@ public record EmployeeFilter(
     Guid? DienstId = null,
 
     /// <summary>
+    /// Filter op sector (bovenliggende groep van dienst) ID.
+    /// </summary>
+    Guid? SectorId = null,
+
+    /// <summary>
     /// Zoekterm voor naam of email.
     /// </summary>
     string? SearchTerm = null,

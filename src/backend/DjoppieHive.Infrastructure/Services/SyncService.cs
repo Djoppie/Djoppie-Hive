@@ -299,6 +299,14 @@ public class SyncService : ISyncService
         {
             var employee = await ZoekOfMaakMedewerkerAsync(graphUser, syncLogboek, cancellationToken);
 
+            // Stel DienstId in als dit een dienst is (niet een sector)
+            if (groep.Niveau == GroepNiveau.Dienst && employee.DienstId != groep.Id)
+            {
+                employee.DienstId = groep.Id;
+                _logger.LogDebug("DienstId ingesteld voor {Employee} naar {Dienst}",
+                    employee.DisplayName, groep.DisplayName);
+            }
+
             // Controleer of lidmaatschap al bestaat
             var bestaandLidmaatschap = bestaandeLidmaatschappen
                 .FirstOrDefault(m => m.Employee.EntraObjectId == graphUser.Id);
