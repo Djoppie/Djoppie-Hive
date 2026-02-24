@@ -5,6 +5,19 @@ import type { Medewerker, ArbeidsRegime, PersoneelType } from '../types';
  * Utility to map between backend API Employee and frontend Medewerker types
  */
 
+// Strip MG- prefixes from group names and normalize dashes to spaces
+function stripMGPrefix(name: string | null | undefined): string {
+  if (!name) return '';
+  let result = name;
+  if (result.startsWith('MG-SECTOR-')) {
+    result = result.substring('MG-SECTOR-'.length);
+  } else if (result.startsWith('MG-')) {
+    result = result.substring('MG-'.length);
+  }
+  // Replace dashes with spaces for consistency with dropdown formatting
+  return result.replace(/-/g, ' ');
+}
+
 // Map backend EmployeeType to frontend PersoneelType
 export function mapEmployeeTypeToPersoneelType(type: EmployeeType): PersoneelType {
   const mapping: Record<EmployeeType, PersoneelType> = {
@@ -50,6 +63,16 @@ export function mapArbeidsRegimeToAPI(regime: ArbeidsRegime): ArbeidsRegimeAPI {
 
 // Map backend Employee to frontend Medewerker
 export function mapEmployeeToMedewerker(employee: Employee): Medewerker {
+  // Determine dienst: use dienstNaam, or first group from groups array
+  let dienst = stripMGPrefix(employee.dienstNaam);
+  if (!dienst && employee.groups && employee.groups.length > 0) {
+    // Use first group as dienst (strip MG- prefix)
+    dienst = stripMGPrefix(employee.groups[0]);
+  }
+
+  // Determine sector: use sectorNaam only (don't guess from department)
+  const sector = stripMGPrefix(employee.sectorNaam) || '';
+
   return {
     id: employee.id,
     adId: employee.bron === 'AzureAD' ? employee.id : undefined,
@@ -60,8 +83,8 @@ export function mapEmployeeToMedewerker(employee: Employee): Medewerker {
     telefoon: employee.mobilePhone || employee.telefoonnummer || undefined,
     functie: employee.jobTitle || undefined,
     afdeling: employee.department || undefined,
-    dienst: employee.dienstNaam || '',
-    sector: employee.sectorNaam || '',
+    dienst: dienst,
+    sector: sector,
     arbeidsRegime: mapArbeidsRegimeFromAPI(employee.arbeidsRegime),
     type: mapEmployeeTypeToPersoneelType(employee.employeeType),
     actief: employee.isActive,

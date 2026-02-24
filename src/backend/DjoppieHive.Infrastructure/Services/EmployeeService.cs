@@ -40,6 +40,7 @@ public class EmployeeService : IEmployeeService
         // Try to find by EntraObjectId
         var employee = await _context.Employees
             .Include(e => e.Dienst)
+                .ThenInclude(d => d!.BovenliggendeGroep)
             .Include(e => e.VrijwilligerDetails)
             .Include(e => e.GroupMemberships)
                 .ThenInclude(m => m.DistributionGroup)
@@ -59,6 +60,7 @@ public class EmployeeService : IEmployeeService
 
         var employees = await _context.Employees
             .Include(e => e.Dienst)
+                .ThenInclude(d => d!.BovenliggendeGroep)
             .Where(e => e.IsActive &&
                        (e.DisplayName.ToLower().Contains(lowerQuery) ||
                         e.Email.ToLower().Contains(lowerQuery)))
@@ -91,6 +93,7 @@ public class EmployeeService : IEmployeeService
         {
             var query = _context.Employees
                 .Include(e => e.Dienst)
+                .ThenInclude(d => d!.BovenliggendeGroep)
                 .Include(e => e.VrijwilligerDetails)
                 .Include(e => e.GroupMemberships)
                     .ThenInclude(m => m.DistributionGroup)
@@ -155,6 +158,7 @@ public class EmployeeService : IEmployeeService
         {
             var employee = await _context.Employees
                 .Include(e => e.Dienst)
+                .ThenInclude(d => d!.BovenliggendeGroep)
                 .Include(e => e.VrijwilligerDetails)
                 .Include(e => e.GroupMemberships)
                     .ThenInclude(m => m.DistributionGroup)
@@ -483,6 +487,7 @@ public class EmployeeService : IEmployeeService
         {
             var employees = await _context.Employees
                 .Include(e => e.Dienst)
+                .ThenInclude(d => d!.BovenliggendeGroep)
                 .Include(e => e.VrijwilligerDetails)
                 .Include(e => e.GroupMemberships)
                     .ThenInclude(m => m.DistributionGroup)
@@ -505,6 +510,7 @@ public class EmployeeService : IEmployeeService
         {
             var volunteers = await _context.Employees
                 .Include(e => e.Dienst)
+                .ThenInclude(d => d!.BovenliggendeGroep)
                 .Include(e => e.VrijwilligerDetails)
                 .Include(e => e.GroupMemberships)
                     .ThenInclude(m => m.DistributionGroup)
@@ -553,6 +559,18 @@ public class EmployeeService : IEmployeeService
             );
         }
 
+        // Bepaal de sector naam via de bovenliggende groep van de dienst
+        string? sectorNaam = null;
+        if (employee.Dienst?.BovenliggendeGroep != null)
+        {
+            sectorNaam = employee.Dienst.BovenliggendeGroep.DisplayName;
+        }
+        else if (employee.Dienst?.Niveau == DjoppieHive.Core.Enums.GroepNiveau.Sector)
+        {
+            // Dienst IS de sector
+            sectorNaam = employee.Dienst.DisplayName;
+        }
+
         return new EmployeeDto(
             employee.Id.ToString(),
             employee.DisplayName,
@@ -572,6 +590,7 @@ public class EmployeeService : IEmployeeService
             employee.PhotoUrl,
             employee.DienstId?.ToString(),
             employee.Dienst?.DisplayName,
+            sectorNaam,
             employee.StartDatum,
             employee.EindDatum,
             employee.Telefoonnummer,

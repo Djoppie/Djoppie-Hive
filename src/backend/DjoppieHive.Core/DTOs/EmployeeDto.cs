@@ -26,6 +26,7 @@ public record EmployeeDto(
     string? PhotoUrl,
     string? DienstId,
     string? DienstNaam,
+    string? SectorNaam,
     DateTime? StartDatum,
     DateTime? EindDatum,
     string? Telefoonnummer,
