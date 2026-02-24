@@ -6,12 +6,15 @@ namespace DjoppieHive.API.Authorization;
 
 /// <summary>
 /// Implementation of user context service using HttpContext and database.
+/// Ondersteunt zowel JWT claims als database-gebaseerde rollen.
 /// </summary>
 public class UserContextService : IUserContextService
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ApplicationDbContext _dbContext;
     private readonly ILogger<UserContextService> _logger;
+    private List<string>? _cachedDbRoles;
+    private bool _dbRolesChecked;
 
     public UserContextService(
         IHttpContextAccessor httpContextAccessor,
@@ -55,7 +58,63 @@ public class UserContextService : IUserContextService
         // Also check for Azure AD "roles" claim
         roles.AddRange(User.FindAll("roles").Select(c => c.Value));
 
+        // Also check database roles (synchronously for interface compatibility)
+        var dbRoles = GetDatabaseRolesAsync().GetAwaiter().GetResult();
+        roles.AddRange(dbRoles);
+
         return roles.Distinct();
+    }
+
+    /// <summary>
+    /// Haalt rollen op uit de database voor de huidige gebruiker.
+    /// Update ook automatisch het EntraObjectId als dit nog "pending-first-login" is.
+    /// </summary>
+    private async Task<List<string>> GetDatabaseRolesAsync()
+    {
+        if (_dbRolesChecked && _cachedDbRoles != null)
+            return _cachedDbRoles;
+
+        _dbRolesChecked = true;
+        _cachedDbRoles = new List<string>();
+
+        var userId = GetCurrentUserId();
+        var email = GetCurrentUserEmail();
+
+        if (string.IsNullOrEmpty(email)) return _cachedDbRoles;
+
+        // Zoek rollen op basis van EntraObjectId of Email
+        var userRoles = await _dbContext.UserRoles
+            .Where(r => r.IsActive &&
+                       (r.EntraObjectId == userId ||
+                        r.Email.ToLower() == email.ToLower()))
+            .ToListAsync();
+
+        if (!userRoles.Any()) return _cachedDbRoles;
+
+        // Update EntraObjectId voor rollen die nog "pending-first-login" hebben
+        if (!string.IsNullOrEmpty(userId))
+        {
+            var pendingRoles = userRoles.Where(r =>
+                r.EntraObjectId == "pending-first-login" &&
+                r.Email.Equals(email, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            if (pendingRoles.Any())
+            {
+                foreach (var role in pendingRoles)
+                {
+                    role.EntraObjectId = userId;
+                    role.UpdatedAt = DateTime.UtcNow;
+                    role.UpdatedBy = "System (Auto-update on first login)";
+                    _logger.LogInformation(
+                        "EntraObjectId bijgewerkt voor {Email} met rol {Role}",
+                        email, role.Role);
+                }
+                await _dbContext.SaveChangesAsync();
+            }
+        }
+
+        _cachedDbRoles = userRoles.Select(r => r.Role).Distinct().ToList();
+        return _cachedDbRoles;
     }
 
     public bool HasRole(string role)
