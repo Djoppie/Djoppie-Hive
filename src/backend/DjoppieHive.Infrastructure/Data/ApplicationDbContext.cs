@@ -21,6 +21,11 @@ public class ApplicationDbContext : DbContext
     public DbSet<EventParticipant> EventParticipants => Set<EventParticipant>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
+    // Hybrid Groups System
+    public DbSet<DynamicGroup> DynamicGroups => Set<DynamicGroup>();
+    public DbSet<LocalGroup> LocalGroups => Set<LocalGroup>();
+    public DbSet<LocalGroupMember> LocalGroupMembers => Set<LocalGroupMember>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -228,6 +233,52 @@ public class ApplicationDbContext : DbContext
             entity.Property(a => a.CorrelationId).HasMaxLength(36);
             entity.Property(a => a.AdditionalInfo).HasMaxLength(1000);
             // OldValues and NewValues are unlimited (JSON)
+        });
+
+        // ============================================
+        // HYBRID GROUPS SYSTEM
+        // ============================================
+
+        // DynamicGroup configuratie
+        modelBuilder.Entity<DynamicGroup>(entity =>
+        {
+            entity.HasKey(g => g.Id);
+            entity.HasIndex(g => g.DisplayName);
+            entity.HasIndex(g => g.IsSystemGroup);
+            entity.Property(g => g.DisplayName).HasMaxLength(256).IsRequired();
+            entity.Property(g => g.Description).HasMaxLength(500);
+            entity.Property(g => g.Email).HasMaxLength(256);
+            entity.Property(g => g.FilterCriteria).IsRequired(); // JSON
+            entity.Property(g => g.CreatedBy).HasMaxLength(256);
+        });
+
+        // LocalGroup configuratie
+        modelBuilder.Entity<LocalGroup>(entity =>
+        {
+            entity.HasKey(g => g.Id);
+            entity.HasIndex(g => g.DisplayName);
+            entity.Property(g => g.DisplayName).HasMaxLength(256).IsRequired();
+            entity.Property(g => g.Description).HasMaxLength(500);
+            entity.Property(g => g.Email).HasMaxLength(256);
+            entity.Property(g => g.CreatedBy).HasMaxLength(256);
+        });
+
+        // LocalGroupMember configuratie (veel-op-veel)
+        modelBuilder.Entity<LocalGroupMember>(entity =>
+        {
+            entity.HasKey(m => new { m.LocalGroupId, m.EmployeeId });
+
+            entity.HasOne(m => m.LocalGroup)
+                .WithMany(g => g.Members)
+                .HasForeignKey(m => m.LocalGroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(m => m.Employee)
+                .WithMany()
+                .HasForeignKey(m => m.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(m => m.AddedBy).HasMaxLength(256);
         });
     }
 }

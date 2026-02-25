@@ -51,6 +51,9 @@ public static class DependencyInjection
         // Register AuditService for manual audit logging
         services.AddScoped<IAuditService, AuditService>();
 
+        // Register UnifiedGroupService (Hybrid Groups System)
+        services.AddScoped<IUnifiedGroupService, UnifiedGroupService>();
+
         // Register database-backed EmployeeService (primary service for CRUD operations)
         services.AddScoped<EmployeeService>();
 

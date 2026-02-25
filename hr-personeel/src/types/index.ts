@@ -468,3 +468,97 @@ export interface AuditFilterOptions {
   actions: string[];
   entityTypes: string[];
 }
+
+// ============================================
+// Unified Groups types (Hybrid Groups System)
+// ============================================
+
+/** Bron van een groep in het Hybrid Groups systeem */
+export type GroupSource = 'Exchange' | 'Dynamic' | 'Local';
+
+/** Filter criteria voor dynamische groepen */
+export interface DynamicGroupFilterCriteria {
+  employeeTypes?: string[];
+  arbeidsRegimes?: string[];
+  alleenActief?: boolean;
+  dienstIds?: string[];
+  sectorIds?: string[];
+}
+
+/** Unified group representatie (alle groeptypes) */
+export interface UnifiedGroup {
+  id: string;
+  displayName: string;
+  description: string | null;
+  email: string | null;
+  memberCount: number;
+  source: GroupSource;
+  isReadOnly: boolean;
+  isSystemGroup: boolean;
+  lastEvaluatedAt: string | null;
+}
+
+/** Gedetailleerde unified group met leden */
+export interface UnifiedGroupDetail extends UnifiedGroup {
+  filterCriteria: DynamicGroupFilterCriteria | null;
+  members: EmployeeSummary[];
+  createdAt: string;
+  createdBy: string | null;
+}
+
+/** Employee summary voor groepsleden */
+export interface EmployeeSummary {
+  id: string;
+  displayName: string;
+  email: string;
+  jobTitle: string | null;
+  employeeType: string;
+  arbeidsRegime: string;
+  isActive: boolean;
+  dienstNaam: string | null;
+}
+
+/** Request voor aanmaken lokale groep */
+export interface CreateLocalGroupRequest {
+  displayName: string;
+  description?: string;
+  email?: string;
+  initialMemberIds?: string[];
+}
+
+/** Request voor bijwerken lokale groep */
+export interface UpdateLocalGroupRequest {
+  displayName?: string;
+  description?: string;
+  email?: string;
+}
+
+/** Request voor aanmaken dynamische groep */
+export interface CreateDynamicGroupRequest {
+  displayName: string;
+  filterCriteria: DynamicGroupFilterCriteria;
+  description?: string;
+  email?: string;
+}
+
+/** Request voor bijwerken dynamische groep */
+export interface UpdateDynamicGroupRequest {
+  displayName?: string;
+  description?: string;
+  email?: string;
+  filterCriteria?: DynamicGroupFilterCriteria;
+}
+
+/** Preview van gecombineerde groepen */
+export interface GroupsPreview {
+  totalUniqueMembers: number;
+  groupBreakdown: Record<string, number>;
+  sampleMembers: EmployeeSummary[];
+}
+
+/** Email export DTO */
+export interface EmailExport {
+  mailtoLink: string;
+  emailCount: number;
+  truncatedWarning: string | null;
+}

@@ -307,6 +307,10 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     dbContext.Database.Migrate();
+
+    // Seed predefined dynamic groups for Hybrid Groups System
+    var unifiedGroupService = scope.ServiceProvider.GetRequiredService<DjoppieHive.Core.Interfaces.IUnifiedGroupService>();
+    await unifiedGroupService.SeedPredefinedDynamicGroupsAsync(CancellationToken.None);
 }
 
 // SECURITY: Force HTTPS in production

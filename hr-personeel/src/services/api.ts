@@ -19,6 +19,16 @@ import type {
   AuditLogFilter,
   AuditFilterOptions,
   AuditEntityType,
+  // Unified Groups types
+  UnifiedGroup,
+  UnifiedGroupDetail,
+  EmployeeSummary as UnifiedEmployeeSummary,
+  CreateLocalGroupRequest,
+  UpdateLocalGroupRequest,
+  CreateDynamicGroupRequest,
+  UpdateDynamicGroupRequest,
+  GroupsPreview,
+  EmailExport,
 } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5014/api';
@@ -337,6 +347,98 @@ export const distributionGroupsApi = {
     fetchWithAuth<void>(`/distributiongroups/${groupId}/members/${userId}`, {
       method: 'DELETE',
     }),
+};
+
+// ============================================
+// Unified Groups API (Hybrid Groups System)
+// ============================================
+
+export const unifiedGroupsApi = {
+  /**
+   * Gets all groups from all sources (Exchange, Dynamic, Local).
+   */
+  getAll: () => fetchWithAuth<UnifiedGroup[]>('/unifiedgroups'),
+
+  /**
+   * Gets a specific group by ID with full details and members.
+   */
+  getById: (id: string) =>
+    fetchWithAuth<UnifiedGroupDetail>(`/unifiedgroups/${encodeURIComponent(id)}`),
+
+  /**
+   * Gets all members of a group.
+   */
+  getMembers: (id: string) =>
+    fetchWithAuth<UnifiedEmployeeSummary[]>(`/unifiedgroups/${encodeURIComponent(id)}/members`),
+
+  /**
+   * Gets a preview of combined members from multiple groups.
+   */
+  getPreview: (groupIds: string[]) =>
+    fetchWithAuth<GroupsPreview>(`/unifiedgroups/preview?groupIds=${groupIds.join(',')}`),
+
+  // Dynamic group operations
+  createDynamic: (dto: CreateDynamicGroupRequest) =>
+    fetchWithAuth<UnifiedGroup>('/unifiedgroups/dynamic', {
+      method: 'POST',
+      body: JSON.stringify(dto),
+    }),
+
+  updateDynamic: (id: string, dto: UpdateDynamicGroupRequest) =>
+    fetchWithAuth<UnifiedGroup>(`/unifiedgroups/dynamic/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(dto),
+    }),
+
+  deleteDynamic: (id: string) =>
+    fetchWithAuth<void>(`/unifiedgroups/dynamic/${id}`, {
+      method: 'DELETE',
+    }),
+
+  evaluateDynamic: (id: string) =>
+    fetchWithAuth<{ memberCount: number }>(`/unifiedgroups/dynamic/${id}/evaluate`, {
+      method: 'POST',
+    }),
+
+  // Local group operations
+  createLocal: (dto: CreateLocalGroupRequest) =>
+    fetchWithAuth<UnifiedGroup>('/unifiedgroups/local', {
+      method: 'POST',
+      body: JSON.stringify(dto),
+    }),
+
+  updateLocal: (id: string, dto: UpdateLocalGroupRequest) =>
+    fetchWithAuth<UnifiedGroup>(`/unifiedgroups/local/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(dto),
+    }),
+
+  deleteLocal: (id: string) =>
+    fetchWithAuth<void>(`/unifiedgroups/local/${id}`, {
+      method: 'DELETE',
+    }),
+
+  addMemberToLocal: (groupId: string, employeeId: string) =>
+    fetchWithAuth<void>(`/unifiedgroups/local/${groupId}/members/${employeeId}`, {
+      method: 'POST',
+    }),
+
+  removeMemberFromLocal: (groupId: string, employeeId: string) =>
+    fetchWithAuth<void>(`/unifiedgroups/local/${groupId}/members/${employeeId}`, {
+      method: 'DELETE',
+    }),
+
+  // Export operations
+  exportEmailsCsv: (groupIds: string[]) =>
+    fetchWithAuth<string>(`/unifiedgroups/export/emails?groupIds=${groupIds.join(',')}`),
+
+  getMailtoLink: (groupIds: string[], subject?: string, body?: string) => {
+    const params = new URLSearchParams();
+    params.append('groupIds', groupIds.join(','));
+    if (subject) params.append('subject', subject);
+    if (body) params.append('body', body);
+    return fetchWithAuth<EmailExport>(`/unifiedgroups/export/mailto?${params.toString()}`);
+  },
 };
 
 export const employeesApi = {
