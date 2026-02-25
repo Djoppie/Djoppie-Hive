@@ -50,6 +50,12 @@ param entraBackendClientSecret string
 @secure()
 param entraFrontendClientId string
 
+@description('Email addresses for alert notifications')
+param alertEmailAddresses array = []
+
+@description('Enable monitoring alerts')
+param enableAlerts bool = true
+
 @description('Tags to apply to all resources')
 param tags object = {
   Environment: environment
@@ -217,6 +223,47 @@ module staticWebApp 'modules/staticwebapp.bicep' = {
   }
 }
 
+// Monitoring Alerts (Task 6.5)
+module monitoringAlerts 'modules/monitoring-alerts.bicep' = {
+  scope: resourceGroup
+  name: 'monitoringAlertsDeployment'
+  params: {
+    location: location
+    environment: environment
+    namingPrefix: namingPrefix
+    tags: tags
+    appInsightsId: appInsights.outputs.appInsightsId
+    appServiceId: appService.outputs.appServiceId
+    alertEmailAddresses: alertEmailAddresses
+    enableAlerts: enableAlerts
+  }
+  dependsOn: [
+    appInsights
+    appService
+  ]
+}
+
+// Monitoring Dashboard (Task 6.5)
+module monitoringDashboard 'modules/monitoring-dashboard.bicep' = {
+  scope: resourceGroup
+  name: 'monitoringDashboardDeployment'
+  params: {
+    location: location
+    environment: environment
+    namingPrefix: namingPrefix
+    tags: tags
+    appInsightsId: appInsights.outputs.appInsightsId
+    appInsightsName: appInsights.outputs.appInsightsName
+    appServiceId: appService.outputs.appServiceId
+    appServiceName: appService.outputs.appServiceName
+    resourceGroupName: resourceGroupName
+  }
+  dependsOn: [
+    appInsights
+    appService
+  ]
+}
+
 // ============================================================================
 // OUTPUTS
 // ============================================================================
@@ -252,6 +299,10 @@ output staticWebAppApiKey string = staticWebApp.outputs.staticWebAppApiKey
 // Log Analytics
 output logAnalyticsWorkspaceId string = logAnalytics.outputs.workspaceId
 output logAnalyticsWorkspaceName string = logAnalytics.outputs.workspaceName
+
+// Monitoring
+output monitoringDashboardId string = monitoringDashboard.outputs.dashboardId
+output monitoringDashboardName string = monitoringDashboard.outputs.dashboardName
 
 // Deployment Information
 output estimatedMonthlyCost string = 'EUR 6-10'

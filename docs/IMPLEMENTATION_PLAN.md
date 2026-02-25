@@ -278,10 +278,27 @@ app.UseSecurityHeaders(policies =>
 | Fase 2 | 10 | 10 | 100% |
 | Fase 3 | 6 | 6 | 100% |
 | Fase 4 | 5 | 5 | 100% |
-| Fase 5 | 7 | 0 | 0% |
-| Fase 6 | 6 | 0 | 0% |
-| **Totaal** | **42** | **29** | **69%** |
+| Fase 5 | 7 | 2 | 29% |
+| Fase 6 | 6 | 3 | 50% |
+| **Totaal** | **42** | **34** | **81%** |
+
+### Fase 5 Details
+- [x] 5.4 Frontend tests (Vitest + React Testing Library)
+- [x] 5.7 API documentatie (Swagger/OpenAPI)
+- [ ] 5.1 Unit tests backend
+- [ ] 5.2 Integration tests
+- [ ] 5.3 Security tests
+- [ ] 5.5 Gebruikershandleiding
+- [ ] 5.6 Admin handleiding
+
+### Fase 6 Details
+- [x] 6.1 Azure DevOps pipeline (CI/CD pipelines exist)
+- [x] 6.3 Database migrations (EF migrations in CD pipeline)
+- [x] 6.5 Monitoring setup (App Insights dashboards + alerts in Bicep)
+- [ ] 6.2 Environment configs (ACC/PROD nog te doen)
+- [ ] 6.4 Production deployment (PROD Bicep nog te doen)
+- [ ] 6.6 Go-live checklist
 
 ---
 
-*Dit plan wordt bijgewerkt naarmate taken worden voltooid.*
+*Laatst bijgewerkt: 2026-02-25*
