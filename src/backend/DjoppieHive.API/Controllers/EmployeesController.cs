@@ -258,4 +258,51 @@ public class EmployeesController : ControllerBase
 
         return Ok(export);
     }
+
+    /// <summary>
+    /// Updates the validation status of an employee.
+    /// Used by HR/managers to approve or reject employee data.
+    /// Requires: CanEditEmployees (HR Admin, ICT Admin, Sector Manager, Diensthoofd)
+    /// </summary>
+    [HttpPut("{id:guid}/validatie")]
+    [Authorize(Policy = PolicyNames.CanEditEmployees)]
+    [ProducesResponseType(typeof(EmployeeDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<EmployeeDto>> UpdateValidatieStatus(
+        Guid id,
+        [FromBody] UpdateValidatieStatusDto dto,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var gevalideerdDoor = _userContext.GetCurrentUserName() ?? _userContext.GetCurrentUserEmail() ?? "Unknown";
+            var employee = await _employeeService.UpdateValidatieStatusAsync(id, dto.Status, gevalideerdDoor, dto.Opmerkingen, cancellationToken);
+
+            if (employee == null)
+            {
+                return NotFound(new { message = $"Employee with ID {id} not found." });
+            }
+
+            _logger.LogInformation(
+                "Validation status updated for employee {EmployeeId} to {Status} by {ValidatedBy}",
+                id, dto.Status, gevalideerdDoor);
+
+            return Ok(employee);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Invalid operation while updating validation status for employee {EmployeeId}", id);
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }
+
+/// <summary>
+/// DTO for updating employee validation status
+/// </summary>
+public record UpdateValidatieStatusDto(
+    ValidatieStatus Status,
+    string? Opmerkingen = null
+);

@@ -42,6 +42,7 @@ This document tracks the progress of bug fixes and enhancements for the Djoppie-
 **Problem:** CLAUDE.md documented port 5052 for the API, but the actual configuration uses port 5014.
 
 **Investigation Results:**
+
 - Backend `launchSettings.json`: Uses port **5014**
 - Frontend `.env.development`: Uses port **5014**
 - CLAUDE.md: Documented port **5052** (incorrect)
@@ -96,6 +97,7 @@ This document tracks the progress of bug fixes and enhancements for the Djoppie-
 **Requirement:** The personnel overview should use `MG-iedereenpersoneel` as the root group, with `MG-SECTOR-*` groups as sectors (containing a sector manager as user member), and `MG-*` groups as diensten (containing medewerkers).
 
 **Hierarchy Structure:**
+
 ```
 MG-iedereenpersoneel (root)
   ├── MG-SECTOR-* (sector + sectormanager user)
@@ -118,11 +120,13 @@ MG-iedereenpersoneel (root)
 | `src/backend/DjoppieHive.API/Controllers/DistributionGroupsController.cs` | Added `GET /api/distributiongroups/hierarchy` endpoint |
 
 **New API Endpoint:**
+
 ```
 GET /api/distributiongroups/hierarchy
 ```
 
 Returns:
+
 ```json
 {
   "rootGroupId": "...",
@@ -169,6 +173,7 @@ Returns:
 | `hr-personeel/src/pages/SectorHierarchy.tsx` | Rewrote to use `distributionGroupsApi.getHierarchy()` |
 
 **Key Changes:**
+
 - Single API call fetches complete hierarchy (sectors, diensten, medewerkers)
 - Uses `fetchWithAuth` for authenticated requests
 - Displays sector managers, team coordinators, and team members in hierarchy view

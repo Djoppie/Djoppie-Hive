@@ -84,6 +84,26 @@ async function fetchWithAuth<T>(
   return text ? JSON.parse(text) : (null as unknown as T);
 }
 
+// ============================================
+// Current User API
+// ============================================
+
+export interface CurrentUser {
+  id: string;
+  email: string;
+  displayName: string;
+  roles: string[];
+  permissions: string[];
+  isAdmin: boolean;
+  sectorId: string | null;
+  dienstId: string | null;
+  employeeId: string | null;
+}
+
+export async function getCurrentUser(): Promise<CurrentUser> {
+  return fetchWithAuth<CurrentUser>('/me');
+}
+
 // Distribution Groups API
 export interface DistributionGroup {
   id: string;

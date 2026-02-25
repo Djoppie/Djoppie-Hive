@@ -136,7 +136,10 @@
       "Bash(gh pr view:*)",
       "Bash(dotnet ef:*)",
       "Bash(timeout 15 dotnet run:*)",
-      "Bash(npm audit:*)"
+      "Bash(npm audit:*)",
+      "Bash(taskkill /F /PID 9064)",
+      "Bash(taskkill //F //PID 9064)",
+      "Bash(taskkill:*)"
     ]
   }
 }

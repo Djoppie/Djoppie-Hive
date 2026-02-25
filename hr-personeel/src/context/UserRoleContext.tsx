@@ -4,6 +4,7 @@ import { InteractionRequiredAuthError } from '@azure/msal-browser';
 import type { Rol, RolPermissies } from '../types';
 import { rolPermissies } from '../types';
 import { apiRequest } from '../auth/authConfig';
+import * as api from '../services/api';
 
 interface UserInfo {
   id: string;
@@ -63,58 +64,58 @@ export function UserRoleProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
       const account = accounts[0];
 
-      // Get access token to decode roles
-      let accessToken: string;
+      // Ensure we have a valid token first
       try {
-        const response = await instance.acquireTokenSilent({
+        await instance.acquireTokenSilent({
           ...apiRequest,
           account,
         });
-        accessToken = response.accessToken;
       } catch (error) {
         if (error instanceof InteractionRequiredAuthError) {
-          // acquireTokenRedirect returns void and triggers redirect
-          // After redirect, the token will be acquired on page reload
           await instance.acquireTokenRedirect(apiRequest);
-          return; // Page will redirect, so exit early
-        } else {
-          throw error;
+          return;
         }
+        throw error;
       }
 
-      // Decode JWT to get roles claim
-      const tokenParts = accessToken.split('.');
-      if (tokenParts.length === 3) {
-        const payload = JSON.parse(atob(tokenParts[1]));
+      // Fetch user info and roles from backend API
+      try {
+        const meResponse = await api.getCurrentUser();
 
-        // Get roles from token claims
-        const tokenRoles = payload.roles || [];
-
-        // Map token roles to our Rol type
-        const mappedRoles: Rol[] = tokenRoles
+        // Map API roles to our Rol type
+        const apiRoles: Rol[] = (meResponse.roles || [])
           .map((r: string) => r.toLowerCase())
           .filter((r: string): r is Rol =>
             ['ict_super_admin', 'hr_admin', 'sectormanager', 'diensthoofd', 'medewerker'].includes(r)
           );
 
-        // If no roles in token, default to medewerker
-        if (mappedRoles.length === 0) {
-          mappedRoles.push('medewerker');
+        // If no roles from API, default to medewerker
+        if (apiRoles.length === 0) {
+          apiRoles.push('medewerker');
         }
 
+        setUser({
+          id: meResponse.id,
+          name: meResponse.displayName || account.name || 'Onbekende gebruiker',
+          email: meResponse.email || account.username,
+          roles: apiRoles,
+          sectorId: meResponse.sectorId || undefined,
+          dienstId: meResponse.dienstId || undefined,
+        });
+
+        console.log('User roles loaded from API:', apiRoles);
+      } catch (apiError) {
+        console.error('Error fetching user from API, falling back to token:', apiError);
+        // Fallback: use account info with medewerker role
         setUser({
           id: account.localAccountId,
           name: account.name || 'Onbekende gebruiker',
           email: account.username,
-          roles: mappedRoles,
-          // These would come from API in a real implementation
-          sectorId: payload.sector_id,
-          dienstId: payload.dienst_id,
+          roles: ['medewerker'],
         });
       }
     } catch (error) {
       console.error('Error fetching user roles:', error);
-      // Set default user with medewerker role
       if (accounts.length > 0) {
         const account = accounts[0];
         setUser({

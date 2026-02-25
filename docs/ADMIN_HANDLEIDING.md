@@ -84,6 +84,7 @@ Datum: Februari 2026
 ### App Registrations (Entra ID)
 
 **Frontend App Registration:**
+
 - **Naam**: Djoppie-Hive-Web
 - **Client ID**: 2ea8a14d-ea05-40cc-af35-dd482bf8e235
 - **Type**: SPA (Single Page Application)
@@ -92,6 +93,7 @@ Datum: Februari 2026
   - `https://swa-djoppie-hive-dev-ui.azurestaticapps.net` (prod)
 
 **Backend App Registration:**
+
 - **Naam**: Djoppie-Hive-API
 - **Client ID**: 2b620e06-39ee-4177-a559-76a12a79320f
 - **Scope**: `api://2b620e06-39ee-4177-a559-76a12a79320f/access_as_user`
@@ -163,6 +165,7 @@ Alleen ICT Super Admins kunnen rollen toewijzen:
 ### Wat wordt gelogd?
 
 Alle CRUD operaties op:
+
 - Medewerkers
 - Vrijwilligers
 - Distributiegroepen
@@ -206,6 +209,7 @@ Audit logs worden 7 jaar bewaard (GDPR compliance).
 De applicatie synchroniseert automatisch met Microsoft 365:
 
 **Gesynchroniseerde data:**
+
 - Gebruikers uit MG-distributiegroepen
 - Groepslidmaatschappen
 - Gebruikersprofielen en foto's
@@ -221,11 +225,13 @@ De applicatie synchroniseert automatisch met Microsoft 365:
 ### Handmatige Sync starten
 
 **Via UI:**
+
 1. Klik op "Sync" in de header
 2. Bevestig de actie
 3. Wacht tot de sync voltooid is
 
 **Via API:**
+
 ```bash
 POST /api/sync
 Authorization: Bearer <token>
@@ -234,6 +240,7 @@ Authorization: Bearer <token>
 ### Sync Monitoring
 
 Bekijk sync status via:
+
 - Dashboard widget
 - Sync Geschiedenis pagina
 - Application Insights
@@ -279,6 +286,7 @@ Referrer-Policy: strict-origin-when-cross-origin
 ### CORS
 
 Toegestane origins:
+
 - `https://swa-djoppie-hive-dev-ui.azurestaticapps.net`
 - `http://localhost:5173` (alleen development)
 
@@ -298,11 +306,13 @@ dotnet ef database update \
 ### Logs bekijken
 
 **Application Insights:**
+
 1. Open Azure Portal
 2. Ga naar appi-djoppie-hive-dev
 3. Bekijk Logs of Failures
 
 **Log Analytics:**
+
 ```kusto
 AppServiceHTTPLogs
 | where TimeGenerated > ago(24h)
@@ -313,6 +323,7 @@ AppServiceHTTPLogs
 ### Backup & Restore
 
 Azure SQL Database heeft automatische backups:
+
 - Point-in-time restore: 7 dagen
 - Long-term retention: 35 dagen
 
@@ -323,21 +334,25 @@ Azure SQL Database heeft automatische backups:
 ### Veelvoorkomende Problemen
 
 **401 Unauthorized errors:**
+
 - Controleer of de token niet verlopen is
 - Verifieer de App Registration configuratie
 - Check de audience in de token
 
 **403 Forbidden errors:**
+
 - Gebruiker heeft niet de juiste rol
 - Scope enforcement blokkeert toegang
 - Controleer UserRole toewijzingen in database
 
 **Sync faalt:**
+
 - Controleer Graph API permissies
 - Verifieer client secret geldigheid
 - Check rate limiting
 
 **Database connectie faalt:**
+
 - Controleer connection string
 - Verifieer firewall rules
 - Check service health
@@ -391,11 +406,9 @@ az rest --method GET \
 ## Contact
 
 **Applicatie Eigenaar:**
-- Naam: Jo Wijnen
-- E-mail: jo.wijnen@diepenbeek.be
 
-**Technisch Contact:**
-- ICT Helpdesk: ict@diepenbeek.be
+- Naam: Jo Wijnen
+- E-mail: <jo.wijnen@diepenbeek.be>
 
 ---
 

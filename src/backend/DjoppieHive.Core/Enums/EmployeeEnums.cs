@@ -51,3 +51,29 @@ public enum ArbeidsRegime
     /// </summary>
     Vrijwilliger = 2
 }
+
+/// <summary>
+/// Validatiestatus van medewerkergegevens.
+/// </summary>
+public enum ValidatieStatus
+{
+    /// <summary>
+    /// Nieuw toegevoegde medewerker, nog niet gevalideerd.
+    /// </summary>
+    Nieuw = 0,
+
+    /// <summary>
+    /// Medewerkergegevens worden momenteel beoordeeld.
+    /// </summary>
+    InReview = 1,
+
+    /// <summary>
+    /// Medewerkergegevens zijn goedgekeurd.
+    /// </summary>
+    Goedgekeurd = 2,
+
+    /// <summary>
+    /// Medewerkergegevens zijn afgekeurd (correctie nodig).
+    /// </summary>
+    Afgekeurd = 3
+}

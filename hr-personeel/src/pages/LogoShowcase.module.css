@@ -1,0 +1,833 @@
+/*
+ * ========================================
+ * DJOPPIE HIVE Brand Showcase Styles
+ * ========================================
+ * Immersive brand presentation with honeycomb
+ * patterns, neumorphic depth, and warm aesthetics
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ==========================================
+   SHOWCASE CONTAINER
+   ========================================== */
+.showcase {
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  transition: background 0.5s ease, color 0.5s ease;
+}
+
+/* Light Theme */
+.showcase--light {
+  --bg-primary: #FAF7F2;
+  --bg-secondary: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --text-primary: #3E2723;
+  --text-secondary: #5D4037;
+  --text-muted: #8D6E63;
+  --border-color: rgba(93, 64, 55, 0.15);
+  --honeycomb-color: rgba(245, 166, 35, 0.08);
+  --shadow-color: rgba(93, 64, 55, 0.15);
+  --neu-light: #FFFFFF;
+  --neu-dark: rgba(166, 161, 155, 0.35);
+  background: linear-gradient(145deg, #FAF7F2 0%, #FFF8E1 50%, #FAF7F2 100%);
+  color: var(--text-primary);
+}
+
+/* Dark Theme */
+.showcase--dark {
+  --bg-primary: #1A1612;
+  --bg-secondary: #252019;
+  --bg-card: #302920;
+  --text-primary: #FFF8E1;
+  --text-secondary: #FFB300;
+  --text-muted: #8D6E63;
+  --border-color: rgba(255, 179, 0, 0.15);
+  --honeycomb-color: rgba(255, 179, 0, 0.05);
+  --shadow-color: rgba(0, 0, 0, 0.4);
+  --neu-light: rgba(60, 50, 40, 0.3);
+  --neu-dark: rgba(0, 0, 0, 0.5);
+  background: linear-gradient(145deg, #1A1612 0%, #252019 50%, #1A1612 100%);
+  color: var(--text-primary);
+}
+
+/* ==========================================
+   HONEYCOMB BACKGROUND
+   ========================================== */
+.honeycombBg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+.honeycombPattern {
+  width: 100%;
+  height: 100%;
+  color: var(--honeycomb-color);
+}
+
+/* ==========================================
+   FLOATING HEXAGONS
+   ========================================== */
+.floatingHexes {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.floatingHex {
+  position: absolute;
+  width: 80px;
+  height: 92px;
+  background: linear-gradient(135deg, rgba(245, 166, 35, 0.15) 0%, rgba(232, 138, 26, 0.1) 100%);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  animation: floatHex 20s ease-in-out infinite;
+}
+
+.hex1 {
+  top: 15%;
+  left: 5%;
+  animation-delay: 0s;
+  opacity: 0.6;
+}
+
+.hex2 {
+  top: 60%;
+  right: 8%;
+  width: 60px;
+  height: 69px;
+  animation-delay: -7s;
+  opacity: 0.4;
+}
+
+.hex3 {
+  bottom: 20%;
+  left: 12%;
+  width: 50px;
+  height: 58px;
+  animation-delay: -14s;
+  opacity: 0.5;
+}
+
+@keyframes floatHex {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-30px) rotate(5deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(-3deg);
+  }
+  75% {
+    transform: translateY(-40px) rotate(2deg);
+  }
+}
+
+/* ==========================================
+   HEADER
+   ========================================== */
+.header {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2rem 3rem;
+  border-bottom: 1px solid var(--border-color);
+  background: linear-gradient(180deg, var(--bg-primary) 0%, transparent 100%);
+}
+
+.headerContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tagline {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin: 0;
+  margin-left: 4px;
+}
+
+/* ==========================================
+   THEME TOGGLE
+   ========================================== */
+.themeToggle {
+  display: flex;
+  gap: 8px;
+  padding: 6px;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  box-shadow:
+    4px 4px 10px var(--neu-dark),
+    -4px -4px 10px var(--neu-light);
+}
+
+.themeBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.themeBtn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.themeBtn:hover {
+  color: var(--text-secondary);
+}
+
+.themeBtn.active {
+  background: linear-gradient(135deg, #F5A623 0%, #E88A1A 100%);
+  color: white;
+  box-shadow:
+    inset 2px 2px 4px rgba(255, 255, 255, 0.2),
+    0 4px 12px rgba(245, 166, 35, 0.4);
+}
+
+/* ==========================================
+   MAIN CONTENT
+   ========================================== */
+.main {
+  position: relative;
+  z-index: 10;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 3rem;
+}
+
+/* ==========================================
+   SECTIONS
+   ========================================== */
+.section {
+  margin-bottom: 4rem;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.hexIcon {
+  color: #F5A623;
+  font-size: 1.2em;
+}
+
+/* ==========================================
+   HERO DISPLAY
+   ========================================== */
+.heroDisplay {
+  display: flex;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.heroCard {
+  padding: 4rem 6rem;
+  background: var(--bg-card);
+  border-radius: 24px;
+  box-shadow:
+    12px 12px 30px var(--neu-dark),
+    -12px -12px 30px var(--neu-light),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  transition: all 0.4s ease;
+}
+
+.heroCard:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    16px 16px 40px var(--neu-dark),
+    -16px -16px 40px var(--neu-light),
+    inset 0 0 0 1px rgba(255, 179, 0, 0.1);
+}
+
+/* ==========================================
+   SIZE GRID
+   ========================================== */
+.sizeGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.sizeItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sizeLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  padding: 4px 12px;
+  background: var(--bg-secondary);
+  border-radius: 20px;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: var(--bg-card);
+  border-radius: 16px;
+  box-shadow:
+    6px 6px 16px var(--neu-dark),
+    -6px -6px 16px var(--neu-light);
+  min-width: 120px;
+}
+
+/* ==========================================
+   VARIANT GRID
+   ========================================== */
+.variantGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.variantItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+  background: var(--bg-card);
+  border-radius: 16px;
+  box-shadow:
+    6px 6px 16px var(--neu-dark),
+    -6px -6px 16px var(--neu-light);
+  transition: all 0.3s ease;
+}
+
+.variantItem:hover {
+  transform: translateY(-2px);
+}
+
+.variantLabel {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.variantCode {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background: var(--bg-secondary);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+/* ==========================================
+   NEUMORPHIC GRID
+   ========================================== */
+.neumorphicGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 2rem;
+}
+
+.neumorphicCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2.5rem;
+  background: var(--bg-card);
+  border-radius: 20px;
+  box-shadow:
+    8px 8px 20px var(--neu-dark),
+    -8px -8px 20px var(--neu-light),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+}
+
+.neumorphicCard:hover {
+  box-shadow:
+    12px 12px 28px var(--neu-dark),
+    -12px -12px 28px var(--neu-light),
+    inset 0 0 0 1px rgba(255, 179, 0, 0.1);
+}
+
+.neumorphicPressed {
+  box-shadow:
+    inset 4px 4px 12px var(--neu-dark),
+    inset -4px -4px 12px var(--neu-light);
+}
+
+.neumorphicPressed:hover {
+  box-shadow:
+    inset 6px 6px 16px var(--neu-dark),
+    inset -6px -6px 16px var(--neu-light);
+}
+
+.cardLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* ==========================================
+   COLOR PALETTE
+   ========================================== */
+.colorGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+.colorItem {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow:
+    4px 4px 12px var(--neu-dark),
+    -4px -4px 12px var(--neu-light);
+  transition: all 0.3s ease;
+}
+
+.colorItem:hover {
+  transform: translateY(-2px);
+}
+
+.colorSwatch {
+  height: 80px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding: 8px;
+  position: relative;
+}
+
+.colorCategory {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 2px 6px;
+  background: rgba(0, 0, 0, 0.3);
+  color: white;
+  border-radius: 4px;
+}
+
+.colorInfo {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.colorName {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.colorHex {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ==========================================
+   USAGE EXAMPLES
+   ========================================== */
+.usageGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.usageExample {
+  background: var(--bg-card);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow:
+    6px 6px 16px var(--neu-dark),
+    -6px -6px 16px var(--neu-light);
+}
+
+.usageTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  padding: 1rem 1.5rem;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  margin: 0;
+}
+
+/* Mock Navigation Bar */
+.mockNavbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  background: var(--bg-primary);
+}
+
+.mockNavLinks {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.mockNavLinks span {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+/* Mock Login */
+.mockLogin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2.5rem;
+  gap: 2rem;
+  background: var(--bg-primary);
+}
+
+.mockLoginForm {
+  width: 100%;
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mockInput {
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border-radius: 10px;
+  box-shadow:
+    inset 2px 2px 6px var(--neu-dark),
+    inset -2px -2px 6px var(--neu-light);
+}
+
+.mockInput span {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.mockButton {
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #F5A623 0%, #E88A1A 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(245, 166, 35, 0.4);
+  transition: all 0.3s ease;
+}
+
+.mockButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(245, 166, 35, 0.5);
+}
+
+/* Mock Mobile Sidebar */
+.mockMobile {
+  width: 100%;
+  max-width: 200px;
+  margin: 1.5rem auto;
+  background: #1A1612;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.mockMobileHeader {
+  padding: 1rem;
+  background: #252019;
+  border-bottom: 1px solid rgba(255, 179, 0, 0.15);
+}
+
+.mockMobileContent {
+  padding: 0.5rem 0;
+}
+
+.mockMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  font-size: 0.85rem;
+  color: #A3A3A3;
+  transition: all 0.2s ease;
+}
+
+.mockMenuItem:hover {
+  background: rgba(255, 179, 0, 0.1);
+  color: #FFB300;
+}
+
+.menuIcon {
+  color: #FFB300;
+  font-size: 0.9em;
+}
+
+/* ==========================================
+   PHILOSOPHY CARDS
+   ========================================== */
+.philosophyGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+}
+
+.philosophyCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2.5rem 2rem;
+  background: var(--bg-card);
+  border-radius: 20px;
+  box-shadow:
+    8px 8px 20px var(--neu-dark),
+    -8px -8px 20px var(--neu-light);
+  transition: all 0.3s ease;
+}
+
+.philosophyCard:hover {
+  transform: translateY(-4px);
+}
+
+.philosophyIcon {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #F5A623 0%, #E88A1A 100%);
+  border-radius: 16px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 8px 20px rgba(245, 166, 35, 0.35);
+}
+
+.philosophyIcon svg {
+  width: 28px;
+  height: 28px;
+  stroke: white;
+}
+
+.philosophyCard h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.philosophyCard p {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ==========================================
+   CODE BLOCK
+   ========================================== */
+.codeBlock {
+  background: #1E1E2E;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow:
+    8px 8px 20px var(--neu-dark),
+    -8px -8px 20px var(--neu-light);
+}
+
+.codeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  background: #181825;
+  border-bottom: 1px solid #313244;
+}
+
+.codeHeader span {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #CDD6F4;
+}
+
+.codeLanguage {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  background: rgba(245, 166, 35, 0.2);
+  color: #F5A623;
+  border-radius: 6px;
+}
+
+.codeContent {
+  padding: 1.5rem;
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: #CDD6F4;
+  overflow-x: auto;
+}
+
+/* ==========================================
+   FOOTER
+   ========================================== */
+.footer {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 2rem;
+  border-top: 1px solid var(--border-color);
+  background: linear-gradient(0deg, var(--bg-primary) 0%, transparent 100%);
+}
+
+.footerText {
+  text-align: left;
+}
+
+.footerTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.footerSubtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .headerContent {
+    align-items: center;
+  }
+
+  .main {
+    padding: 1.5rem;
+  }
+
+  .sectionTitle {
+    font-size: 1.25rem;
+  }
+
+  .heroCard {
+    padding: 2rem;
+  }
+
+  .sizeGrid {
+    gap: 1rem;
+  }
+
+  .usageGrid,
+  .philosophyGrid,
+  .neumorphicGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .floatingHexes {
+    display: none;
+  }
+}
+
+/* ==========================================
+   REDUCED MOTION
+   ========================================== */
+@media (prefers-reduced-motion: reduce) {
+  .floatingHex {
+    animation: none;
+  }
+
+  .heroCard,
+  .variantItem,
+  .colorItem,
+  .philosophyCard,
+  .mockButton {
+    transition: none;
+  }
+}
+
+/* ==========================================
+   PRINT
+   ========================================== */
+@media print {
+  .showcase {
+    background: white !important;
+  }
+
+  .honeycombBg,
+  .floatingHexes,
+  .themeToggle {
+    display: none;
+  }
+
+  .section {
+    page-break-inside: avoid;
+  }
+}

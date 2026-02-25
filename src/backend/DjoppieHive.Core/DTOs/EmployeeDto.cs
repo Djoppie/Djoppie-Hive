@@ -58,6 +58,11 @@ public record EmployeeDto(
     DateTime? EindDatum,
     string? Telefoonnummer,
 
+    // Validatie velden
+    string ValidatieStatus,
+    string? GevalideerdDoor,
+    DateTime? ValidatieDatum,
+
     // Vrijwilligersdetails (indien EmployeeType = Vrijwilliger)
     VrijwilligerDetailsDto? VrijwilligerDetails,
 

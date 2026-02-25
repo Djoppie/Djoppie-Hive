@@ -17,11 +17,11 @@ import {
   RefreshCw,
   FileText,
 } from 'lucide-react';
-import diepenbeekLogo from '../assets/diepenbeek-logo.svg';
 import { useAuth } from '../auth/AuthProvider';
 import { useUserRole } from '../context/UserRoleContext';
 import { validatieVerzoekenApi } from '../services/api';
 import ThemeToggle from './ThemeToggle';
+import { DjoppieHiveLogo } from './Logo';
 import type { Rol } from '../types';
 import { rolLabels } from '../types';
 
@@ -93,21 +93,22 @@ export default function Layout() {
       <aside className={`sidebar ${sidebarOpen ? 'open' : 'collapsed'}`}>
         <div className="sidebar-header">
           <div className="logo-section">
-            <img src={diepenbeekLogo} alt="Diepenbeek" className="logo-img" />
-            {sidebarOpen && (
-              <div className="logo-text">
-                <h1>Diepenbeek</h1>
-                <span>HR Personeelsbeheer</span>
-              </div>
-            )}
+            <DjoppieHiveLogo
+              size={sidebarOpen ? 'small' : 'xs'}
+              theme="auto"
+              showSubtitle={sidebarOpen}
+            />
           </div>
-          <button
-            className="sidebar-toggle"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            aria-label={sidebarOpen ? 'Sidebar inklappen' : 'Sidebar uitklappen'}
-          >
-            {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
+          <div className="header-actions">
+            <ThemeToggle />
+            <button
+              className="sidebar-toggle"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              aria-label={sidebarOpen ? 'Sidebar inklappen' : 'Sidebar uitklappen'}
+            >
+              {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
         </div>
 
         <nav className="sidebar-nav">
@@ -137,9 +138,6 @@ export default function Layout() {
         </nav>
 
         <div className="sidebar-footer">
-          <div className="theme-toggle-section">
-            <ThemeToggle />
-          </div>
           <div className="user-section">
             <div className="user-info">
               <div className="user-avatar">

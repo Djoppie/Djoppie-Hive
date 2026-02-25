@@ -14,6 +14,7 @@ import {
   InteractionStatus,
 } from '@azure/msal-browser';
 import { msalConfig, loginRequest } from './authConfig';
+import { DjoppieHiveLogo } from '../components/Logo';
 
 // Initialize MSAL instance
 export const msalInstance = new PublicClientApplication(msalConfig);
@@ -95,8 +96,11 @@ function LoginPage() {
     <div className="login-page">
       <div className="login-card">
         <div className="login-header">
-          <h1>Djoppie-Hive</h1>
-          <p>HR Personeelsbeheer - Gemeente Diepenbeek</p>
+          <DjoppieHiveLogo
+            size="large"
+            theme="light"
+            showSubtitle={true}
+          />
         </div>
 
         {error && (

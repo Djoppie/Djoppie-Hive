@@ -130,12 +130,14 @@ Gebruik de filterknoppen bovenaan de lijst:
 ### Secties
 
 **Persoonlijke gegevens:**
+
 - Naam (voornaam, achternaam)
 - E-mailadres
 - Telefoonnummer
 - Foto (indien beschikbaar)
 
 **Werkgegevens:**
+
 - Functie
 - Afdeling
 - Kantoorlocatie
@@ -143,6 +145,7 @@ Gebruik de filterknoppen bovenaan de lijst:
 - Start- en einddatum
 
 **Organisatie:**
+
 - Toegewezen dienst
 - Sector
 - Groepslidmaatschappen
@@ -150,6 +153,7 @@ Gebruik de filterknoppen bovenaan de lijst:
 ### Bewerken (Admin alleen)
 
 **Voor Azure medewerkers:**
+
 - Alleen lokale velden kunnen worden bewerkt:
   - Telefoonnummer
   - Type medewerker
@@ -157,6 +161,7 @@ Gebruik de filterknoppen bovenaan de lijst:
   - Toegewezen dienst
 
 **Voor handmatige medewerkers:**
+
 - Alle velden kunnen worden bewerkt
 
 ### Nieuwe medewerker toevoegen
@@ -192,6 +197,7 @@ Gebruik de filterknoppen bovenaan de lijst:
 ### Bijzonderheden vrijwilligers
 
 Vrijwilligers hebben extra velden:
+
 - Rijbewijsgegevens
 - Beschikbaarheid per dag
 - Interessegebieden
@@ -286,11 +292,13 @@ Groepslidmaatschappen worden beheerd via Microsoft 365. Neem contact op met ICT 
 ## Contact & Support
 
 **ICT Helpdesk:**
-- E-mail: ict@diepenbeek.be
+
+- E-mail: <ict@diepenbeek.be>
 - Intern: ext. 123
 
 **Applicatiebeheer:**
-- E-mail: jo.wijnen@diepenbeek.be
+
+- E-mail: <jo.wijnen@diepenbeek.be>
 
 ---
 

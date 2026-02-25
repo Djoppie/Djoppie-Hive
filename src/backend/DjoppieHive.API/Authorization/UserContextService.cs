@@ -30,14 +30,19 @@ public class UserContextService : IUserContextService
 
     public string? GetCurrentUserId()
     {
-        return User?.FindFirstValue(ClaimTypes.NameIdentifier)
-               ?? User?.FindFirstValue("oid")  // Azure AD object ID
+        // Azure AD v1.0 tokens use the full URL claim type for object identifier
+        return User?.FindFirstValue("http://schemas.microsoft.com/identity/claims/objectidentifier")
+               ?? User?.FindFirstValue("oid")  // Azure AD v2.0 short format
+               ?? User?.FindFirstValue(ClaimTypes.NameIdentifier)
                ?? User?.FindFirstValue("sub"); // Subject claim
     }
 
     public string? GetCurrentUserEmail()
     {
-        return User?.FindFirstValue(ClaimTypes.Email)
+        // Azure AD tokens use UPN claim for email
+        return User?.FindFirstValue(ClaimTypes.Upn)  // http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn
+               ?? User?.FindFirstValue("upn")
+               ?? User?.FindFirstValue(ClaimTypes.Email)
                ?? User?.FindFirstValue("preferred_username")
                ?? User?.FindFirstValue("email");
     }

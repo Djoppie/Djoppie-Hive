@@ -17,16 +17,19 @@ This document records the security hardening measures implemented for Djoppie-Hi
 **Status**: IMPLEMENTED
 
 ### Configuration
+
 - **Global Rate Limit**: 100 requests per minute per user/IP
 - **Sync Operations**: 5 requests per 5 minutes (expensive operation)
 - **Authentication**: 10 requests per minute (brute-force protection)
 
 ### Implementation
+
 - Built-in .NET 8 Rate Limiting middleware
 - Partition by authenticated user OID or IP address
 - JSON response with `429 Too Many Requests` and `Retry-After` header
 
 ### Location
+
 - `Program.cs:17-79`
 
 ---
@@ -36,10 +39,12 @@ This document records the security hardening measures implemented for Djoppie-Hi
 **Status**: IMPLEMENTED
 
 ### Configuration
+
 - FluentValidation for all incoming DTOs
 - Automatic validation via `AddFluentValidationAutoValidation()`
 
 ### Validators Created
+
 | Validator | File |
 |-----------|------|
 | CreateEmployeeDtoValidator | Validators/EmployeeValidators.cs |
@@ -48,6 +53,7 @@ This document records the security hardening measures implemented for Djoppie-Hi
 | UpdateUserRoleDtoValidator | Validators/UserRoleValidators.cs |
 
 ### Validation Rules
+
 - Required fields validation
 - Email format validation
 - Maximum length constraints
@@ -64,17 +70,20 @@ This document records the security hardening measures implemented for Djoppie-Hi
 **Status**: VERIFIED SAFE
 
 ### Analysis
+
 - **ORM**: Entity Framework Core 8.0
 - **Raw SQL Queries**: NONE FOUND
 - **Parameterized Queries**: EF Core automatically parameterizes all queries
 
 ### Verification
+
 ```bash
 grep -r "FromSqlRaw\|ExecuteSqlRaw\|SqlQuery" .
 # Result: No matches
 ```
 
 ### Conclusion
+
 All database access uses LINQ queries through EF Core, which provides automatic parameterization and prevents SQL injection attacks.
 
 ---
@@ -84,17 +93,20 @@ All database access uses LINQ queries through EF Core, which provides automatic 
 **Status**: VERIFIED SAFE
 
 ### Backend Analysis
+
 - **Content-Type**: Returns `application/json` only
 - **Html.Raw Usage**: NONE FOUND
 - **User Input**: JSON serialized (auto-escaped)
 
 ### Frontend Analysis
+
 - **Framework**: React 19 with JSX
 - **dangerouslySetInnerHTML**: NONE FOUND
 - **innerHTML**: NONE FOUND
 - **Auto-escaping**: React JSX auto-escapes all interpolated values
 
 ### Additional Protection
+
 - Input validators check for `<script>`, `javascript:`, `onerror=`, `<iframe>` patterns
 - Content-Security-Policy header: `default-src 'none'; frame-ancestors 'none'`
 
@@ -105,10 +117,12 @@ All database access uses LINQ queries through EF Core, which provides automatic 
 **Status**: IMPLEMENTED
 
 ### Development
+
 - Allowed origins: `localhost:5173`, `localhost:5174`, `localhost:5175`
 - All headers and methods allowed
 
 ### Production
+
 - Strict origin allowlist from configuration
 - Limited headers: `Authorization`, `Content-Type`, `Accept`, `X-Requested-With`
 - Limited methods: `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS`
@@ -116,6 +130,7 @@ All database access uses LINQ queries through EF Core, which provides automatic 
 - No wildcards
 
 ### Location
+
 - `Program.cs:138-190`
 
 ---
@@ -125,6 +140,7 @@ All database access uses LINQ queries through EF Core, which provides automatic 
 **Status**: IMPLEMENTED
 
 ### Headers Applied
+
 | Header | Value | Purpose |
 |--------|-------|---------|
 | X-Content-Type-Options | nosniff | Prevent MIME sniffing |
@@ -137,6 +153,7 @@ All database access uses LINQ queries through EF Core, which provides automatic 
 | Cache-Control | no-store, no-cache | Prevent caching sensitive data |
 
 ### Location
+
 - `Middleware/SecurityHeadersMiddleware.cs`
 
 ---
@@ -146,18 +163,21 @@ All database access uses LINQ queries through EF Core, which provides automatic 
 **Status**: PASSED
 
 ### .NET Packages
+
 ```bash
 dotnet list package --vulnerable
 # Result: No vulnerable packages found
 ```
 
 ### NPM Packages
+
 ```bash
 npm audit
 # Result: 0 vulnerabilities
 ```
 
 ### Recommendation
+
 - Run `dotnet list package --vulnerable` in CI/CD pipeline
 - Run `npm audit` in CI/CD pipeline
 - Configure Dependabot/GitHub Security Alerts
@@ -169,11 +189,13 @@ npm audit
 **Status**: IMPLEMENTED (Phase 1)
 
 ### Authentication
+
 - Microsoft Entra ID (Azure AD) via MSAL
 - JWT Bearer token validation
 - Token claims: `oid`, `preferred_username`, `roles`
 
 ### Authorization
+
 - Role-based policies: `CanViewAllEmployees`, `CanEditEmployees`, `CanDeleteEmployees`, etc.
 - Scope-based filtering: Sectormanager sees only their sector
 - Resource-based authorization handlers
@@ -185,6 +207,7 @@ npm audit
 **Status**: PENDING (Azure Deployment Phase)
 
 ### Planned
+
 - [ ] Azure Key Vault for secrets
 - [ ] Managed Identity for App Service → Key Vault
 - [ ] Private endpoints (budget dependent)
@@ -212,11 +235,13 @@ npm audit
 ## Recommendations
 
 ### Immediate
+
 1. Complete Azure Key Vault integration
 2. Enable Azure Application Insights
 3. Add audit logging (Phase 4)
 
 ### Future
+
 1. Implement Content-Security-Policy reporting
 2. Add rate limiting to individual endpoints where needed
 3. Consider Web Application Firewall (WAF)

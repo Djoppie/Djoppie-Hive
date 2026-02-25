@@ -1,0 +1,144 @@
+/*
+ * ========================================
+ * DJOPPIE • HIVE Logo Design System
+ * ========================================
+ * Clean, professional text-based logo
+ */
+
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=DM+Sans:wght@400;500&display=swap');
+
+/* Design Tokens */
+:root {
+  --hive-honey: #F5A623;
+  --hive-gold: #E8A524;
+  --hive-amber: #FFB300;
+  --hive-deep-orange: #E65100;
+  --hive-brown: #5D4037;
+  --hive-brown-dark: #3E2723;
+  --hive-cream: #FFF8E1;
+  --hive-warm-white: #FAF7F2;
+}
+
+/* Main Logo Container */
+.logo {
+  display: inline-flex;
+  align-items: center;
+  user-select: none;
+  cursor: default;
+}
+
+.logo[role="button"] {
+  cursor: pointer;
+}
+
+.logo[role="button"]:focus-visible {
+  outline: 2px solid var(--hive-amber);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+/* Size Variants */
+.logo--xs { gap: 4px; }
+.logo--small { gap: 6px; }
+.logo--medium { gap: 8px; }
+.logo--large { gap: 10px; }
+.logo--hero { gap: 12px; }
+
+/* Theme Variants */
+.logo--light {
+  --text-main: #3E2723;
+  --text-accent: #E65100;
+  --text-subtitle: #5D4037;
+}
+
+.logo--auto {
+  --text-main: #3E2723;
+  --text-accent: #E65100;
+  --text-subtitle: #5D4037;
+}
+
+.logo--dark {
+  --text-main: #FFFFFF;
+  --text-accent: #F5A623;
+  --text-subtitle: #FFB300;
+}
+
+[data-theme="dark"] .logo--auto {
+  --text-main: #FFFFFF;
+  --text-accent: #F5A623;
+  --text-subtitle: #FFB300;
+}
+
+/* Logo Text Container */
+.logoText {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Main Title Row */
+.mainText {
+  display: flex;
+  align-items: center;
+  gap: 0.25em;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Djoppie Text */
+.djoppie {
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+/* Separator Dot */
+.separator {
+  color: var(--hive-honey);
+  font-weight: 700;
+  margin: 0 0.1em;
+}
+
+/* Hive Text */
+.hive {
+  color: var(--text-accent);
+  font-weight: 700;
+}
+
+/* Subtitle */
+.subtitle {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--text-subtitle);
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .logo,
+  .djoppie,
+  .hive,
+  .separator,
+  .subtitle {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .djoppie {
+    color: #3E2723;
+  }
+
+  .hive {
+    color: #E65100;
+  }
+
+  .separator {
+    color: #F5A623;
+  }
+}

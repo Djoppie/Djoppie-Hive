@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import {
   employeesApi,
+  employeeValidatieApi,
   type Employee,
   type ValidatieStatusAPI,
   type ValidatieStatistieken,
@@ -63,10 +64,10 @@ export default function Validatie() {
       setError(null);
       const data = await employeesApi.getAll();
 
-      // Add mock validation status if not present (for development)
-      const employeesWithStatus = data.map((emp, index) => ({
+      // Use validatieStatus from API, default to 'Nieuw' if not present
+      const employeesWithStatus = data.map((emp) => ({
         ...emp,
-        validatieStatus: emp.validatieStatus || getDefaultValidatieStatus(index),
+        validatieStatus: emp.validatieStatus || 'Nieuw' as ValidatieStatusAPI,
       }));
 
       setEmployees(employeesWithStatus);
@@ -90,20 +91,6 @@ export default function Validatie() {
       setIsLoading(false);
     }
   }, []);
-
-  // Mock function to assign validation status for development
-  function getDefaultValidatieStatus(index: number): ValidatieStatusAPI {
-    const statuses: ValidatieStatusAPI[] = ['Nieuw', 'InReview', 'Goedgekeurd', 'Afgekeurd'];
-    // Make most employees 'Goedgekeurd', some 'Nieuw', few 'InReview', fewer 'Afgekeurd'
-    const weights = [0.2, 0.15, 0.55, 0.1];
-    const random = (index * 0.618033988749895) % 1; // Deterministic pseudo-random
-    let cumulative = 0;
-    for (let i = 0; i < weights.length; i++) {
-      cumulative += weights[i];
-      if (random < cumulative) return statuses[i];
-    }
-    return 'Goedgekeurd';
-  }
 
   useEffect(() => {
     loadData();
@@ -166,20 +153,22 @@ export default function Validatie() {
       setDetailModal({ open: true, employee, action: 'view' });
     } else if (action === 'approve') {
       try {
-        // Update locally for now (API call would go here)
-        setEmployees(prev => prev.map(e =>
-          e.id === employee.id ? { ...e, validatieStatus: 'Goedgekeurd' as ValidatieStatusAPI } : e
-        ));
-        // Recalculate stats
+        // Call API to update validation status
+        await employeeValidatieApi.updateStatus(employee.id, {
+          status: 'Goedgekeurd',
+        });
+        // Reload data to get updated state from server
         loadData();
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Fout bij goedkeuren');
       }
     } else if (action === 'reject') {
       try {
-        setEmployees(prev => prev.map(e =>
-          e.id === employee.id ? { ...e, validatieStatus: 'Afgekeurd' as ValidatieStatusAPI } : e
-        ));
+        // Call API to update validation status
+        await employeeValidatieApi.updateStatus(employee.id, {
+          status: 'Afgekeurd',
+        });
+        // Reload data to get updated state from server
         loadData();
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Fout bij afkeuren');

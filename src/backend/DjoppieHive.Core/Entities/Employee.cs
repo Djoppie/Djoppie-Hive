@@ -46,6 +46,21 @@ public class Employee
     public ArbeidsRegime ArbeidsRegime { get; set; } = ArbeidsRegime.Voltijds;
 
     /// <summary>
+    /// Validatiestatus van de medewerkergegevens (Nieuw, InReview, Goedgekeurd, Afgekeurd).
+    /// </summary>
+    public ValidatieStatus ValidatieStatus { get; set; } = ValidatieStatus.Nieuw;
+
+    /// <summary>
+    /// Wie heeft de medewerkergegevens gevalideerd (e-mail of naam).
+    /// </summary>
+    public string? GevalideerdDoor { get; set; }
+
+    /// <summary>
+    /// Datum waarop de medewerkergegevens zijn gevalideerd.
+    /// </summary>
+    public DateTime? ValidatieDatum { get; set; }
+
+    /// <summary>
     /// URL naar profielfoto (bijv. vanuit Graph API of lokaal opgeslagen).
     /// </summary>
     public string? PhotoUrl { get; set; }

@@ -485,6 +485,44 @@ public class EmployeeService : IEmployeeService
         }
     }
 
+    public async Task<EmployeeDto?> UpdateValidatieStatusAsync(
+        Guid id,
+        ValidatieStatus status,
+        string gevalideerdDoor,
+        string? opmerkingen = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var employee = await _context.Employees
+                .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+
+            if (employee == null)
+            {
+                return null;
+            }
+
+            employee.ValidatieStatus = status;
+            employee.GevalideerdDoor = gevalideerdDoor;
+            employee.ValidatieDatum = DateTime.UtcNow;
+            employee.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation(
+                "Updated validation status for employee {EmployeeId} to {Status} by {GevalideerdDoor}",
+                id, status, gevalideerdDoor);
+
+            // Reload with full includes
+            return await GetByIdAsync(id, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating validation status for employee {EmployeeId}", id);
+            throw;
+        }
+    }
+
     public async Task<IEnumerable<EmployeeDto>> GetByDienstAsync(
         Guid dienstId,
         CancellationToken cancellationToken = default)
@@ -737,6 +775,9 @@ public class EmployeeService : IEmployeeService
             employee.StartDatum,
             employee.EindDatum,
             employee.Telefoonnummer,
+            employee.ValidatieStatus.ToString(),
+            employee.GevalideerdDoor,
+            employee.ValidatieDatum,
             vrijwilligerDetails,
             employee.CreatedAt,
             employee.UpdatedAt,
