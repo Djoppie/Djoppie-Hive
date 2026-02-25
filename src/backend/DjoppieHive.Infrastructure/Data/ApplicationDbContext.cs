@@ -16,6 +16,15 @@ public class ApplicationDbContext : DbContext
     public DbSet<SyncLogboek> SyncLogboeken => Set<SyncLogboek>();
     public DbSet<ValidatieVerzoek> ValidatieVerzoeken => Set<ValidatieVerzoek>();
     public DbSet<VrijwilligerDetails> VrijwilligerDetails => Set<VrijwilligerDetails>();
+    public DbSet<UserRole> UserRoles => Set<UserRole>();
+    public DbSet<Event> Events => Set<Event>();
+    public DbSet<EventParticipant> EventParticipants => Set<EventParticipant>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+
+    // Hybrid Groups System
+    public DbSet<DynamicGroup> DynamicGroups => Set<DynamicGroup>();
+    public DbSet<LocalGroup> LocalGroups => Set<LocalGroup>();
+    public DbSet<LocalGroupMember> LocalGroupMembers => Set<LocalGroupMember>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -134,6 +143,142 @@ public class ApplicationDbContext : DbContext
             entity.Property(v => v.NoodContactNaam).HasMaxLength(256);
             entity.Property(v => v.NoodContactTelefoon).HasMaxLength(50);
             entity.Property(v => v.Opmerkingen).HasMaxLength(1000);
+        });
+
+        // UserRole configuratie
+        modelBuilder.Entity<UserRole>(entity =>
+        {
+            entity.HasKey(r => r.Id);
+            entity.HasIndex(r => r.EntraObjectId);
+            entity.HasIndex(r => r.Email);
+            entity.HasIndex(r => r.Role);
+            entity.HasIndex(r => r.IsActive);
+            // Unique constraint: een gebruiker kan elke rol maar 1x hebben
+            entity.HasIndex(r => new { r.EntraObjectId, r.Role }).IsUnique();
+
+            entity.Property(r => r.EntraObjectId).HasMaxLength(36).IsRequired();
+            entity.Property(r => r.Email).HasMaxLength(256).IsRequired();
+            entity.Property(r => r.DisplayName).HasMaxLength(256).IsRequired();
+            entity.Property(r => r.Role).HasMaxLength(50).IsRequired();
+            entity.Property(r => r.CreatedBy).HasMaxLength(256);
+            entity.Property(r => r.UpdatedBy).HasMaxLength(256);
+
+            // Relatie met Sector (DistributionGroup)
+            entity.HasOne(r => r.Sector)
+                .WithMany()
+                .HasForeignKey(r => r.SectorId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Relatie met Dienst (DistributionGroup)
+            entity.HasOne(r => r.Dienst)
+                .WithMany()
+                .HasForeignKey(r => r.DienstId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // Event configuratie
+        modelBuilder.Entity<Event>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.Type);
+            entity.HasIndex(e => e.Datum);
+            entity.HasIndex(e => e.AangemaaktOp);
+            entity.Property(e => e.Titel).HasMaxLength(256).IsRequired();
+            entity.Property(e => e.Beschrijving).HasMaxLength(2000).IsRequired();
+            entity.Property(e => e.AangemaaktDoor).HasMaxLength(256);
+            entity.Property(e => e.VerstuurdDoor).HasMaxLength(256);
+
+            // Relatie met DistributieGroep
+            entity.HasOne(e => e.DistributieGroep)
+                .WithMany()
+                .HasForeignKey(e => e.DistributieGroepId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // EventParticipant configuratie (veel-op-veel)
+        modelBuilder.Entity<EventParticipant>(entity =>
+        {
+            entity.HasKey(p => new { p.EventId, p.EmployeeId });
+            entity.HasIndex(p => p.EmailVerstuurd);
+
+            entity.HasOne(p => p.Event)
+                .WithMany(e => e.Deelnemers)
+                .HasForeignKey(p => p.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(p => p.Employee)
+                .WithMany()
+                .HasForeignKey(p => p.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // AuditLog configuratie
+        modelBuilder.Entity<AuditLog>(entity =>
+        {
+            entity.HasKey(a => a.Id);
+            entity.HasIndex(a => a.Timestamp);
+            entity.HasIndex(a => a.UserId);
+            entity.HasIndex(a => a.Action);
+            entity.HasIndex(a => a.EntityType);
+            entity.HasIndex(a => a.EntityId);
+            entity.HasIndex(a => a.CorrelationId);
+
+            entity.Property(a => a.UserId).HasMaxLength(36);
+            entity.Property(a => a.UserEmail).HasMaxLength(256);
+            entity.Property(a => a.UserDisplayName).HasMaxLength(256);
+            entity.Property(a => a.EntityDescription).HasMaxLength(256);
+            entity.Property(a => a.IpAddress).HasMaxLength(45); // IPv6 max length
+            entity.Property(a => a.UserAgent).HasMaxLength(500);
+            entity.Property(a => a.CorrelationId).HasMaxLength(36);
+            entity.Property(a => a.AdditionalInfo).HasMaxLength(1000);
+            // OldValues and NewValues are unlimited (JSON)
+        });
+
+        // ============================================
+        // HYBRID GROUPS SYSTEM
+        // ============================================
+
+        // DynamicGroup configuratie
+        modelBuilder.Entity<DynamicGroup>(entity =>
+        {
+            entity.HasKey(g => g.Id);
+            entity.HasIndex(g => g.DisplayName);
+            entity.HasIndex(g => g.IsSystemGroup);
+            entity.Property(g => g.DisplayName).HasMaxLength(256).IsRequired();
+            entity.Property(g => g.Description).HasMaxLength(500);
+            entity.Property(g => g.Email).HasMaxLength(256);
+            entity.Property(g => g.FilterCriteria).IsRequired(); // JSON
+            entity.Property(g => g.CreatedBy).HasMaxLength(256);
+        });
+
+        // LocalGroup configuratie
+        modelBuilder.Entity<LocalGroup>(entity =>
+        {
+            entity.HasKey(g => g.Id);
+            entity.HasIndex(g => g.DisplayName);
+            entity.Property(g => g.DisplayName).HasMaxLength(256).IsRequired();
+            entity.Property(g => g.Description).HasMaxLength(500);
+            entity.Property(g => g.Email).HasMaxLength(256);
+            entity.Property(g => g.CreatedBy).HasMaxLength(256);
+        });
+
+        // LocalGroupMember configuratie (veel-op-veel)
+        modelBuilder.Entity<LocalGroupMember>(entity =>
+        {
+            entity.HasKey(m => new { m.LocalGroupId, m.EmployeeId });
+
+            entity.HasOne(m => m.LocalGroup)
+                .WithMany(g => g.Members)
+                .HasForeignKey(m => m.LocalGroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(m => m.Employee)
+                .WithMany()
+                .HasForeignKey(m => m.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(m => m.AddedBy).HasMaxLength(256);
         });
     }
 }

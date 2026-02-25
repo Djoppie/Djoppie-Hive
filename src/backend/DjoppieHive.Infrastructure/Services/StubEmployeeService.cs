@@ -52,12 +52,22 @@ public class StubEmployeeService : IEmployeeService
         throw new NotImplementedException("StubEmployeeService does not support database operations. Use EmployeeService instead.");
     }
 
+    public Task<EmployeeDto?> UpdateValidatieStatusAsync(Guid id, Core.Enums.ValidatieStatus status, string gevalideerdDoor, string? opmerkingen = null, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("StubEmployeeService does not support database operations. Use EmployeeService instead.");
+    }
+
     public Task<IEnumerable<EmployeeDto>> GetByDienstAsync(Guid dienstId, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException("StubEmployeeService does not support database operations. Use EmployeeService instead.");
     }
 
     public Task<IEnumerable<EmployeeDto>> GetVolunteersAsync(CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("StubEmployeeService does not support database operations. Use EmployeeService instead.");
+    }
+
+    public Task<GdprExportDto?> ExportPersonalDataAsync(Guid employeeId, string exportedBy, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException("StubEmployeeService does not support database operations. Use EmployeeService instead.");
     }

@@ -40,6 +40,7 @@ public class EmployeeService : IEmployeeService
         // Try to find by EntraObjectId
         var employee = await _context.Employees
             .Include(e => e.Dienst)
+                .ThenInclude(d => d!.BovenliggendeGroep)
             .Include(e => e.VrijwilligerDetails)
             .Include(e => e.GroupMemberships)
                 .ThenInclude(m => m.DistributionGroup)
@@ -59,6 +60,7 @@ public class EmployeeService : IEmployeeService
 
         var employees = await _context.Employees
             .Include(e => e.Dienst)
+                .ThenInclude(d => d!.BovenliggendeGroep)
             .Where(e => e.IsActive &&
                        (e.DisplayName.ToLower().Contains(lowerQuery) ||
                         e.Email.ToLower().Contains(lowerQuery)))
@@ -91,6 +93,7 @@ public class EmployeeService : IEmployeeService
         {
             var query = _context.Employees
                 .Include(e => e.Dienst)
+                .ThenInclude(d => d!.BovenliggendeGroep)
                 .Include(e => e.VrijwilligerDetails)
                 .Include(e => e.GroupMemberships)
                     .ThenInclude(m => m.DistributionGroup)
@@ -117,6 +120,12 @@ public class EmployeeService : IEmployeeService
                 if (filter.DienstId.HasValue)
                 {
                     query = query.Where(e => e.DienstId == filter.DienstId.Value);
+                }
+
+                if (filter.SectorId.HasValue)
+                {
+                    // Filter by sector: employees whose dienst belongs to the specified sector
+                    query = query.Where(e => e.Dienst != null && e.Dienst.BovenliggendeGroepId == filter.SectorId.Value);
                 }
 
                 if (filter.Bron.HasValue)
@@ -155,6 +164,7 @@ public class EmployeeService : IEmployeeService
         {
             var employee = await _context.Employees
                 .Include(e => e.Dienst)
+                .ThenInclude(d => d!.BovenliggendeGroep)
                 .Include(e => e.VrijwilligerDetails)
                 .Include(e => e.GroupMemberships)
                     .ThenInclude(m => m.DistributionGroup)
@@ -475,6 +485,44 @@ public class EmployeeService : IEmployeeService
         }
     }
 
+    public async Task<EmployeeDto?> UpdateValidatieStatusAsync(
+        Guid id,
+        ValidatieStatus status,
+        string gevalideerdDoor,
+        string? opmerkingen = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var employee = await _context.Employees
+                .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+
+            if (employee == null)
+            {
+                return null;
+            }
+
+            employee.ValidatieStatus = status;
+            employee.GevalideerdDoor = gevalideerdDoor;
+            employee.ValidatieDatum = DateTime.UtcNow;
+            employee.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation(
+                "Updated validation status for employee {EmployeeId} to {Status} by {GevalideerdDoor}",
+                id, status, gevalideerdDoor);
+
+            // Reload with full includes
+            return await GetByIdAsync(id, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating validation status for employee {EmployeeId}", id);
+            throw;
+        }
+    }
+
     public async Task<IEnumerable<EmployeeDto>> GetByDienstAsync(
         Guid dienstId,
         CancellationToken cancellationToken = default)
@@ -483,6 +531,7 @@ public class EmployeeService : IEmployeeService
         {
             var employees = await _context.Employees
                 .Include(e => e.Dienst)
+                .ThenInclude(d => d!.BovenliggendeGroep)
                 .Include(e => e.VrijwilligerDetails)
                 .Include(e => e.GroupMemberships)
                     .ThenInclude(m => m.DistributionGroup)
@@ -505,6 +554,7 @@ public class EmployeeService : IEmployeeService
         {
             var volunteers = await _context.Employees
                 .Include(e => e.Dienst)
+                .ThenInclude(d => d!.BovenliggendeGroep)
                 .Include(e => e.VrijwilligerDetails)
                 .Include(e => e.GroupMemberships)
                     .ThenInclude(m => m.DistributionGroup)
@@ -517,6 +567,143 @@ public class EmployeeService : IEmployeeService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving volunteers");
+            throw;
+        }
+    }
+
+    public async Task<GdprExportDto?> ExportPersonalDataAsync(
+        Guid employeeId,
+        string exportedBy,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // 1. Get employee with all related data
+            var employee = await _context.Employees
+                .Include(e => e.Dienst)
+                    .ThenInclude(d => d!.BovenliggendeGroep)
+                .Include(e => e.VrijwilligerDetails)
+                .Include(e => e.GroupMemberships)
+                    .ThenInclude(m => m.DistributionGroup)
+                .FirstOrDefaultAsync(e => e.Id == employeeId, cancellationToken);
+
+            if (employee == null)
+            {
+                return null;
+            }
+
+            // Determine sector name
+            string? sectorNaam = null;
+            if (employee.Dienst?.BovenliggendeGroep != null)
+            {
+                sectorNaam = employee.Dienst.BovenliggendeGroep.DisplayName;
+            }
+            else if (employee.Dienst?.Niveau == GroepNiveau.Sector)
+            {
+                sectorNaam = employee.Dienst.DisplayName;
+            }
+
+            // 2. Map personal data
+            var personalData = new GdprEmployeeDataDto(
+                employee.Id,
+                employee.EntraObjectId,
+                employee.DisplayName,
+                employee.GivenName,
+                employee.Surname,
+                employee.Email,
+                employee.Telefoonnummer ?? employee.MobilePhone,
+                employee.JobTitle,
+                employee.Department,
+                employee.EmployeeType,
+                employee.ArbeidsRegime,
+                employee.IsActive,
+                employee.Bron,
+                employee.Dienst?.DisplayName,
+                sectorNaam,
+                employee.StartDatum,
+                employee.EindDatum,
+                employee.CreatedAt,
+                employee.UpdatedAt
+            );
+
+            // 3. Map group memberships
+            var groupMemberships = employee.GroupMemberships
+                .Select(m => new GdprGroupMembershipDto(
+                    m.DistributionGroupId,
+                    m.DistributionGroup.DisplayName,
+                    m.DistributionGroup.Niveau.ToString(),
+                    m.ToegevoegdOp
+                ))
+                .ToList();
+
+            // 4. Get event participations
+            var eventParticipations = await _context.Set<Core.Entities.EventParticipant>()
+                .Include(ep => ep.Event)
+                .Where(ep => ep.EmployeeId == employeeId)
+                .Select(ep => new GdprEventParticipationDto(
+                    ep.EventId,
+                    ep.Event.Titel,
+                    ep.Event.Datum,
+                    ep.Event.Status.ToString(),
+                    ep.ToegevoegdOp,
+                    ep.EmailVerstuurd,
+                    ep.EmailVerstuurdOp
+                ))
+                .ToListAsync(cancellationToken);
+
+            // 5. Get audit logs related to this employee
+            var auditLogs = await _context.AuditLogs
+                .Where(a =>
+                    (a.EntityType == AuditEntityType.Employee && a.EntityId == employeeId) ||
+                    a.UserId == employee.EntraObjectId)
+                .OrderByDescending(a => a.Timestamp)
+                .Take(500) // Limit to last 500 entries
+                .Select(a => new GdprAuditEntryDto(
+                    a.Timestamp,
+                    a.Action.ToString(),
+                    a.EntityType.ToString(),
+                    a.EntityDescription,
+                    a.UserDisplayName
+                ))
+                .ToListAsync(cancellationToken);
+
+            // 6. Get user roles (if employee has EntraObjectId)
+            var roles = new List<GdprUserRoleDto>();
+            if (!string.IsNullOrEmpty(employee.EntraObjectId))
+            {
+                var userRoles = await _context.UserRoles
+                    .Include(ur => ur.Sector)
+                    .Include(ur => ur.Dienst)
+                    .Where(ur => ur.EntraObjectId == employee.EntraObjectId && ur.IsActive)
+                    .ToListAsync(cancellationToken);
+
+                roles = userRoles.Select(ur => new GdprUserRoleDto(
+                    ur.Role,
+                    ur.Sector?.DisplayName,
+                    ur.Dienst?.DisplayName,
+                    ur.CreatedAt,
+                    ur.CreatedBy
+                )).ToList();
+            }
+
+            _logger.LogInformation(
+                "GDPR data export requested for employee {EmployeeId} by {ExportedBy}",
+                employeeId, exportedBy);
+
+            return new GdprExportDto(
+                DateTime.UtcNow,
+                exportedBy,
+                "GDPR Article 15 - Right of Access",
+                personalData,
+                groupMemberships,
+                eventParticipations,
+                auditLogs,
+                roles
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error exporting GDPR data for employee {EmployeeId}", employeeId);
             throw;
         }
     }
@@ -553,6 +740,18 @@ public class EmployeeService : IEmployeeService
             );
         }
 
+        // Bepaal de sector naam via de bovenliggende groep van de dienst
+        string? sectorNaam = null;
+        if (employee.Dienst?.BovenliggendeGroep != null)
+        {
+            sectorNaam = employee.Dienst.BovenliggendeGroep.DisplayName;
+        }
+        else if (employee.Dienst?.Niveau == DjoppieHive.Core.Enums.GroepNiveau.Sector)
+        {
+            // Dienst IS de sector
+            sectorNaam = employee.Dienst.DisplayName;
+        }
+
         return new EmployeeDto(
             employee.Id.ToString(),
             employee.DisplayName,
@@ -572,9 +771,13 @@ public class EmployeeService : IEmployeeService
             employee.PhotoUrl,
             employee.DienstId?.ToString(),
             employee.Dienst?.DisplayName,
+            sectorNaam,
             employee.StartDatum,
             employee.EindDatum,
             employee.Telefoonnummer,
+            employee.ValidatieStatus.ToString(),
+            employee.GevalideerdDoor,
+            employee.ValidatieDatum,
             vrijwilligerDetails,
             employee.CreatedAt,
             employee.UpdatedAt,

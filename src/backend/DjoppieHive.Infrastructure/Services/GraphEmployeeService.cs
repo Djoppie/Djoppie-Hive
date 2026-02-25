@@ -87,9 +87,13 @@ public class GraphEmployeeService : IEmployeeService
                 PhotoUrl: null,
                 DienstId: null,
                 DienstNaam: null,
+                SectorNaam: null,
                 StartDatum: null,
                 EindDatum: null,
                 Telefoonnummer: null,
+                ValidatieStatus: "Goedgekeurd", // Graph API users default to Goedgekeurd
+                GevalideerdDoor: null,
+                ValidatieDatum: null,
                 VrijwilligerDetails: null,
                 CreatedAt: DateTime.UtcNow,
                 UpdatedAt: null,
@@ -153,9 +157,13 @@ public class GraphEmployeeService : IEmployeeService
                 PhotoUrl: null,
                 DienstId: null,
                 DienstNaam: null,
+                SectorNaam: null,
                 StartDatum: null,
                 EindDatum: null,
                 Telefoonnummer: null,
+                ValidatieStatus: "Goedgekeurd",
+                GevalideerdDoor: null,
+                ValidatieDatum: null,
                 VrijwilligerDetails: null,
                 CreatedAt: DateTime.UtcNow,
                 UpdatedAt: null,
@@ -226,12 +234,22 @@ public class GraphEmployeeService : IEmployeeService
         throw new NotImplementedException("GraphEmployeeService does not support database operations. Use EmployeeService instead.");
     }
 
+    public Task<EmployeeDto?> UpdateValidatieStatusAsync(Guid id, Core.Enums.ValidatieStatus status, string gevalideerdDoor, string? opmerkingen = null, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("GraphEmployeeService does not support database operations. Use EmployeeService instead.");
+    }
+
     public Task<IEnumerable<EmployeeDto>> GetByDienstAsync(Guid dienstId, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException("GraphEmployeeService does not support database operations. Use EmployeeService instead.");
     }
 
     public Task<IEnumerable<EmployeeDto>> GetVolunteersAsync(CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("GraphEmployeeService does not support database operations. Use EmployeeService instead.");
+    }
+
+    public Task<GdprExportDto?> ExportPersonalDataAsync(Guid employeeId, string exportedBy, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException("GraphEmployeeService does not support database operations. Use EmployeeService instead.");
     }

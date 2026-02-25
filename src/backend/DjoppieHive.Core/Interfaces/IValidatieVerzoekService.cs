@@ -12,6 +12,7 @@ public interface IValidatieVerzoekService
     /// Haalt alle openstaande validatieverzoeken op.
     /// </summary>
     /// <param name="groepId">Optioneel filter op groep</param>
+    /// <param name="cancellationToken">Annuleringstoken</param>
     Task<IEnumerable<ValidatieVerzoekDto>> GetOpenstaandeVerzoekenAsync(
         Guid? groepId = null,
         CancellationToken cancellationToken = default);
@@ -28,6 +29,7 @@ public interface IValidatieVerzoekService
     /// <param name="afhandeling">Gekozen afhandelingsactie</param>
     /// <param name="afgehandeldDoor">Gebruiker die afhandelt</param>
     /// <param name="notities">Optionele notities</param>
+    /// <param name="cancellationToken">Annuleringstoken</param>
     Task<bool> HandelAfAsync(
         Guid id,
         ValidatieAfhandeling afhandeling,

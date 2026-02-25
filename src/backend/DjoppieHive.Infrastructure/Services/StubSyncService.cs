@@ -42,4 +42,23 @@ public class StubSyncService : ISyncService
     {
         return Task.FromResult(Enumerable.Empty<SyncLogboekDto>());
     }
+
+    public Task<SyncPreviewDto> GetSyncPreviewAsync(CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(new SyncPreviewDto(
+            Gebruikers: Enumerable.Empty<ADUserPreviewDto>(),
+            Groepen: Enumerable.Empty<ADGroupPreviewDto>(),
+            Statistieken: new SyncPreviewStatisticsDto(
+                TotaalGebruikers: 0,
+                ActieveGebruikers: 0,
+                InactieveGebruikers: 0,
+                NieuweGebruikers: 0,
+                BestaandeGebruikers: 0,
+                TotaalGroepen: 0,
+                NieuweGroepen: 0,
+                BestaandeGroepen: 0
+            ),
+            OpgehaaldOp: DateTime.UtcNow
+        ));
+    }
 }

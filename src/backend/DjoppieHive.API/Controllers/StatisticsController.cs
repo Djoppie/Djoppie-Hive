@@ -6,11 +6,13 @@ using Microsoft.AspNetCore.Mvc;
 namespace DjoppieHive.API.Controllers;
 
 /// <summary>
-/// Controller voor dashboard statistieken.
+/// Dashboard statistieken en rapportage.
+/// Biedt inzicht in aantallen medewerkers, sync status en andere KPI's.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+[Tags("Statistieken")]
 public class StatisticsController : ControllerBase
 {
     private readonly IStatisticsService _statisticsService;
@@ -32,24 +34,6 @@ public class StatisticsController : ControllerBase
     public async Task<ActionResult<DashboardStatisticsDto>> GetDashboardStatistics(
         CancellationToken cancellationToken)
     {
-        var stats = await _statisticsService.GetDashboardStatisticsAsync(cancellationToken);
-        return Ok(stats);
-    }
-
-    // ============================================
-    // TEST ENDPOINTS (geen authenticatie vereist)
-    // ============================================
-
-    /// <summary>
-    /// [TEST] Haalt dashboard statistieken op zonder authenticatie.
-    /// </summary>
-    [HttpGet("test/dashboard")]
-    [AllowAnonymous]
-    [ProducesResponseType(typeof(DashboardStatisticsDto), StatusCodes.Status200OK)]
-    public async Task<ActionResult<DashboardStatisticsDto>> TestGetDashboardStatistics(
-        CancellationToken cancellationToken)
-    {
-        _logger.LogInformation("Test dashboard statistieken ophalen");
         var stats = await _statisticsService.GetDashboardStatisticsAsync(cancellationToken);
         return Ok(stats);
     }

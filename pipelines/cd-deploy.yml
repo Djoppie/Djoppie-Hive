@@ -35,6 +35,8 @@ variables:
     value: 'app-djoppie-hive-dev'
   - name: staticWebAppName
     value: 'stapp-djoppie-hive-dev'
+  - name: keyVaultName
+    value: 'kv-djoppie-hive-dev'
 
 stages:
   # ==========================================================================
@@ -66,11 +68,69 @@ stages:
                         --parameters infra/parameters-dev.json
 
   # ==========================================================================
+  # Stage: Database Migrations (Task 6.3)
+  # ==========================================================================
+  - stage: DatabaseMigration
+    displayName: 'Database Migrations'
+    dependsOn: []
+    jobs:
+      - job: RunMigrations
+        displayName: 'Run EF Core Migrations'
+        steps:
+          - checkout: self
+
+          - task: UseDotNet@2
+            displayName: 'Install .NET SDK'
+            inputs:
+              packageType: 'sdk'
+              version: '8.0.x'
+
+          - task: DotNetCoreCLI@2
+            displayName: 'Install EF Core tools'
+            inputs:
+              command: 'custom'
+              custom: 'tool'
+              arguments: 'install --global dotnet-ef'
+
+          - task: DotNetCoreCLI@2
+            displayName: 'Restore packages'
+            inputs:
+              command: 'restore'
+              projects: 'src/backend/DjoppieHive.slnx'
+
+          - task: AzureCLI@2
+            displayName: 'Run database migrations'
+            inputs:
+              azureSubscription: '$(azureSubscription)'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                # Get connection string from Key Vault
+                CONNECTION_STRING=$(az keyvault secret show \
+                  --vault-name $(keyVaultName) \
+                  --name SqlConnectionString \
+                  --query value -o tsv)
+
+                echo "Running EF Core migrations..."
+
+                # Navigate to backend directory
+                cd src/backend
+
+                # Run migrations using EF Core tools
+                ~/.dotnet/tools/dotnet-ef database update \
+                  --project DjoppieHive.Infrastructure/DjoppieHive.Infrastructure.csproj \
+                  --startup-project DjoppieHive.API/DjoppieHive.API.csproj \
+                  --connection "$CONNECTION_STRING" \
+                  --verbose
+
+                echo "Migrations completed successfully!"
+
+  # ==========================================================================
   # Stage: Deploy Backend API
   # ==========================================================================
   - stage: DeployBackend
     displayName: 'Deploy Backend API'
-    dependsOn: []
+    dependsOn: DatabaseMigration
     jobs:
       - deployment: DeployAPI
         displayName: 'Deploy to App Service'

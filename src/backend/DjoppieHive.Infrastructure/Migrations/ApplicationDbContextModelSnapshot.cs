@@ -17,6 +17,79 @@ namespace DjoppieHive.Infrastructure.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.24");
 
+            modelBuilder.Entity("DjoppieHive.Core.Entities.AuditLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Action")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AdditionalInfo")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CorrelationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EntityDescription")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("EntityId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EntityType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NewValues")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OldValues")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserDisplayName")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Action");
+
+                    b.HasIndex("CorrelationId");
+
+                    b.HasIndex("EntityId");
+
+                    b.HasIndex("EntityType");
+
+                    b.HasIndex("Timestamp");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AuditLogs");
+                });
+
             modelBuilder.Entity("DjoppieHive.Core.Entities.DistributionGroup", b =>
                 {
                     b.Property<Guid>("Id")
@@ -76,6 +149,57 @@ namespace DjoppieHive.Infrastructure.Migrations
                     b.ToTable("DistributionGroups");
                 });
 
+            modelBuilder.Entity("DjoppieHive.Core.Entities.DynamicGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CachedMemberCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FilterCriteria")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsSystemGroup")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("LastEvaluatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DisplayName");
+
+                    b.HasIndex("IsSystemGroup");
+
+                    b.ToTable("DynamicGroups");
+                });
+
             modelBuilder.Entity("DjoppieHive.Core.Entities.Employee", b =>
                 {
                     b.Property<Guid>("Id")
@@ -121,6 +245,9 @@ namespace DjoppieHive.Infrastructure.Migrations
                         .HasMaxLength(36)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("GevalideerdDoor")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("GivenName")
                         .HasColumnType("TEXT");
 
@@ -158,6 +285,12 @@ namespace DjoppieHive.Infrastructure.Migrations
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ValidatieDatum")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ValidatieStatus")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -206,6 +339,153 @@ namespace DjoppieHive.Infrastructure.Migrations
                     b.HasIndex("IsActief");
 
                     b.ToTable("EmployeeGroupMemberships");
+                });
+
+            modelBuilder.Entity("DjoppieHive.Core.Entities.Event", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AangemaaktDoor")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("AangemaaktOp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Beschrijving")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Datum")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DistributieGroepId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FilterCriteria")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("GeannuleerdOp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Titel")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("VerstuurdDoor")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("VerstuurdOp")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AangemaaktOp");
+
+                    b.HasIndex("Datum");
+
+                    b.HasIndex("DistributieGroepId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("Type");
+
+                    b.ToTable("Events");
+                });
+
+            modelBuilder.Entity("DjoppieHive.Core.Entities.EventParticipant", b =>
+                {
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("EmailVerstuurd")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("EmailVerstuurdOp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ToegevoegdOp")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("EventId", "EmployeeId");
+
+                    b.HasIndex("EmailVerstuurd");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.ToTable("EventParticipants");
+                });
+
+            modelBuilder.Entity("DjoppieHive.Core.Entities.LocalGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DisplayName");
+
+                    b.ToTable("LocalGroups");
+                });
+
+            modelBuilder.Entity("DjoppieHive.Core.Entities.LocalGroupMember", b =>
+                {
+                    b.Property<Guid>("LocalGroupId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("AddedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AddedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("LocalGroupId", "EmployeeId");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.ToTable("LocalGroupMembers");
                 });
 
             modelBuilder.Entity("DjoppieHive.Core.Entities.SyncLogboek", b =>
@@ -262,6 +542,75 @@ namespace DjoppieHive.Infrastructure.Migrations
                     b.HasIndex("Status");
 
                     b.ToTable("SyncLogboeken");
+                });
+
+            modelBuilder.Entity("DjoppieHive.Core.Entities.UserRole", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DienstId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EntraObjectId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("SectorId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DienstId");
+
+                    b.HasIndex("Email");
+
+                    b.HasIndex("EntraObjectId");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("Role");
+
+                    b.HasIndex("SectorId");
+
+                    b.HasIndex("EntraObjectId", "Role")
+                        .IsUnique();
+
+                    b.ToTable("UserRoles");
                 });
 
             modelBuilder.Entity("DjoppieHive.Core.Entities.ValidatieVerzoek", b =>
@@ -425,6 +774,71 @@ namespace DjoppieHive.Infrastructure.Migrations
                     b.Navigation("Employee");
                 });
 
+            modelBuilder.Entity("DjoppieHive.Core.Entities.Event", b =>
+                {
+                    b.HasOne("DjoppieHive.Core.Entities.DistributionGroup", "DistributieGroep")
+                        .WithMany()
+                        .HasForeignKey("DistributieGroepId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("DistributieGroep");
+                });
+
+            modelBuilder.Entity("DjoppieHive.Core.Entities.EventParticipant", b =>
+                {
+                    b.HasOne("DjoppieHive.Core.Entities.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DjoppieHive.Core.Entities.Event", "Event")
+                        .WithMany("Deelnemers")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("Event");
+                });
+
+            modelBuilder.Entity("DjoppieHive.Core.Entities.LocalGroupMember", b =>
+                {
+                    b.HasOne("DjoppieHive.Core.Entities.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DjoppieHive.Core.Entities.LocalGroup", "LocalGroup")
+                        .WithMany("Members")
+                        .HasForeignKey("LocalGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("LocalGroup");
+                });
+
+            modelBuilder.Entity("DjoppieHive.Core.Entities.UserRole", b =>
+                {
+                    b.HasOne("DjoppieHive.Core.Entities.DistributionGroup", "Dienst")
+                        .WithMany()
+                        .HasForeignKey("DienstId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("DjoppieHive.Core.Entities.DistributionGroup", "Sector")
+                        .WithMany()
+                        .HasForeignKey("SectorId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Dienst");
+
+                    b.Navigation("Sector");
+                });
+
             modelBuilder.Entity("DjoppieHive.Core.Entities.ValidatieVerzoek", b =>
                 {
                     b.HasOne("DjoppieHive.Core.Entities.DistributionGroup", "DistributionGroup")
@@ -476,6 +890,16 @@ namespace DjoppieHive.Infrastructure.Migrations
                     b.Navigation("ValidatieVerzoeken");
 
                     b.Navigation("VrijwilligerDetails");
+                });
+
+            modelBuilder.Entity("DjoppieHive.Core.Entities.Event", b =>
+                {
+                    b.Navigation("Deelnemers");
+                });
+
+            modelBuilder.Entity("DjoppieHive.Core.Entities.LocalGroup", b =>
+                {
+                    b.Navigation("Members");
                 });
 
             modelBuilder.Entity("DjoppieHive.Core.Entities.SyncLogboek", b =>

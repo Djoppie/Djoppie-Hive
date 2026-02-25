@@ -7,9 +7,10 @@ interface VrijwilligerModalProps {
   open: boolean;
   onClose: () => void;
   onSave: (data: Partial<Employee>) => void;
+  viewOnly?: boolean;
 }
 
-export default function VrijwilligerModal({ vrijwilliger, open, onClose, onSave }: VrijwilligerModalProps) {
+export default function VrijwilligerModal({ vrijwilliger, open, onClose, onSave, viewOnly = false }: VrijwilligerModalProps) {
   // Basic info
   const [displayName, setDisplayName] = useState('');
   const [givenName, setGivenName] = useState('');
@@ -145,7 +146,7 @@ export default function VrijwilligerModal({ vrijwilliger, open, onClose, onSave 
         <div className="modal-header">
           <h2>
             <Heart size={20} style={{ color: 'var(--color-danger)' }} />
-            {vrijwilliger ? 'Vrijwilliger Bewerken' : 'Nieuwe Vrijwilliger'}
+            {viewOnly ? 'Vrijwilliger Details' : vrijwilliger ? 'Vrijwilliger Bewerken' : 'Nieuwe Vrijwilliger'}
           </h2>
           <button className="icon-btn" onClick={onClose}>
             <X size={20} />
@@ -161,33 +162,39 @@ export default function VrijwilligerModal({ vrijwilliger, open, onClose, onSave 
 
           <div className="form-row">
             <div className="form-group">
-              <label>Voornaam *</label>
+              <label>Voornaam {!viewOnly && '*'}</label>
               <input
                 type="text"
                 value={givenName}
                 onChange={e => setGivenName(e.target.value)}
-                required
+                required={!viewOnly}
+                disabled={viewOnly}
+                className={viewOnly ? 'input-readonly' : ''}
               />
             </div>
             <div className="form-group">
-              <label>Achternaam *</label>
+              <label>Achternaam {!viewOnly && '*'}</label>
               <input
                 type="text"
                 value={surname}
                 onChange={e => setSurname(e.target.value)}
-                required
+                required={!viewOnly}
+                disabled={viewOnly}
+                className={viewOnly ? 'input-readonly' : ''}
               />
             </div>
           </div>
 
           <div className="form-row">
             <div className="form-group">
-              <label>E-mailadres *</label>
+              <label>E-mailadres {!viewOnly && '*'}</label>
               <input
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                required
+                required={!viewOnly}
+                disabled={viewOnly}
+                className={viewOnly ? 'input-readonly' : ''}
               />
             </div>
             <div className="form-group">
@@ -196,7 +203,9 @@ export default function VrijwilligerModal({ vrijwilliger, open, onClose, onSave 
                 type="tel"
                 value={telefoonnummer}
                 onChange={e => setTelefoonnummer(e.target.value)}
-                placeholder="+32 123 45 67 89"
+                placeholder={viewOnly ? '' : '+32 123 45 67 89'}
+                disabled={viewOnly}
+                className={viewOnly ? 'input-readonly' : ''}
               />
             </div>
           </div>
@@ -208,7 +217,9 @@ export default function VrijwilligerModal({ vrijwilliger, open, onClose, onSave 
                 type="text"
                 value={jobTitle}
                 onChange={e => setJobTitle(e.target.value)}
-                placeholder="bijv. Jeugdmonitor, Evenementenhelper"
+                placeholder={viewOnly ? '' : 'bijv. Jeugdmonitor, Evenementenhelper'}
+                disabled={viewOnly}
+                className={viewOnly ? 'input-readonly' : ''}
               />
             </div>
             <div className="form-group">
@@ -217,6 +228,7 @@ export default function VrijwilligerModal({ vrijwilliger, open, onClose, onSave 
                   type="checkbox"
                   checked={isActive}
                   onChange={e => setIsActive(e.target.checked)}
+                  disabled={viewOnly}
                 />
                 Actief
               </label>
@@ -236,14 +248,15 @@ export default function VrijwilligerModal({ vrijwilliger, open, onClose, onSave 
                 <button
                   key={day}
                   type="button"
-                  className={`chip ${availabilityDays.includes(day) ? 'chip-active' : ''}`}
-                  onClick={() => toggleAvailabilityDay(day)}
+                  className={`chip ${availabilityDays.includes(day) ? 'chip-active' : ''} ${viewOnly ? 'chip-readonly' : ''}`}
+                  onClick={() => !viewOnly && toggleAvailabilityDay(day)}
+                  disabled={viewOnly}
                 >
                   {day}
                 </button>
               ))}
             </div>
-            <span className="form-hint">Selecteer de dagen waarop de vrijwilliger beschikbaar is</span>
+            {!viewOnly && <span className="form-hint">Selecteer de dagen waarop de vrijwilliger beschikbaar is</span>}
           </div>
 
           <div className="form-row">
@@ -253,6 +266,8 @@ export default function VrijwilligerModal({ vrijwilliger, open, onClose, onSave 
                 type="date"
                 value={startDatum}
                 onChange={e => setStartDatum(e.target.value)}
+                disabled={viewOnly}
+                className={viewOnly ? 'input-readonly' : ''}
               />
             </div>
             <div className="form-group">
@@ -261,6 +276,8 @@ export default function VrijwilligerModal({ vrijwilliger, open, onClose, onSave 
                 type="date"
                 value={eindDatum}
                 onChange={e => setEindDatum(e.target.value)}
+                disabled={viewOnly}
+                className={viewOnly ? 'input-readonly' : ''}
               />
             </div>
           </div>
@@ -277,9 +294,11 @@ export default function VrijwilligerModal({ vrijwilliger, open, onClose, onSave 
               value={specialisaties}
               onChange={e => setSpecialisaties(e.target.value)}
               rows={3}
-              placeholder="bijv. Eerste hulp, kinderanimatie, technische ondersteuning, ..."
+              placeholder={viewOnly ? '' : 'bijv. Eerste hulp, kinderanimatie, technische ondersteuning, ...'}
+              disabled={viewOnly}
+              className={viewOnly ? 'input-readonly' : ''}
             />
-            <span className="form-hint">Komma-gescheiden lijst van vaardigheden</span>
+            {!viewOnly && <span className="form-hint">Komma-gescheiden lijst van vaardigheden</span>}
           </div>
 
           {/* Emergency Contact */}
@@ -295,7 +314,9 @@ export default function VrijwilligerModal({ vrijwilliger, open, onClose, onSave 
                 type="text"
                 value={noodContactNaam}
                 onChange={e => setNoodContactNaam(e.target.value)}
-                placeholder="Naam van noodcontactpersoon"
+                placeholder={viewOnly ? '' : 'Naam van noodcontactpersoon'}
+                disabled={viewOnly}
+                className={viewOnly ? 'input-readonly' : ''}
               />
             </div>
             <div className="form-group">
@@ -304,7 +325,9 @@ export default function VrijwilligerModal({ vrijwilliger, open, onClose, onSave 
                 type="tel"
                 value={noodContactTelefoon}
                 onChange={e => setNoodContactTelefoon(e.target.value)}
-                placeholder="+32 123 45 67 89"
+                placeholder={viewOnly ? '' : '+32 123 45 67 89'}
+                disabled={viewOnly}
+                className={viewOnly ? 'input-readonly' : ''}
               />
             </div>
           </div>
@@ -322,8 +345,10 @@ export default function VrijwilligerModal({ vrijwilliger, open, onClose, onSave 
                 type="date"
                 value={vogDatum}
                 onChange={e => setVogDatum(e.target.value)}
+                disabled={viewOnly}
+                className={viewOnly ? 'input-readonly' : ''}
               />
-              <span className="form-hint">Datum van afgifte</span>
+              {!viewOnly && <span className="form-hint">Datum van afgifte</span>}
             </div>
             <div className="form-group">
               <label>VOG Geldig Tot</label>
@@ -331,20 +356,30 @@ export default function VrijwilligerModal({ vrijwilliger, open, onClose, onSave 
                 type="date"
                 value={vogGeldigTot}
                 onChange={e => setVogGeldigTot(e.target.value)}
+                disabled={viewOnly}
+                className={viewOnly ? 'input-readonly' : ''}
               />
-              <span className="form-hint">Vervaldatum (waarschuwing na 3 maanden)</span>
+              {!viewOnly && <span className="form-hint">Vervaldatum (waarschuwing na 3 maanden)</span>}
             </div>
           </div>
 
           {/* Actions */}
           <div className="modal-actions">
-            <button type="button" className="btn btn-secondary" onClick={onClose}>
-              Annuleren
-            </button>
-            <button type="submit" className="btn btn-primary">
-              <Save size={16} />
-              {vrijwilliger ? 'Opslaan' : 'Aanmaken'}
-            </button>
+            {viewOnly ? (
+              <button type="button" className="btn btn-primary" onClick={onClose}>
+                Sluiten
+              </button>
+            ) : (
+              <>
+                <button type="button" className="btn btn-secondary" onClick={onClose}>
+                  Annuleren
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  <Save size={16} />
+                  {vrijwilliger ? 'Opslaan' : 'Aanmaken'}
+                </button>
+              </>
+            )}
           </div>
         </form>
       </div>

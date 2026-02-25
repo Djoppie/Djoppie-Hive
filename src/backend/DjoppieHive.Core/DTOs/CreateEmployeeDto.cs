@@ -6,6 +6,24 @@ namespace DjoppieHive.Core.DTOs;
 /// <summary>
 /// DTO voor het aanmaken van een nieuwe medewerker (POST /api/employees).
 /// </summary>
+/// <param name="DisplayName">Volledige weergavenaam (verplicht, max 256 tekens)</param>
+/// <param name="GivenName">Voornaam</param>
+/// <param name="Surname">Achternaam</param>
+/// <param name="Email">E-mailadres (verplicht, geldig emailadres)</param>
+/// <param name="JobTitle">Functietitel</param>
+/// <param name="Department">Afdeling</param>
+/// <param name="OfficeLocation">Kantoorlocatie</param>
+/// <param name="MobilePhone">Mobiel telefoonnummer</param>
+/// <param name="BusinessPhones">Zakelijke telefoonnummers</param>
+/// <param name="IsActive">Actieve status (default: true)</param>
+/// <param name="EmployeeType">Type medewerker (default: Personeel)</param>
+/// <param name="ArbeidsRegime">Arbeidsregime (default: Voltijds)</param>
+/// <param name="PhotoUrl">URL naar profielfoto (max 500 tekens)</param>
+/// <param name="DienstId">ID van de primaire dienst</param>
+/// <param name="StartDatum">Startdatum dienstverband</param>
+/// <param name="EindDatum">Einddatum dienstverband</param>
+/// <param name="Telefoonnummer">Vast telefoonnummer (max 50 tekens)</param>
+/// <param name="VrijwilligerDetails">Extra details voor vrijwilligers</param>
 public record CreateEmployeeDto(
     [Required(ErrorMessage = "DisplayName is verplicht")]
     [MaxLength(256, ErrorMessage = "DisplayName mag maximaal 256 tekens bevatten")]
@@ -32,47 +50,21 @@ public record CreateEmployeeDto(
 
     bool IsActive = true,
 
-    /// <summary>
-    /// Type medewerker (Personeel, Vrijwilliger, Interim, Extern, Stagiair).
-    /// Default: Personeel.
-    /// </summary>
     EmployeeType EmployeeType = EmployeeType.Personeel,
 
-    /// <summary>
-    /// Arbeidsregime (Voltijds, Deeltijds, Vrijwilliger).
-    /// Default: Voltijds.
-    /// </summary>
     ArbeidsRegime ArbeidsRegime = ArbeidsRegime.Voltijds,
 
-    /// <summary>
-    /// URL naar profielfoto.
-    /// </summary>
     [MaxLength(500, ErrorMessage = "PhotoUrl mag maximaal 500 tekens bevatten")]
     string? PhotoUrl = null,
 
-    /// <summary>
-    /// ID van de dienst (DistributionGroup) waar deze medewerker primair onder valt.
-    /// </summary>
     Guid? DienstId = null,
 
-    /// <summary>
-    /// Startdatum van het dienstverband.
-    /// </summary>
     DateTime? StartDatum = null,
 
-    /// <summary>
-    /// Einddatum van het dienstverband.
-    /// </summary>
     DateTime? EindDatum = null,
 
-    /// <summary>
-    /// Telefoonnummer (vast toestel of alternatief nummer).
-    /// </summary>
     [MaxLength(50, ErrorMessage = "Telefoonnummer mag maximaal 50 tekens bevatten")]
     string? Telefoonnummer = null,
 
-    /// <summary>
-    /// Vrijwilligersdetails (indien EmployeeType = Vrijwilliger).
-    /// </summary>
     VrijwilligerDetailsUpsertDto? VrijwilligerDetails = null
 );

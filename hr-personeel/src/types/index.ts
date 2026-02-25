@@ -171,7 +171,8 @@ export interface DistributieGroep {
   emailAddress: string;         // bijv. "mg-allepersoneel@diepenbeek.be"
   beschrijving: string;
   type: DistributieGroepType;
-  ledenIds: string[];           // medewerker IDs
+  ledenIds: string[];           // medewerker IDs (voor lokaal beheer)
+  ledenAantal: number;          // aantal leden (van API)
   eigenaarIds: string[];        // eigenaar medewerker IDs
   bronExchange: boolean;        // uit Exchange geïmporteerd
   aanmaakDatum: string;
@@ -269,4 +270,295 @@ export interface SyncValidatieVerzoek {
 export interface AfhandelValidatieRequest {
   afhandeling: ValidatieAfhandeling;
   notities?: string;
+}
+
+// ============================================
+// Sync Preview types (voor AD Import pagina)
+// ============================================
+
+/** Preview van een gebruiker uit Azure AD/Entra ID */
+export interface ADUserPreview {
+  id: string;
+  displayName: string;
+  givenName: string | null;
+  surname: string | null;
+  email: string;
+  jobTitle: string | null;
+  department: string | null;
+  mobilePhone: string | null;
+  accountEnabled: boolean;
+  bestaatAl: boolean;
+  bestaandeMedewerkerId: string | null;
+}
+
+/** Preview van een groep uit Azure AD/Entra ID */
+export interface ADGroupPreview {
+  id: string;
+  displayName: string;
+  description: string | null;
+  email: string | null;
+  niveau: string;
+  aantalLeden: number;
+  bestaatAl: boolean;
+}
+
+/** Statistieken voor de sync preview */
+export interface SyncPreviewStatistics {
+  totaalGebruikers: number;
+  actieveGebruikers: number;
+  inactieveGebruikers: number;
+  nieuweGebruikers: number;
+  bestaandeGebruikers: number;
+  totaalGroepen: number;
+  nieuweGroepen: number;
+  bestaandeGroepen: number;
+}
+
+/** Volledige preview van wat er gesynchroniseerd zou worden */
+export interface SyncPreview {
+  gebruikers: ADUserPreview[];
+  groepen: ADGroupPreview[];
+  statistieken: SyncPreviewStatistics;
+  opgehaaldOp: string;
+}
+
+// ============================================
+// Event types (voor Uitnodigingen pagina)
+// ============================================
+
+export type EventTypeAPI = 'Personeelsfeest' | 'Vergadering' | 'Training' | 'Communicatie' | 'Overig';
+export type EventStatusAPI = 'Concept' | 'Verstuurd' | 'Geannuleerd';
+
+/** Filter criteria voor event ontvangers */
+export interface EventFilterCriteria {
+  alleenActief?: boolean;
+  sectoren?: string[];
+  employeeTypes?: string[];
+  arbeidsRegimes?: string[];
+  distributieGroepId?: string;
+}
+
+/** Event DTO */
+export interface EventDTO {
+  id: string;
+  titel: string;
+  beschrijving: string;
+  datum: string;
+  type: EventTypeAPI;
+  status: EventStatusAPI;
+  filterCriteria?: EventFilterCriteria;
+  distributieGroepId?: string;
+  distributieGroepNaam?: string;
+  aantalDeelnemers: number;
+  aangemaaktDoor?: string;
+  aangemaaktOp: string;
+  verstuurdOp?: string;
+  verstuurdDoor?: string;
+}
+
+/** Deelnemer aan een event */
+export interface EventParticipantDTO {
+  employeeId: string;
+  displayName: string;
+  email: string;
+  jobTitle?: string;
+  department?: string;
+  emailVerstuurd: boolean;
+  emailVerstuurdOp?: string;
+}
+
+/** Event detail DTO met deelnemers */
+export interface EventDetailDTO extends Omit<EventDTO, 'aantalDeelnemers'> {
+  deelnemers: EventParticipantDTO[];
+}
+
+/** Request voor aanmaken event */
+export interface CreateEventRequest {
+  titel: string;
+  beschrijving: string;
+  datum: string;
+  type: EventTypeAPI;
+  filterCriteria?: EventFilterCriteria;
+  distributieGroepId?: string;
+}
+
+/** Request voor bijwerken event */
+export interface UpdateEventRequest {
+  titel?: string;
+  beschrijving?: string;
+  datum?: string;
+  type?: EventTypeAPI;
+  filterCriteria?: EventFilterCriteria;
+  distributieGroepId?: string;
+}
+
+/** Preview van event ontvangers */
+export interface EventRecipientsPreview {
+  totaalAantal: number;
+  voorbeeldOntvangers: EventParticipantDTO[];
+}
+
+// ============================================
+// Audit types (voor Audit Log pagina)
+// ============================================
+
+export type AuditAction =
+  | 'Create'
+  | 'Update'
+  | 'Delete'
+  | 'View'
+  | 'Login'
+  | 'Logout'
+  | 'Export'
+  | 'Sync'
+  | 'Send'
+  | 'AccessDenied';
+
+export type AuditEntityType =
+  | 'Employee'
+  | 'DistributionGroup'
+  | 'EmployeeGroupMembership'
+  | 'UserRole'
+  | 'Event'
+  | 'EventParticipant'
+  | 'ValidatieVerzoek'
+  | 'SyncLogboek'
+  | 'System';
+
+/** Audit log entry */
+export interface AuditLogDTO {
+  id: string;
+  userId: string | null;
+  userEmail: string | null;
+  userDisplayName: string | null;
+  action: AuditAction;
+  entityType: AuditEntityType;
+  entityId: string | null;
+  entityDescription: string | null;
+  oldValues: string | null;
+  newValues: string | null;
+  timestamp: string;
+  ipAddress: string | null;
+  additionalInfo: string | null;
+}
+
+/** Gepagineerde response voor audit logs */
+export interface AuditLogPagedResponse {
+  items: AuditLogDTO[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+/** Filter parameters voor audit logs */
+export interface AuditLogFilter {
+  fromDate?: string;
+  toDate?: string;
+  userId?: string;
+  action?: AuditAction;
+  entityType?: AuditEntityType;
+  entityId?: string;
+  pageNumber?: number;
+  pageSize?: number;
+}
+
+/** Filter opties voor audit logs */
+export interface AuditFilterOptions {
+  actions: string[];
+  entityTypes: string[];
+}
+
+// ============================================
+// Unified Groups types (Hybrid Groups System)
+// ============================================
+
+/** Bron van een groep in het Hybrid Groups systeem */
+export type GroupSource = 'Exchange' | 'Dynamic' | 'Local';
+
+/** Filter criteria voor dynamische groepen */
+export interface DynamicGroupFilterCriteria {
+  employeeTypes?: string[];
+  arbeidsRegimes?: string[];
+  alleenActief?: boolean;
+  dienstIds?: string[];
+  sectorIds?: string[];
+}
+
+/** Unified group representatie (alle groeptypes) */
+export interface UnifiedGroup {
+  id: string;
+  displayName: string;
+  description: string | null;
+  email: string | null;
+  memberCount: number;
+  source: GroupSource;
+  isReadOnly: boolean;
+  isSystemGroup: boolean;
+  lastEvaluatedAt: string | null;
+}
+
+/** Gedetailleerde unified group met leden */
+export interface UnifiedGroupDetail extends UnifiedGroup {
+  filterCriteria: DynamicGroupFilterCriteria | null;
+  members: EmployeeSummary[];
+  createdAt: string;
+  createdBy: string | null;
+}
+
+/** Employee summary voor groepsleden */
+export interface EmployeeSummary {
+  id: string;
+  displayName: string;
+  email: string;
+  jobTitle: string | null;
+  employeeType: string;
+  arbeidsRegime: string;
+  isActive: boolean;
+  dienstNaam: string | null;
+}
+
+/** Request voor aanmaken lokale groep */
+export interface CreateLocalGroupRequest {
+  displayName: string;
+  description?: string;
+  email?: string;
+  initialMemberIds?: string[];
+}
+
+/** Request voor bijwerken lokale groep */
+export interface UpdateLocalGroupRequest {
+  displayName?: string;
+  description?: string;
+  email?: string;
+}
+
+/** Request voor aanmaken dynamische groep */
+export interface CreateDynamicGroupRequest {
+  displayName: string;
+  filterCriteria: DynamicGroupFilterCriteria;
+  description?: string;
+  email?: string;
+}
+
+/** Request voor bijwerken dynamische groep */
+export interface UpdateDynamicGroupRequest {
+  displayName?: string;
+  description?: string;
+  email?: string;
+  filterCriteria?: DynamicGroupFilterCriteria;
+}
+
+/** Preview van gecombineerde groepen */
+export interface GroupsPreview {
+  totalUniqueMembers: number;
+  groupBreakdown: Record<string, number>;
+  sampleMembers: EmployeeSummary[];
+}
+
+/** Email export DTO */
+export interface EmailExport {
+  mailtoLink: string;
+  emailCount: number;
+  truncatedWarning: string | null;
 }

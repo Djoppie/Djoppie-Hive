@@ -9,117 +9,46 @@ import {
   Users,
   Info,
   ArrowRight,
-
+  Building2,
+  AlertCircle,
 } from 'lucide-react';
-import { usePersoneel } from '../context/PersoneelContext';
-import type { Medewerker } from '../types';
+import { syncApi } from '../services/api';
+import type { ADUserPreview, SyncPreview, SyncResultaat } from '../types';
 
-interface ADUser {
-  displayName: string;
-  givenName: string;
-  surname: string;
-  mail: string;
-  jobTitle?: string;
-  department?: string;
-  mobilePhone?: string;
-  accountEnabled: boolean;
-  id: string;
-}
-
-// Simulated AD users for demo
-const simulatedADUsers: ADUser[] = [
-  {
-    id: 'ad-001',
-    displayName: 'Lotte Van den Berg',
-    givenName: 'Lotte',
-    surname: 'Van den Berg',
-    mail: 'lotte.vandenberg@diepenbeek.be',
-    jobTitle: 'Communicatiemedewerker',
-    department: 'Algemene Zaken',
-    mobilePhone: '0477 12 34 56',
-    accountEnabled: true,
-  },
-  {
-    id: 'ad-002',
-    displayName: 'Thomas Schepers',
-    givenName: 'Thomas',
-    surname: 'Schepers',
-    mail: 'thomas.schepers@diepenbeek.be',
-    jobTitle: 'ICT Helpdesk',
-    department: 'ICT',
-    accountEnabled: true,
-  },
-  {
-    id: 'ad-003',
-    displayName: 'Elke Vandeweyer',
-    givenName: 'Elke',
-    surname: 'Vandeweyer',
-    mail: 'elke.vandeweyer@diepenbeek.be',
-    jobTitle: 'Administratief Bediende',
-    department: 'Burgerzaken',
-    accountEnabled: true,
-  },
-  {
-    id: 'ad-004',
-    displayName: 'Ruben Gorissen',
-    givenName: 'Ruben',
-    surname: 'Gorissen',
-    mail: 'ruben.gorissen@diepenbeek.be',
-    jobTitle: 'Technisch Assistent',
-    department: 'Technische Dienst',
-    accountEnabled: true,
-  },
-  {
-    id: 'ad-005',
-    displayName: 'Veerle Puts',
-    givenName: 'Veerle',
-    surname: 'Puts',
-    mail: 'veerle.puts@diepenbeek.be',
-    jobTitle: 'Maatschappelijk Werker',
-    department: 'Welzijn',
-    mobilePhone: '0478 56 78 90',
-    accountEnabled: true,
-  },
-  {
-    id: 'ad-006',
-    displayName: 'Filip Driesen',
-    givenName: 'Filip',
-    surname: 'Driesen',
-    mail: 'filip.driesen@diepenbeek.be',
-    jobTitle: 'Boekhouder',
-    department: 'Financiën',
-    accountEnabled: false,
-  },
-];
-
-type ImportStep = 'connect' | 'preview' | 'mapping' | 'result';
+type ImportStep = 'connect' | 'preview' | 'result';
 
 export default function ADImport() {
-  const { medewerkers, importeerVanAD } = usePersoneel();
   const [step, setStep] = useState<ImportStep>('connect');
   const [loading, setLoading] = useState(false);
-  const [adUsers, setAdUsers] = useState<ADUser[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [preview, setPreview] = useState<SyncPreview | null>(null);
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
-  const [importResult, setImportResult] = useState<{
-    success: number;
-    skipped: number;
-    errors: number;
-  } | null>(null);
+  const [syncResult, setSyncResult] = useState<SyncResultaat | null>(null);
 
-  // CSV upload
+  // CSV upload state (fallback for when Graph is not available)
   const [csvMode, setCsvMode] = useState(false);
+  const [csvUsers, setCsvUsers] = useState<ADUserPreview[]>([]);
 
-  const handleConnectAD = () => {
+  const handleConnectAD = async () => {
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setAdUsers(simulatedADUsers);
-      setSelectedUsers(
-        new Set(simulatedADUsers.filter(u => u.accountEnabled).map(u => u.id))
-      );
-      setLoading(false);
+    setError(null);
+
+    try {
+      const previewData = await syncApi.getPreview();
+      setPreview(previewData);
+
+      // Select all active users that don't already exist
+      const activeNewUsers = previewData.gebruikers
+        .filter(u => u.accountEnabled && !u.bestaatAl)
+        .map(u => u.id);
+      setSelectedUsers(new Set(activeNewUsers));
+
       setStep('preview');
-    }, 1500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Kon geen verbinding maken met Azure AD');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -133,7 +62,7 @@ export default function ADImport() {
       if (lines.length < 2) return;
 
       const headers = lines[0].split(';').map(h => h.trim().replace(/"/g, ''));
-      const users: ADUser[] = lines.slice(1).map((line, i) => {
+      const users: ADUserPreview[] = lines.slice(1).map((line, i) => {
         const values = line.split(';').map(v => v.trim().replace(/"/g, ''));
         const get = (header: string) => {
           const idx = headers.findIndex(
@@ -142,67 +71,46 @@ export default function ADImport() {
           return idx >= 0 ? values[idx] : '';
         };
 
+        const displayName = get('displayName') || get('naam') ||
+          `${get('givenName') || get('voornaam')} ${get('surname') || get('achternaam')}`;
+
         return {
           id: `csv-${i}`,
-          displayName: get('displayName') || get('naam') || `${get('givenName') || get('voornaam')} ${get('surname') || get('achternaam')}`,
-          givenName: get('givenName') || get('voornaam') || '',
-          surname: get('surname') || get('achternaam') || '',
-          mail: get('mail') || get('email') || '',
-          jobTitle: get('jobTitle') || get('functie') || undefined,
-          department: get('department') || get('afdeling') || undefined,
-          mobilePhone: get('mobilePhone') || get('telefoon') || undefined,
+          displayName,
+          givenName: get('givenName') || get('voornaam') || null,
+          surname: get('surname') || get('achternaam') || null,
+          email: get('mail') || get('email') || '',
+          jobTitle: get('jobTitle') || get('functie') || null,
+          department: get('department') || get('afdeling') || null,
+          mobilePhone: get('mobilePhone') || get('telefoon') || null,
           accountEnabled: (get('accountEnabled') || get('actief') || 'true').toLowerCase() !== 'false',
+          bestaatAl: false,
+          bestaandeMedewerkerId: null,
         };
       });
 
-      setAdUsers(users);
+      setCsvUsers(users);
       setSelectedUsers(new Set(users.filter(u => u.accountEnabled).map(u => u.id)));
+      setCsvMode(true);
       setStep('preview');
     };
     reader.readAsText(file);
   };
 
-  const handleImport = () => {
+  const handleImport = async () => {
     setLoading(true);
-    const toImport = adUsers.filter(u => selectedUsers.has(u.id));
+    setError(null);
 
-    const bestaandeEmails = new Set(medewerkers.map(m => m.email.toLowerCase()));
-    let success = 0;
-    let skipped = 0;
-
-    const nieuweMedewerkers: Partial<Medewerker>[] = [];
-    toImport.forEach(u => {
-      if (bestaandeEmails.has(u.mail.toLowerCase())) {
-        skipped++;
-        return;
-      }
-      nieuweMedewerkers.push({
-        adId: u.id,
-        voornaam: u.givenName,
-        achternaam: u.surname,
-        volledigeNaam: u.displayName,
-        email: u.mail,
-        telefoon: u.mobilePhone,
-        functie: u.jobTitle || '',
-        afdeling: u.department || '',
-        sector: u.department || '',
-        dienst: '',
-        arbeidsRegime: 'voltijds',
-        type: 'personeel',
-        actief: u.accountEnabled,
-        opmerkingen: 'Geïmporteerd uit Azure AD',
-        bronAD: true,
-        handmatigToegevoegd: false,
-      });
-      success++;
-    });
-
-    setTimeout(() => {
-      importeerVanAD(nieuweMedewerkers);
-      setImportResult({ success, skipped, errors: 0 });
-      setLoading(false);
+    try {
+      // For real sync, use the sync API to perform the actual import
+      const result = await syncApi.uitvoeren();
+      setSyncResult(result);
       setStep('result');
-    }, 1000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Import mislukt');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const toggleUser = (id: string) => {
@@ -216,11 +124,17 @@ export default function ADImport() {
 
   const reset = () => {
     setStep('connect');
-    setAdUsers([]);
+    setPreview(null);
+    setCsvUsers([]);
     setSelectedUsers(new Set());
-    setImportResult(null);
+    setSyncResult(null);
+    setError(null);
     setCsvMode(false);
   };
+
+  // Get the users to display (from preview or CSV)
+  const displayUsers = csvMode ? csvUsers : (preview?.gebruikers || []);
+  const displayStats = preview?.statistieken;
 
   return (
     <div className="page">
@@ -233,14 +147,22 @@ export default function ADImport() {
         </div>
       </div>
 
+      {/* Error message */}
+      {error && (
+        <div className="alert alert-error">
+          <AlertCircle size={18} />
+          <span>{error}</span>
+        </div>
+      )}
+
       {/* Stappen indicator */}
       <div className="steps-indicator">
-        <div className={`step ${step === 'result' ? 'step-active' : step !== 'connect' ? 'step-done' : ''}`}>
+        <div className={`step ${step === 'connect' ? 'step-active' : 'step-done'}`}>
           <span className="step-number">1</span>
           <span className="step-label">Verbinden</span>
         </div>
         <ArrowRight size={16} className="step-arrow" />
-        <div className={`step ${step === 'preview' ? 'step-active' : step === 'mapping' || step === 'result' ? 'step-done' : ''}`}>
+        <div className={`step ${step === 'preview' ? 'step-active' : step === 'result' ? 'step-done' : ''}`}>
           <span className="step-number">2</span>
           <span className="step-label">Voorbeeld</span>
         </div>
@@ -252,7 +174,7 @@ export default function ADImport() {
       </div>
 
       {/* Stap 1: Verbinden */}
-      {step === 'result' && (
+      {step === 'connect' && (
         <div className="import-connect">
           <div className="import-options">
             <div
@@ -263,7 +185,7 @@ export default function ADImport() {
               <h3>Azure AD / Entra</h3>
               <p>
                 Verbind rechtstreeks met Azure AD om gebruikers op te halen.
-                Haalt automatisch actieve en inactieve accounts op.
+                Haalt automatisch alle leden van MG- distributiegroepen op.
               </p>
               <button
                 className="btn btn-primary"
@@ -321,33 +243,73 @@ export default function ADImport() {
       {/* Stap 2: Preview */}
       {step === 'preview' && (
         <div className="import-preview">
+          {/* Summary stats */}
           <div className="import-summary">
             <div className="import-summary-item">
               <Users size={18} />
               <span>
-                <strong>{adUsers.length}</strong> gebruikers gevonden
+                <strong>{displayStats?.totaalGebruikers || displayUsers.length}</strong> gebruikers gevonden
               </span>
             </div>
             <div className="import-summary-item">
               <CheckCircle2 size={18} className="text-success" />
               <span>
-                <strong>{adUsers.filter(u => u.accountEnabled).length}</strong> actief
+                <strong>{displayStats?.actieveGebruikers || displayUsers.filter(u => u.accountEnabled).length}</strong> actief
               </span>
             </div>
             <div className="import-summary-item">
               <AlertTriangle size={18} className="text-warning" />
               <span>
-                <strong>{adUsers.filter(u => !u.accountEnabled).length}</strong> inactief
+                <strong>{displayStats?.inactieveGebruikers || displayUsers.filter(u => !u.accountEnabled).length}</strong> inactief
               </span>
             </div>
-            <div className="import-summary-item">
-              <CheckCircle2 size={18} className="text-info" />
-              <span>
-                <strong>{selectedUsers.size}</strong> geselecteerd voor import
-              </span>
-            </div>
+            {!csvMode && displayStats && (
+              <>
+                <div className="import-summary-item">
+                  <Users size={18} className="text-info" />
+                  <span>
+                    <strong>{displayStats.nieuweGebruikers}</strong> nieuw
+                  </span>
+                </div>
+                <div className="import-summary-item">
+                  <Building2 size={18} />
+                  <span>
+                    <strong>{displayStats.totaalGroepen}</strong> groepen
+                  </span>
+                </div>
+              </>
+            )}
           </div>
 
+          {/* Groups preview (for real API) */}
+          {!csvMode && preview?.groepen && preview.groepen.length > 0 && (
+            <div className="import-groups-preview">
+              <h3>MG- Distributiegroepen</h3>
+              <div className="groups-grid">
+                {preview.groepen.slice(0, 8).map(group => (
+                  <div key={group.id} className={`group-card ${group.bestaatAl ? 'group-existing' : 'group-new'}`}>
+                    <div className="group-name">{group.displayName}</div>
+                    <div className="group-meta">
+                      <span className="group-level">{group.niveau}</span>
+                      <span className="group-members">{group.aantalLeden} leden</span>
+                    </div>
+                    {group.bestaatAl ? (
+                      <span className="badge-status badge-aangepast">Bestaat al</span>
+                    ) : (
+                      <span className="badge-status badge-goedgekeurd">Nieuw</span>
+                    )}
+                  </div>
+                ))}
+                {preview.groepen.length > 8 && (
+                  <div className="group-card group-more">
+                    +{preview.groepen.length - 8} meer groepen
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Users table */}
           <div className="table-container">
             <table className="data-table">
               <thead>
@@ -355,12 +317,13 @@ export default function ADImport() {
                   <th className="th-checkbox">
                     <input
                       type="checkbox"
-                      checked={selectedUsers.size === adUsers.length}
+                      checked={selectedUsers.size === displayUsers.filter(u => !u.bestaatAl).length}
                       onChange={() => {
-                        if (selectedUsers.size === adUsers.length) {
+                        const newUsers = displayUsers.filter(u => !u.bestaatAl);
+                        if (selectedUsers.size === newUsers.length) {
                           setSelectedUsers(new Set());
                         } else {
-                          setSelectedUsers(new Set(adUsers.map(u => u.id)));
+                          setSelectedUsers(new Set(newUsers.map(u => u.id)));
                         }
                       }}
                     />
@@ -374,40 +337,35 @@ export default function ADImport() {
                 </tr>
               </thead>
               <tbody>
-                {adUsers.map(u => {
-                  const bestaand = medewerkers.some(
-                    m => m.email.toLowerCase() === u.mail.toLowerCase()
-                  );
-                  return (
-                    <tr
-                      key={u.id}
-                      className={`${!u.accountEnabled ? 'row-inactive' : ''} ${bestaand ? 'row-duplicate' : ''}`}
-                    >
-                      <td>
-                        <input
-                          type="checkbox"
-                          checked={selectedUsers.has(u.id)}
-                          onChange={() => toggleUser(u.id)}
-                          disabled={bestaand}
-                        />
-                      </td>
-                      <td className="td-name">{u.displayName}</td>
-                      <td className="td-email">{u.mail}</td>
-                      <td>{u.jobTitle || '-'}</td>
-                      <td>{u.department || '-'}</td>
-                      <td>{u.mobilePhone || '-'}</td>
-                      <td>
-                        {bestaand ? (
-                          <span className="badge-status badge-aangepast">Bestaat al</span>
-                        ) : u.accountEnabled ? (
-                          <span className="badge-status badge-goedgekeurd">Actief</span>
-                        ) : (
-                          <span className="badge-status badge-afgekeurd">Inactief</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
+                {displayUsers.map(u => (
+                  <tr
+                    key={u.id}
+                    className={`${!u.accountEnabled ? 'row-inactive' : ''} ${u.bestaatAl ? 'row-duplicate' : ''}`}
+                  >
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={selectedUsers.has(u.id)}
+                        onChange={() => toggleUser(u.id)}
+                        disabled={u.bestaatAl}
+                      />
+                    </td>
+                    <td className="td-name">{u.displayName}</td>
+                    <td className="td-email">{u.email}</td>
+                    <td>{u.jobTitle || '-'}</td>
+                    <td>{u.department || '-'}</td>
+                    <td>{u.mobilePhone || '-'}</td>
+                    <td>
+                      {u.bestaatAl ? (
+                        <span className="badge-status badge-aangepast">Bestaat al</span>
+                      ) : u.accountEnabled ? (
+                        <span className="badge-status badge-goedgekeurd">Actief</span>
+                      ) : (
+                        <span className="badge-status badge-afgekeurd">Inactief</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -419,46 +377,82 @@ export default function ADImport() {
             <button
               className="btn btn-primary"
               onClick={handleImport}
-              disabled={selectedUsers.size === 0 || loading}
+              disabled={loading}
             >
               {loading ? (
                 <>
-                  <RefreshCw size={16} className="spin" /> Importeren...
+                  <RefreshCw size={16} className="spin" /> Synchroniseren...
                 </>
               ) : (
                 <>
-                  <CloudDownload size={16} /> {selectedUsers.size} gebruikers importeren
+                  <CloudDownload size={16} /> Synchronisatie starten
                 </>
               )}
             </button>
+          </div>
+
+          <div className="import-note">
+            <Info size={16} />
+            <span>
+              De synchronisatie importeert alle gebruikers uit de MG- distributiegroepen.
+              Gebruikers die al bestaan worden bijgewerkt met de nieuwste gegevens.
+            </span>
           </div>
         </div>
       )}
 
       {/* Stap 3: Resultaat */}
-      {step === 'result' && importResult && (
+      {step === 'result' && syncResult && (
         <div className="import-result">
-          <div className="result-card result-success">
-            <CheckCircle2 size={64} />
-            <h2>Import voltooid</h2>
+          <div className={`result-card ${syncResult.foutmelding ? 'result-warning' : 'result-success'}`}>
+            {syncResult.foutmelding ? (
+              <AlertTriangle size={64} />
+            ) : (
+              <CheckCircle2 size={64} />
+            )}
+            <h2>{syncResult.foutmelding ? 'Synchronisatie voltooid met waarschuwingen' : 'Synchronisatie voltooid'}</h2>
+
             <div className="result-stats">
               <div className="result-stat">
-                <span className="result-stat-value text-success">{importResult.success}</span>
-                <span className="result-stat-label">Geïmporteerd</span>
+                <span className="result-stat-value text-info">{syncResult.groepenVerwerkt}</span>
+                <span className="result-stat-label">Groepen verwerkt</span>
               </div>
               <div className="result-stat">
-                <span className="result-stat-value text-warning">{importResult.skipped}</span>
-                <span className="result-stat-label">Overgeslagen (bestaan al)</span>
+                <span className="result-stat-value text-success">{syncResult.medewerkersToegevoegd}</span>
+                <span className="result-stat-label">Toegevoegd</span>
               </div>
               <div className="result-stat">
-                <span className="result-stat-value text-danger">{importResult.errors}</span>
-                <span className="result-stat-label">Fouten</span>
+                <span className="result-stat-value text-warning">{syncResult.medewerkersBijgewerkt}</span>
+                <span className="result-stat-label">Bijgewerkt</span>
+              </div>
+              <div className="result-stat">
+                <span className="result-stat-value text-danger">{syncResult.medewerkersVerwijderd}</span>
+                <span className="result-stat-label">Verwijderd</span>
               </div>
             </div>
+
+            {syncResult.validatieVerzoekenAangemaakt > 0 && (
+              <div className="result-validations">
+                <AlertTriangle size={18} />
+                <span>
+                  Er zijn <strong>{syncResult.validatieVerzoekenAangemaakt}</strong> validatieverzoeken aangemaakt
+                  die moeten worden beoordeeld.
+                </span>
+              </div>
+            )}
+
+            {syncResult.foutmelding && (
+              <div className="result-error">
+                <AlertCircle size={18} />
+                <span>{syncResult.foutmelding}</span>
+              </div>
+            )}
+
             <p className="result-note">
-              De geïmporteerde medewerkers hebben de status &ldquo;Nieuw&rdquo; en moeten nog
+              De geïmporteerde medewerkers hebben de status "Nieuw" en moeten nog
               gevalideerd worden door de verantwoordelijke diensthoofden of sectormanagers.
             </p>
+
             <div className="result-actions">
               <button className="btn btn-secondary" onClick={reset}>
                 Nieuwe Import

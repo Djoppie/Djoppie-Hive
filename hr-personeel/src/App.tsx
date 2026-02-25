@@ -12,6 +12,7 @@ import DistributieGroepen from './pages/DistributieGroepen';
 import SectorHierarchy from './pages/SectorHierarchy';
 import Vrijwilligers from './pages/Vrijwilligers';
 import SyncGeschiedenis from './pages/SyncGeschiedenis';
+import AuditLog from './pages/AuditLog';
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
               <Route path="/rollen" element={<Rollen />} />
               <Route path="/sync" element={<SyncGeschiedenis />} />
               <Route path="/import" element={<ADImport />} />
+              <Route path="/audit" element={<AuditLog />} />
             </Route>
           </Routes>
         </BrowserRouter>

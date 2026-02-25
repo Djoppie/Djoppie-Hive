@@ -78,6 +78,7 @@ export const employeesApi = {
 New service layer providing employee management operations with proper error handling:
 
 **Functions**:
+
 - `getEmployees(filter?: EmployeeFilter)` - Get all employees with optional filtering
 - `getEmployee(id: string)` - Get single employee by ID
 - `createEmployee(dto: CreateEmployeeDto)` - Create new employee
@@ -94,6 +95,7 @@ All functions include proper error handling with Dutch error messages.
 Specialized service for volunteer management:
 
 **Functions**:
+
 - `getVolunteers()` - Get all volunteers
 - `getVolunteer(id: string)` - Get single volunteer (validates type)
 - `createVolunteer(dto: CreateVolunteerDto)` - Create new volunteer
@@ -106,6 +108,7 @@ Specialized service for volunteer management:
 Utilities to map between backend API types and frontend types:
 
 **Mapping Functions**:
+
 - `mapEmployeeTypeToPersoneelType()` - Backend → Frontend type mapping
 - `mapPersoneelTypeToEmployeeType()` - Frontend → Backend type mapping
 - `mapArbeidsRegimeFromAPI()` - Backend → Frontend arbeidsregime
@@ -119,6 +122,7 @@ Utilities to map between backend API types and frontend types:
 Complete rewrite to use real API instead of mock data:
 
 **Key Changes**:
+
 - Removed dependency on `PersoneelContext`
 - Added local state management with `useState`:
   - `medewerkers` - Employee list from API
@@ -131,6 +135,7 @@ Complete rewrite to use real API instead of mock data:
 - Added error banner UI with dismiss functionality
 
 **Loading State**:
+
 ```typescript
 if (loading) {
   return (
@@ -148,6 +153,7 @@ if (loading) {
 ```
 
 **Error Handling**:
+
 ```typescript
 {error && (
   <div style={{ padding: '12px 16px', backgroundColor: '#FEE', ... }}>
@@ -209,6 +215,7 @@ All API calls include comprehensive error handling:
 4. **Server Errors**: Display error message from API or generic fallback
 
 Example:
+
 ```typescript
 try {
   const employees = await employeeService.getEmployees();
@@ -273,6 +280,7 @@ PersoneelLijst component - Display in UI
 ## Testing the Integration
 
 ### 1. Start Backend API
+
 ```bash
 cd C:\Djoppie\Djoppie-Hive
 dotnet run --project DjoppieHive.API
@@ -280,6 +288,7 @@ dotnet run --project DjoppieHive.API
 ```
 
 ### 2. Start Frontend
+
 ```bash
 cd C:\Djoppie\Djoppie-Hive\hr-personeel
 npm run dev
@@ -289,28 +298,33 @@ npm run dev
 ### 3. Test Operations
 
 **Load Employees**:
+
 - Navigate to Personeelslijst
 - Should show loading spinner, then employee list
 - Should show data source icons (Cloud for Azure, UserPlus for Manual)
 
 **Create Employee**:
+
 - Click "Nieuwe Medewerker"
 - Fill form with required fields
 - Click "Opslaan"
 - Should see new employee in list
 
 **Update Employee**:
+
 - Click edit icon on employee row
 - Modify fields
 - Click "Opslaan"
 - Should see updated data
 
 **Delete Employee**:
+
 - Click delete icon
 - Confirm deletion
 - Should see employee removed from list
 
 **Error Handling**:
+
 - Stop backend API
 - Try any operation
 - Should see error banner with appropriate message
@@ -318,10 +332,12 @@ npm run dev
 ## Breaking Changes
 
 ### Removed Dependencies
+
 - `PersoneelContext` is NO LONGER USED in PersoneelLijst
 - Mock data is bypassed in favor of real API data
 
 ### Changed Behavior
+
 - All operations are now **async** and may show loading states
 - Errors are displayed in a dismissible banner instead of alerts
 - Data is fetched from backend on component mount
@@ -338,15 +354,19 @@ npm run dev
 ## Troubleshooting
 
 ### Issue: "Kan medewerkers niet laden"
-**Solution**: Check that backend API is running at http://localhost:5014
+
+**Solution**: Check that backend API is running at <http://localhost:5014>
 
 ### Issue: "Sessie verlopen. Log opnieuw in."
+
 **Solution**: MSAL token expired, re-authenticate through login flow
 
 ### Issue: TypeScript errors in employeeMapper
+
 **Solution**: Ensure all imports use correct types from `../services/api`
 
 ### Issue: Empty employee list
+
 **Solution**: Check backend database has employees, check browser console for API errors
 
 ## Files Modified

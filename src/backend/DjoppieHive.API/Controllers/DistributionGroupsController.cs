@@ -1,3 +1,4 @@
+using DjoppieHive.API.Authorization;
 using DjoppieHive.Core.DTOs;
 using DjoppieHive.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -5,19 +6,27 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DjoppieHive.API.Controllers;
 
+/// <summary>
+/// Beheer van MG- distributiegroepen uit Microsoft 365.
+/// Biedt inzicht in de organisatiehierarchie met sectoren en diensten.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+[Tags("Distributiegroepen")]
 public class DistributionGroupsController : ControllerBase
 {
     private readonly IDistributionGroupService _groupService;
+    private readonly IUserContextService _userContext;
     private readonly ILogger<DistributionGroupsController> _logger;
 
     public DistributionGroupsController(
         IDistributionGroupService groupService,
+        IUserContextService userContext,
         ILogger<DistributionGroupsController> logger)
     {
         _groupService = groupService;
+        _userContext = userContext;
         _logger = logger;
     }
 
@@ -33,56 +42,26 @@ public class DistributionGroupsController : ControllerBase
     }
 
     /// <summary>
-    /// Test endpoint to verify Graph API connection (no auth required for debugging).
+    /// Gets the complete organizational hierarchy starting from MG-iedereenpersoneel.
+    /// Returns all sectors (MG-SECTOR-*), their sector managers, diensten (MG-*), and medewerkers.
     /// </summary>
-    [HttpGet("test")]
-    [AllowAnonymous]
-    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
-    public async Task<ActionResult<object>> TestGraphConnection(CancellationToken cancellationToken)
-    {
-        try
-        {
-            var groups = await _groupService.GetAllGroupsAsync(cancellationToken);
-            return Ok(new {
-                success = true,
-                groupCount = groups.Count(),
-                groups = groups.Select(g => new { g.Id, g.DisplayName, g.Email })
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Graph API test failed");
-            return Ok(new {
-                success = false,
-                error = ex.Message,
-                innerError = ex.InnerException?.Message
-            });
-        }
-    }
-
-    /// <summary>
-    /// Test endpoint to get sector details with owners and nested groups (no auth for debugging).
-    /// </summary>
-    [HttpGet("test/{id}")]
-    [AllowAnonymous]
-    [ProducesResponseType(typeof(DistributionGroupDetailDto), StatusCodes.Status200OK)]
+    [HttpGet("hierarchy")]
+    [ProducesResponseType(typeof(OrganizationHierarchyDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<DistributionGroupDetailDto>> TestGetById(string id, CancellationToken cancellationToken)
+    public async Task<ActionResult<OrganizationHierarchyDto>> GetHierarchy(CancellationToken cancellationToken)
     {
-        try
+        var hierarchy = await _groupService.GetOrganizationHierarchyAsync(cancellationToken);
+
+        if (hierarchy == null)
         {
-            var group = await _groupService.GetGroupByIdAsync(id, cancellationToken);
-            if (group == null)
-            {
-                return NotFound(new { error = "Group not found", groupId = id });
-            }
-            return Ok(group);
+            return NotFound(new { message = "Root group MG-iedereenpersoneel not found in Entra ID" });
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error fetching group {GroupId}", id);
-            return Ok(new { error = ex.Message, groupId = id });
-        }
+
+        _logger.LogInformation(
+            "Retrieved organization hierarchy: {TotalSectors} sectors, {TotalDiensten} diensten, {TotalMedewerkers} medewerkers",
+            hierarchy.TotalSectors, hierarchy.TotalDiensten, hierarchy.TotalMedewerkers);
+
+        return Ok(hierarchy);
     }
 
     /// <summary>
@@ -116,10 +95,13 @@ public class DistributionGroupsController : ControllerBase
 
     /// <summary>
     /// Adds a member to a distribution group.
+    /// Requires: CanManageGroups (ICT Admin only)
     /// </summary>
     [HttpPost("{id}/members/{userId}")]
+    [Authorize(Policy = PolicyNames.CanManageGroups)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> AddMember(string id, string userId, CancellationToken cancellationToken)
     {
         var success = await _groupService.AddMemberToGroupAsync(id, userId, cancellationToken);
@@ -137,10 +119,13 @@ public class DistributionGroupsController : ControllerBase
 
     /// <summary>
     /// Removes a member from a distribution group.
+    /// Requires: CanManageGroups (ICT Admin only)
     /// </summary>
     [HttpDelete("{id}/members/{userId}")]
+    [Authorize(Policy = PolicyNames.CanManageGroups)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> RemoveMember(string id, string userId, CancellationToken cancellationToken)
     {
         var success = await _groupService.RemoveMemberFromGroupAsync(id, userId, cancellationToken);

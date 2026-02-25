@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import {
   employeesApi,
+  employeeValidatieApi,
   type Employee,
   type ValidatieStatusAPI,
   type ValidatieStatistieken,
@@ -48,7 +49,6 @@ export default function Validatie() {
   const [filterSector, setFilterSector] = useState('');
   const [filterStatus, setFilterStatus] = useState<ValidatieStatusAPI | ''>('');
   const [expandedSectors, setExpandedSectors] = useState<Set<string>>(new Set());
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [stats, setStats] = useState<ValidatieStatistieken | null>(null);
 
   // Modal state for viewing/editing
@@ -64,10 +64,10 @@ export default function Validatie() {
       setError(null);
       const data = await employeesApi.getAll();
 
-      // Add mock validation status if not present (for development)
-      const employeesWithStatus = data.map((emp, index) => ({
+      // Use validatieStatus from API, default to 'Nieuw' if not present
+      const employeesWithStatus = data.map((emp) => ({
         ...emp,
-        validatieStatus: emp.validatieStatus || getDefaultValidatieStatus(index),
+        validatieStatus: emp.validatieStatus || 'Nieuw' as ValidatieStatusAPI,
       }));
 
       setEmployees(employeesWithStatus);
@@ -91,20 +91,6 @@ export default function Validatie() {
       setIsLoading(false);
     }
   }, []);
-
-  // Mock function to assign validation status for development
-  function getDefaultValidatieStatus(index: number): ValidatieStatusAPI {
-    const statuses: ValidatieStatusAPI[] = ['Nieuw', 'InReview', 'Goedgekeurd', 'Afgekeurd'];
-    // Make most employees 'Goedgekeurd', some 'Nieuw', few 'InReview', fewer 'Afgekeurd'
-    const weights = [0.2, 0.15, 0.55, 0.1];
-    const random = (index * 0.618033988749895) % 1; // Deterministic pseudo-random
-    let cumulative = 0;
-    for (let i = 0; i < weights.length; i++) {
-      cumulative += weights[i];
-      if (random < cumulative) return statuses[i];
-    }
-    return 'Goedgekeurd';
-  }
 
   useEffect(() => {
     loadData();
@@ -162,49 +148,27 @@ export default function Validatie() {
     });
   };
 
-  const toggleSelectAll = (_sector: string, employeeList: Employee[]) => {
-    const sectorIds = employeeList.map(e => e.id);
-    const allSelected = sectorIds.every(id => selectedIds.has(id));
-
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      if (allSelected) {
-        sectorIds.forEach(id => next.delete(id));
-      } else {
-        sectorIds.forEach(id => next.add(id));
-      }
-      return next;
-    });
-  };
-
-  const toggleSelect = (id: string) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
   const handleAction = async (employee: Employee, action: 'view' | 'approve' | 'reject') => {
     if (action === 'view') {
       setDetailModal({ open: true, employee, action: 'view' });
     } else if (action === 'approve') {
       try {
-        // Update locally for now (API call would go here)
-        setEmployees(prev => prev.map(e =>
-          e.id === employee.id ? { ...e, validatieStatus: 'Goedgekeurd' as ValidatieStatusAPI } : e
-        ));
-        // Recalculate stats
+        // Call API to update validation status
+        await employeeValidatieApi.updateStatus(employee.id, {
+          status: 'Goedgekeurd',
+        });
+        // Reload data to get updated state from server
         loadData();
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Fout bij goedkeuren');
       }
     } else if (action === 'reject') {
       try {
-        setEmployees(prev => prev.map(e =>
-          e.id === employee.id ? { ...e, validatieStatus: 'Afgekeurd' as ValidatieStatusAPI } : e
-        ));
+        // Call API to update validation status
+        await employeeValidatieApi.updateStatus(employee.id, {
+          status: 'Afgekeurd',
+        });
+        // Reload data to get updated state from server
         loadData();
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Fout bij afkeuren');
@@ -314,7 +278,6 @@ export default function Validatie() {
           {Object.entries(perSector).map(([sector, sectorEmployees]) => {
             const expanded = expandedSectors.has(sector);
             const teValideren = teValiderenPerSector[sector] || 0;
-            const allSelected = sectorEmployees.every(e => selectedIds.has(e.id));
 
             return (
               <div key={sector} className="validatie-sector-card">
@@ -339,13 +302,6 @@ export default function Validatie() {
                     <table className="data-table validatie-table">
                       <thead>
                         <tr>
-                          <th className="th-checkbox">
-                            <input
-                              type="checkbox"
-                              checked={allSelected && sectorEmployees.length > 0}
-                              onChange={() => toggleSelectAll(sector, sectorEmployees)}
-                            />
-                          </th>
                           <th>Naam</th>
                           <th>Dienst</th>
                           <th>Functie</th>
@@ -363,13 +319,6 @@ export default function Validatie() {
 
                           return (
                             <tr key={emp.id} className={!emp.isActive ? 'row-inactive' : ''}>
-                              <td className="td-checkbox">
-                                <input
-                                  type="checkbox"
-                                  checked={selectedIds.has(emp.id)}
-                                  onChange={() => toggleSelect(emp.id)}
-                                />
-                              </td>
                               <td className="td-name">{emp.displayName}</td>
                               <td>{emp.dienstNaam || '-'}</td>
                               <td>{emp.jobTitle || '-'}</td>

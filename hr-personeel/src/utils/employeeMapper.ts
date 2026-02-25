@@ -1,9 +1,22 @@
-import type { Employee, EmployeeType, ArbeidsRegimeAPI } from '../services/api';
-import type { Medewerker, ArbeidsRegime, PersoneelType } from '../types';
+import type { Employee, EmployeeType, ArbeidsRegimeAPI, ValidatieStatusAPI } from '../services/api';
+import type { Medewerker, ArbeidsRegime, PersoneelType, ValidatieStatus } from '../types';
 
 /**
  * Utility to map between backend API Employee and frontend Medewerker types
  */
+
+// Strip MG- prefixes from group names and normalize dashes to spaces
+function stripMGPrefix(name: string | null | undefined): string {
+  if (!name) return '';
+  let result = name;
+  if (result.startsWith('MG-SECTOR-')) {
+    result = result.substring('MG-SECTOR-'.length);
+  } else if (result.startsWith('MG-')) {
+    result = result.substring('MG-'.length);
+  }
+  // Replace dashes with spaces for consistency with dropdown formatting
+  return result.replace(/-/g, ' ');
+}
 
 // Map backend EmployeeType to frontend PersoneelType
 export function mapEmployeeTypeToPersoneelType(type: EmployeeType): PersoneelType {
@@ -48,8 +61,42 @@ export function mapArbeidsRegimeToAPI(regime: ArbeidsRegime): ArbeidsRegimeAPI {
   return mapping[regime];
 }
 
+// Map backend ValidatieStatus to frontend
+export function mapValidatieStatusFromAPI(status: ValidatieStatusAPI | undefined | null): ValidatieStatus {
+  if (!status) return 'nieuw';
+  const mapping: Record<ValidatieStatusAPI, ValidatieStatus> = {
+    'Nieuw': 'nieuw',
+    'InReview': 'in_review',
+    'Goedgekeurd': 'goedgekeurd',
+    'Afgekeurd': 'afgekeurd',
+  };
+  return mapping[status] || 'nieuw';
+}
+
+// Map frontend ValidatieStatus to backend
+export function mapValidatieStatusToAPI(status: ValidatieStatus): ValidatieStatusAPI {
+  const mapping: Record<ValidatieStatus, ValidatieStatusAPI> = {
+    'nieuw': 'Nieuw',
+    'in_review': 'InReview',
+    'goedgekeurd': 'Goedgekeurd',
+    'afgekeurd': 'Afgekeurd',
+    'aangepast': 'InReview', // Map 'aangepast' to 'InReview' as closest equivalent
+  };
+  return mapping[status];
+}
+
 // Map backend Employee to frontend Medewerker
 export function mapEmployeeToMedewerker(employee: Employee): Medewerker {
+  // Determine dienst: use dienstNaam, or first group from groups array
+  let dienst = stripMGPrefix(employee.dienstNaam);
+  if (!dienst && employee.groups && employee.groups.length > 0) {
+    // Use first group as dienst (strip MG- prefix)
+    dienst = stripMGPrefix(employee.groups[0]);
+  }
+
+  // Determine sector: use sectorNaam only (don't guess from department)
+  const sector = stripMGPrefix(employee.sectorNaam) || '';
+
   return {
     id: employee.id,
     adId: employee.bron === 'AzureAD' ? employee.id : undefined,
@@ -60,13 +107,13 @@ export function mapEmployeeToMedewerker(employee: Employee): Medewerker {
     telefoon: employee.mobilePhone || employee.telefoonnummer || undefined,
     functie: employee.jobTitle || undefined,
     afdeling: employee.department || undefined,
-    dienst: employee.dienstNaam || '',
-    sector: employee.sectorNaam || '',
+    dienst: dienst,
+    sector: sector,
     arbeidsRegime: mapArbeidsRegimeFromAPI(employee.arbeidsRegime),
     type: mapEmployeeTypeToPersoneelType(employee.employeeType),
     actief: employee.isActive,
     opmerkingen: employee.vrijwilligerDetails?.specialisaties || '',
-    validatieStatus: 'goedgekeurd', // Default for API employees
+    validatieStatus: mapValidatieStatusFromAPI(employee.validatieStatus),
     bronAD: employee.bron === 'AzureAD',
     handmatigToegevoegd: employee.isHandmatigToegevoegd,
     aanmaakDatum: employee.createdAt.split('T')[0],
@@ -91,8 +138,8 @@ export function mapMedewerkerToCreateDto(medewerker: Partial<Medewerker>) {
 }
 
 // Map frontend Medewerker to backend UpdateEmployeeDto
-export function mapMedewerkerToUpdateDto(medewerker: Partial<Medewerker>) {
-  const dto: any = {};
+export function mapMedewerkerToUpdateDto(medewerker: Partial<Medewerker>): Record<string, unknown> {
+  const dto: Record<string, unknown> = {};
 
   if (medewerker.voornaam !== undefined) dto.givenName = medewerker.voornaam;
   if (medewerker.achternaam !== undefined) dto.surname = medewerker.achternaam;

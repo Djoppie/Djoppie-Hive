@@ -14,20 +14,29 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // Database context
+        // Register audit interceptor (needs to be registered before DbContext)
+        services.AddScoped<AuditSaveChangesInterceptor>();
+
+        // Database context with audit interceptor
         var connectionString = configuration.GetConnectionString("DefaultConnection");
 
         if (string.IsNullOrEmpty(connectionString) || connectionString.Contains("Data Source=:memory:"))
         {
             // Use SQLite for local development
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlite("Data Source=djoppie-paparazzi.db"));
+            services.AddDbContext<ApplicationDbContext>((sp, options) =>
+            {
+                options.UseSqlite("Data Source=djoppie-paparazzi.db");
+                options.AddInterceptors(sp.GetRequiredService<AuditSaveChangesInterceptor>());
+            });
         }
         else
         {
             // Use SQL Server for production
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(connectionString));
+            services.AddDbContext<ApplicationDbContext>((sp, options) =>
+            {
+                options.UseSqlServer(connectionString);
+                options.AddInterceptors(sp.GetRequiredService<AuditSaveChangesInterceptor>());
+            });
         }
 
         // Register ValidatieVerzoekService (doesn't depend on Graph)
@@ -35,6 +44,15 @@ public static class DependencyInjection
 
         // Register StatisticsService (doesn't depend on Graph)
         services.AddScoped<IStatisticsService, StatisticsService>();
+
+        // Register UserRoleService (doesn't depend on Graph)
+        services.AddScoped<IUserRoleService, UserRoleService>();
+
+        // Register AuditService for manual audit logging
+        services.AddScoped<IAuditService, AuditService>();
+
+        // Register UnifiedGroupService (Hybrid Groups System)
+        services.AddScoped<IUnifiedGroupService, UnifiedGroupService>();
 
         // Register database-backed EmployeeService (primary service for CRUD operations)
         services.AddScoped<EmployeeService>();

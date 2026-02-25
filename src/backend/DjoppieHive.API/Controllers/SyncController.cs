@@ -1,3 +1,4 @@
+using DjoppieHive.API.Authorization;
 using DjoppieHive.Core.DTOs;
 using DjoppieHive.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -6,32 +7,83 @@ using Microsoft.AspNetCore.Mvc;
 namespace DjoppieHive.API.Controllers;
 
 /// <summary>
-/// Controller voor synchronisatie van Microsoft Graph gegevens.
+/// Synchronisatie van medewerkers en groepen vanuit Microsoft Graph API.
+/// Ondersteunt handmatige sync, status opvragen en sync geschiedenis.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+[Tags("Synchronisatie")]
 public class SyncController : ControllerBase
 {
     private readonly ISyncService _syncService;
     private readonly ILogger<SyncController> _logger;
+    private readonly IWebHostEnvironment _environment;
 
     public SyncController(
         ISyncService syncService,
-        ILogger<SyncController> logger)
+        ILogger<SyncController> logger,
+        IWebHostEnvironment environment)
     {
         _syncService = syncService;
         _logger = logger;
+        _environment = environment;
+    }
+
+    /// <summary>
+    /// DEV ONLY: Start een synchronisatie zonder authenticatie.
+    /// </summary>
+    [HttpPost("dev/uitvoeren")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(SyncResultaatDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ApiExplorerSettings(IgnoreApi = true)]
+    public async Task<ActionResult<SyncResultaatDto>> VoerDevSyncUit(CancellationToken cancellationToken)
+    {
+        if (!_environment.IsDevelopment())
+        {
+            return Forbid();
+        }
+
+        _logger.LogWarning("DEV sync gestart (geen authenticatie)");
+
+        try
+        {
+            var resultaat = await _syncService.VoerSyncUitAsync("DEV-SYNC", cancellationToken);
+            return Ok(resultaat);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new ProblemDetails
+            {
+                Title = "Synchronisatie al bezig",
+                Detail = ex.Message,
+                Status = StatusCodes.Status409Conflict
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "DEV sync mislukt");
+            return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
+            {
+                Title = "Synchronisatie mislukt",
+                Detail = ex.Message,
+                Status = StatusCodes.Status500InternalServerError
+            });
+        }
     }
 
     /// <summary>
     /// Start een handmatige synchronisatie vanuit Microsoft Graph.
+    /// Requires: CanSync (HR Admin, ICT Admin only)
     /// </summary>
     /// <returns>Resultaat van de synchronisatie</returns>
     [HttpPost("uitvoeren")]
+    [Authorize(Policy = PolicyNames.CanSync)]
     [ProducesResponseType(typeof(SyncResultaatDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<SyncResultaatDto>> VoerSyncUit(CancellationToken cancellationToken)
     {
         var gebruiker = User.Identity?.Name ?? User.Claims
@@ -67,27 +119,6 @@ public class SyncController : ControllerBase
     }
 
     /// <summary>
-    /// Test endpoint to run sync without authentication (for debugging).
-    /// </summary>
-    [HttpPost("test")]
-    [AllowAnonymous]
-    [ProducesResponseType(typeof(SyncResultaatDto), StatusCodes.Status200OK)]
-    public async Task<ActionResult<SyncResultaatDto>> TestSync(CancellationToken cancellationToken)
-    {
-        _logger.LogInformation("Test synchronisatie gestart");
-        try
-        {
-            var resultaat = await _syncService.VoerSyncUitAsync("Test-User", cancellationToken);
-            return Ok(resultaat);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Test synchronisatie mislukt");
-            return Ok(new { error = ex.Message, details = ex.ToString() });
-        }
-    }
-
-    /// <summary>
     /// Haalt de status op van de huidige of laatste synchronisatie.
     /// </summary>
     [HttpGet("status")]
@@ -102,6 +133,7 @@ public class SyncController : ControllerBase
     /// Haalt de synchronisatiegeschiedenis op.
     /// </summary>
     /// <param name="aantal">Aantal logboekitems om op te halen (standaard 10)</param>
+    /// <param name="cancellationToken">Annuleringstoken</param>
     [HttpGet("geschiedenis")]
     [ProducesResponseType(typeof(IEnumerable<SyncLogboekDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<SyncLogboekDto>>> GetGeschiedenis(
@@ -112,33 +144,68 @@ public class SyncController : ControllerBase
         return Ok(geschiedenis);
     }
 
-    // ============================================
-    // TEST ENDPOINTS (geen authenticatie vereist)
-    // ============================================
-
     /// <summary>
-    /// [TEST] Haalt sync status op zonder authenticatie.
+    /// Haalt een preview op van wat er gesynchroniseerd zou worden uit Azure AD/Entra ID.
+    /// Voert geen wijzigingen uit - alleen lezen.
+    /// Requires: CanSync (HR Admin, ICT Admin only)
     /// </summary>
-    [HttpGet("test/status")]
-    [AllowAnonymous]
-    [ProducesResponseType(typeof(SyncStatusDto), StatusCodes.Status200OK)]
-    public async Task<ActionResult<SyncStatusDto>> TestGetStatus(CancellationToken cancellationToken)
+    /// <returns>Preview van gebruikers en groepen die gesynchroniseerd zouden worden</returns>
+    [HttpGet("preview")]
+    [Authorize(Policy = PolicyNames.CanSync)]
+    [ProducesResponseType(typeof(SyncPreviewDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<SyncPreviewDto>> GetPreview(CancellationToken cancellationToken)
     {
-        var status = await _syncService.GetSyncStatusAsync(cancellationToken);
-        return Ok(status);
+        _logger.LogInformation("Sync preview aangevraagd");
+
+        try
+        {
+            var preview = await _syncService.GetSyncPreviewAsync(cancellationToken);
+            return Ok(preview);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Sync preview mislukt");
+            return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
+            {
+                Title = "Preview ophalen mislukt",
+                Detail = ex.Message,
+                Status = StatusCodes.Status500InternalServerError
+            });
+        }
     }
 
     /// <summary>
-    /// [TEST] Haalt sync geschiedenis op zonder authenticatie.
+    /// DEV ONLY: Haalt een preview op zonder authenticatie.
     /// </summary>
-    [HttpGet("test/geschiedenis")]
+    [HttpGet("dev/preview")]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(IEnumerable<SyncLogboekDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<SyncLogboekDto>>> TestGetGeschiedenis(
-        [FromQuery] int aantal = 10,
-        CancellationToken cancellationToken = default)
+    [ProducesResponseType(typeof(SyncPreviewDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ApiExplorerSettings(IgnoreApi = true)]
+    public async Task<ActionResult<SyncPreviewDto>> GetDevPreview(CancellationToken cancellationToken)
     {
-        var geschiedenis = await _syncService.GetSyncGeschiedenisAsync(aantal, cancellationToken);
-        return Ok(geschiedenis);
+        if (!_environment.IsDevelopment())
+        {
+            return Forbid();
+        }
+
+        _logger.LogWarning("DEV sync preview (geen authenticatie)");
+
+        try
+        {
+            var preview = await _syncService.GetSyncPreviewAsync(cancellationToken);
+            return Ok(preview);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "DEV sync preview mislukt");
+            return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
+            {
+                Title = "Preview ophalen mislukt",
+                Detail = ex.Message,
+                Status = StatusCodes.Status500InternalServerError
+            });
+        }
     }
 }

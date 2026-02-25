@@ -51,6 +51,17 @@ public interface IEmployeeService
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Updates the validation status of an employee.
+    /// Used by HR/managers to approve or reject employee data.
+    /// </summary>
+    Task<EmployeeDto?> UpdateValidatieStatusAsync(
+        Guid id,
+        Enums.ValidatieStatus status,
+        string gevalideerdDoor,
+        string? opmerkingen = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets all employees belonging to a specific dienst (DistributionGroup).
     /// </summary>
     Task<IEnumerable<EmployeeDto>> GetByDienstAsync(Guid dienstId, CancellationToken cancellationToken = default);
@@ -60,4 +71,10 @@ public interface IEmployeeService
     /// Includes VrijwilligerDetails if available.
     /// </summary>
     Task<IEnumerable<EmployeeDto>> GetVolunteersAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Exports all personal data for a specific employee (GDPR Article 15).
+    /// Includes: personal data, group memberships, event participations, audit logs, roles.
+    /// </summary>
+    Task<GdprExportDto?> ExportPersonalDataAsync(Guid employeeId, string exportedBy, CancellationToken cancellationToken = default);
 }
