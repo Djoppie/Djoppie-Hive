@@ -34,6 +34,7 @@ public class ValidatieVerzoekenController : ControllerBase
     /// Haalt alle openstaande validatieverzoeken op.
     /// </summary>
     /// <param name="groepId">Optioneel filter op groep</param>
+    /// <param name="cancellationToken">Annuleringstoken</param>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<ValidatieVerzoekDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<ValidatieVerzoekDto>>> GetOpenstaande(

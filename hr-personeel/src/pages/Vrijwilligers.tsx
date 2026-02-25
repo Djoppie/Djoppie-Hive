@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import VrijwilligerModal from '../components/VrijwilligerModal';
 import { volunteerService } from '../services/volunteerService';
-import type { Employee } from '../services/api';
+import type { Employee, CreateVolunteerDto, UpdateVolunteerDto } from '../services/api';
 
 type SortKey = 'displayName' | 'email' | 'dienstNaam' | 'beschikbaarheid' | 'vogGeldigTot';
 type SortDir = 'asc' | 'desc';
@@ -258,16 +258,16 @@ export default function Vrijwilligers() {
       setError(null);
       if (bewerkVrijwilliger) {
         // Update existing volunteer - map to UpdateVolunteerDto
-        const updateDto: any = {
-          givenName: data.givenName,
-          surname: data.surname,
-          email: data.email,
-          jobTitle: data.jobTitle,
-          telefoonnummer: data.telefoonnummer,
-          dienstId: data.dienstId,
+        const updateDto: UpdateVolunteerDto = {
+          givenName: data.givenName ?? undefined,
+          surname: data.surname ?? undefined,
+          email: data.email ?? undefined,
+          jobTitle: data.jobTitle ?? undefined,
+          telefoonnummer: data.telefoonnummer ?? undefined,
+          dienstId: data.dienstId ?? undefined,
           isActive: data.isActive,
-          startDatum: data.startDatum,
-          eindDatum: data.eindDatum,
+          startDatum: data.startDatum ?? undefined,
+          eindDatum: data.eindDatum ?? undefined,
           employeeType: data.employeeType,
           arbeidsRegime: data.arbeidsRegime,
           vrijwilligerDetails: data.vrijwilligerDetails ? {
@@ -285,16 +285,16 @@ export default function Vrijwilligers() {
         );
       } else {
         // Create new volunteer
-        const createDto: any = {
+        const createDto: CreateVolunteerDto = {
           givenName: data.givenName!,
           surname: data.surname!,
           email: data.email!,
-          jobTitle: data.jobTitle,
-          telefoonnummer: data.telefoonnummer,
-          dienstId: data.dienstId,
+          jobTitle: data.jobTitle ?? undefined,
+          telefoonnummer: data.telefoonnummer ?? undefined,
+          dienstId: data.dienstId ?? undefined,
           isActive: data.isActive,
-          startDatum: data.startDatum,
-          eindDatum: data.eindDatum,
+          startDatum: data.startDatum ?? undefined,
+          eindDatum: data.eindDatum ?? undefined,
           employeeType: 'Vrijwilliger' as const,
           arbeidsRegime: 'Vrijwilliger' as const,
           vrijwilligerDetails: data.vrijwilligerDetails ? {
@@ -458,7 +458,7 @@ export default function Vrijwilligers() {
             </div>
             <div className="form-group">
               <label>VOG Status</label>
-              <select value={filterVOG} onChange={e => setFilterVOG(e.target.value as any)}>
+              <select value={filterVOG} onChange={e => setFilterVOG(e.target.value as '' | 'valid' | 'warning' | 'expired' | 'none')}>
                 <option value="">Alle statussen</option>
                 <option value="valid">Geldig</option>
                 <option value="warning">Verloopt binnenkort</option>

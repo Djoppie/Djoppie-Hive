@@ -133,6 +133,7 @@ public class SyncController : ControllerBase
     /// Haalt de synchronisatiegeschiedenis op.
     /// </summary>
     /// <param name="aantal">Aantal logboekitems om op te halen (standaard 10)</param>
+    /// <param name="cancellationToken">Annuleringstoken</param>
     [HttpGet("geschiedenis")]
     [ProducesResponseType(typeof(IEnumerable<SyncLogboekDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<SyncLogboekDto>>> GetGeschiedenis(

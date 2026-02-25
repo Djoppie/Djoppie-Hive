@@ -138,8 +138,8 @@ export function mapMedewerkerToCreateDto(medewerker: Partial<Medewerker>) {
 }
 
 // Map frontend Medewerker to backend UpdateEmployeeDto
-export function mapMedewerkerToUpdateDto(medewerker: Partial<Medewerker>) {
-  const dto: any = {};
+export function mapMedewerkerToUpdateDto(medewerker: Partial<Medewerker>): Record<string, unknown> {
+  const dto: Record<string, unknown> = {};
 
   if (medewerker.voornaam !== undefined) dto.givenName = medewerker.voornaam;
   if (medewerker.achternaam !== undefined) dto.surname = medewerker.achternaam;

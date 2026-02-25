@@ -24,6 +24,7 @@ public interface ISyncService
     /// Haalt de synchronisatiegeschiedenis op.
     /// </summary>
     /// <param name="aantal">Aantal logboekitems om op te halen</param>
+    /// <param name="cancellationToken">Annuleringstoken</param>
     Task<IEnumerable<SyncLogboekDto>> GetSyncGeschiedenisAsync(int aantal = 10, CancellationToken cancellationToken = default);
 
     /// <summary>

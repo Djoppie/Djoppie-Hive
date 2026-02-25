@@ -6,6 +6,24 @@ namespace DjoppieHive.Core.DTOs;
 /// <summary>
 /// DTO voor het bijwerken van een bestaande medewerker (PUT /api/employees/{id}).
 /// </summary>
+/// <param name="DisplayName">Volledige weergavenaam (max 256 tekens)</param>
+/// <param name="GivenName">Voornaam</param>
+/// <param name="Surname">Achternaam</param>
+/// <param name="Email">E-mailadres (moet geldig zijn)</param>
+/// <param name="JobTitle">Functietitel</param>
+/// <param name="Department">Afdeling</param>
+/// <param name="OfficeLocation">Kantoorlocatie</param>
+/// <param name="MobilePhone">Mobiel telefoonnummer</param>
+/// <param name="BusinessPhones">Zakelijke telefoonnummers</param>
+/// <param name="IsActive">Actieve status</param>
+/// <param name="EmployeeType">Type medewerker</param>
+/// <param name="ArbeidsRegime">Arbeidsregime</param>
+/// <param name="PhotoUrl">URL naar profielfoto</param>
+/// <param name="DienstId">ID van de primaire dienst (lege Guid verwijdert dienst)</param>
+/// <param name="StartDatum">Startdatum dienstverband</param>
+/// <param name="EindDatum">Einddatum dienstverband</param>
+/// <param name="Telefoonnummer">Vast telefoonnummer</param>
+/// <param name="VrijwilligerDetails">Extra details voor vrijwilligers (null = geen wijziging)</param>
 public record UpdateEmployeeDto(
     [MaxLength(256, ErrorMessage = "DisplayName mag maximaal 256 tekens bevatten")]
     string? DisplayName = null,
@@ -30,47 +48,21 @@ public record UpdateEmployeeDto(
 
     bool? IsActive = null,
 
-    /// <summary>
-    /// Type medewerker (Personeel, Vrijwilliger, Interim, Extern, Stagiair).
-    /// </summary>
     EmployeeType? EmployeeType = null,
 
-    /// <summary>
-    /// Arbeidsregime (Voltijds, Deeltijds, Vrijwilliger).
-    /// </summary>
     ArbeidsRegime? ArbeidsRegime = null,
 
-    /// <summary>
-    /// URL naar profielfoto.
-    /// </summary>
     [MaxLength(500, ErrorMessage = "PhotoUrl mag maximaal 500 tekens bevatten")]
     string? PhotoUrl = null,
 
-    /// <summary>
-    /// ID van de dienst (DistributionGroup) waar deze medewerker primair onder valt.
-    /// Gebruik een lege Guid om de dienst te verwijderen.
-    /// </summary>
     Guid? DienstId = null,
 
-    /// <summary>
-    /// Startdatum van het dienstverband.
-    /// </summary>
     DateTime? StartDatum = null,
 
-    /// <summary>
-    /// Einddatum van het dienstverband.
-    /// </summary>
     DateTime? EindDatum = null,
 
-    /// <summary>
-    /// Telefoonnummer (vast toestel of alternatief nummer).
-    /// </summary>
     [MaxLength(50, ErrorMessage = "Telefoonnummer mag maximaal 50 tekens bevatten")]
     string? Telefoonnummer = null,
 
-    /// <summary>
-    /// Vrijwilligersdetails (indien EmployeeType = Vrijwilliger).
-    /// Indien null, worden de bestaande details niet gewijzigd.
-    /// </summary>
     VrijwilligerDetailsUpsertDto? VrijwilligerDetails = null
 );

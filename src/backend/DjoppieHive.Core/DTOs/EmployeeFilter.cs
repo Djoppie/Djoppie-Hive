@@ -5,39 +5,25 @@ namespace DjoppieHive.Core.DTOs;
 /// <summary>
 /// Filter voor het ophalen van medewerkers.
 /// </summary>
+/// <param name="Type">Filter op type medewerker (Personeel, Vrijwilliger, etc.)</param>
+/// <param name="Regime">Filter op arbeidsregime (Voltijds, Deeltijds, Vrijwilliger)</param>
+/// <param name="IsActive">Filter op actieve status (null = alle, true = actief, false = inactief)</param>
+/// <param name="DienstId">Filter op dienst (DistributionGroup) ID</param>
+/// <param name="SectorId">Filter op sector ID</param>
+/// <param name="SearchTerm">Zoekterm voor naam of email</param>
+/// <param name="Bron">Filter op gegevensbron (AzureAD of Handmatig)</param>
 public record EmployeeFilter(
-    /// <summary>
-    /// Filter op type medewerker (Personeel, Vrijwilliger, etc.).
-    /// </summary>
     EmployeeType? Type = null,
 
-    /// <summary>
-    /// Filter op arbeidsregime (Voltijds, Deeltijds, Vrijwilliger).
-    /// </summary>
     ArbeidsRegime? Regime = null,
 
-    /// <summary>
-    /// Filter op actieve status. Null = alle, true = alleen actief, false = alleen inactief.
-    /// </summary>
     bool? IsActive = null,
 
-    /// <summary>
-    /// Filter op dienst (DistributionGroup) ID.
-    /// </summary>
     Guid? DienstId = null,
 
-    /// <summary>
-    /// Filter op sector (bovenliggende groep van dienst) ID.
-    /// </summary>
     Guid? SectorId = null,
 
-    /// <summary>
-    /// Zoekterm voor naam of email.
-    /// </summary>
     string? SearchTerm = null,
 
-    /// <summary>
-    /// Filter op gegevensbron (AzureAD of Handmatig).
-    /// </summary>
     GegevensBron? Bron = null
 );

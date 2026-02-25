@@ -28,6 +28,9 @@ namespace DjoppieHive.Core.DTOs;
 /// <param name="StartDatum">Startdatum dienstverband</param>
 /// <param name="EindDatum">Einddatum dienstverband (indien van toepassing)</param>
 /// <param name="Telefoonnummer">Vast telefoonnummer</param>
+/// <param name="ValidatieStatus">Validatiestatus: Nieuw, InReview, Goedgekeurd, Afgekeurd</param>
+/// <param name="GevalideerdDoor">Naam van de persoon die de validatie heeft uitgevoerd</param>
+/// <param name="ValidatieDatum">Datum waarop de validatie heeft plaatsgevonden</param>
 /// <param name="VrijwilligerDetails">Extra details voor vrijwilligers (rijbewijs, beschikbaarheid, etc.)</param>
 /// <param name="CreatedAt">Datum/tijd waarop het record is aangemaakt in Djoppie-Hive</param>
 /// <param name="UpdatedAt">Datum/tijd van de laatste wijziging</param>
