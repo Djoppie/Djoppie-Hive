@@ -18,6 +18,7 @@ public class SyncService : ISyncService
 {
     private readonly GraphServiceClient _graphClient;
     private readonly ApplicationDbContext _context;
+    private readonly IJobTitleRoleMappingService _jobTitleRoleMappingService;
     private readonly ILogger<SyncService> _logger;
     private const string MgGroupPrefix = "MG-";
     private const string SectorPrefix = "MG-SECTOR-";
@@ -25,10 +26,12 @@ public class SyncService : ISyncService
     public SyncService(
         GraphServiceClient graphClient,
         ApplicationDbContext context,
+        IJobTitleRoleMappingService jobTitleRoleMappingService,
         ILogger<SyncService> logger)
     {
         _graphClient = graphClient;
         _context = context;
+        _jobTitleRoleMappingService = jobTitleRoleMappingService;
         _logger = logger;
     }
 
@@ -43,8 +46,24 @@ public class SyncService : ISyncService
 
         if (bezigSync != null)
         {
-            throw new InvalidOperationException(
-                $"Er is al een synchronisatie bezig (gestart op {bezigSync.GeStartOp:dd-MM-yyyy HH:mm} door {bezigSync.GestartDoor})");
+            // Check if sync is stale (running for more than 30 minutes = likely crashed)
+            var syncDuration = DateTime.UtcNow - bezigSync.GeStartOp;
+            if (syncDuration.TotalMinutes > 30)
+            {
+                _logger.LogWarning(
+                    "Stale sync detected (ID: {SyncId}, started {Duration} ago). Marking as failed and allowing new sync.",
+                    bezigSync.Id, syncDuration);
+
+                bezigSync.Status = SyncStatus.Mislukt;
+                bezigSync.VoltooidOp = DateTime.UtcNow;
+                bezigSync.Foutmelding = "Synchronisatie time-out (> 30 minuten). Automatisch afgesloten.";
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                throw new InvalidOperationException(
+                    $"Er is al een synchronisatie bezig (gestart op {bezigSync.GeStartOp:dd-MM-yyyy HH:mm} door {bezigSync.GestartDoor})");
+            }
         }
 
         // Maak nieuw logboek aan
@@ -108,8 +127,26 @@ public class SyncService : ISyncService
                 await VerwerkGroepAsync(dienst, bovenliggendeGroep?.Id, GroepNiveau.Dienst, syncLogboek, cancellationToken);
             }
 
-            // Detecteer verwijderde lidmaatschappen en maak validatieverzoeken
-            await DetecteerVerwijderingenAsync(syncLogboek, cancellationToken);
+            // Automatische roltoewijzing voor nieuwe medewerkers (alleen als er mappings zijn geconfigureerd)
+            try
+            {
+                var autoAssignResult = await _jobTitleRoleMappingService.AssignRolesForAllEmployeesAsync(
+                    gestartDoor,
+                    onlyNewEmployees: true, // Alleen medewerkers zonder bestaande rollen
+                    cancellationToken);
+
+                if (autoAssignResult.RolesAssigned > 0)
+                {
+                    _logger.LogInformation(
+                        "Automatische roltoewijzing na sync: {Assigned} rollen toegekend aan nieuwe medewerkers",
+                        autoAssignResult.RolesAssigned);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log maar faal niet de sync
+                _logger.LogWarning(ex, "Automatische roltoewijzing na sync kon niet worden uitgevoerd");
+            }
 
             // Markeer sync als voltooid
             syncLogboek.Status = SyncStatus.Voltooid;
@@ -148,6 +185,26 @@ public class SyncService : ISyncService
 
         if (bezigSync != null)
         {
+            // Check if sync is stale (running for more than 30 minutes = likely crashed)
+            var syncDuration = DateTime.UtcNow - bezigSync.GeStartOp;
+            if (syncDuration.TotalMinutes > 30)
+            {
+                _logger.LogWarning(
+                    "Stale sync detected (ID: {SyncId}, started {Duration} ago). Marking as failed.",
+                    bezigSync.Id, syncDuration);
+
+                bezigSync.Status = SyncStatus.Mislukt;
+                bezigSync.VoltooidOp = DateTime.UtcNow;
+                bezigSync.Foutmelding = "Synchronisatie time-out (> 30 minuten). Waarschijnlijk gecrasht.";
+                await _context.SaveChangesAsync(cancellationToken);
+
+                return new SyncStatusDto(
+                    IsSyncBezig: false,
+                    LaatsteSyncOp: bezigSync.VoltooidOp,
+                    LaatsteSyncStatus: "Mislukt (time-out)",
+                    HuidigeSyncId: null);
+            }
+
             return new SyncStatusDto(
                 IsSyncBezig: true,
                 LaatsteSyncOp: bezigSync.GeStartOp,
@@ -470,16 +527,6 @@ public class SyncService : ISyncService
         }
 
         return result;
-    }
-
-    private async Task DetecteerVerwijderingenAsync(
-        SyncLogboek syncLogboek,
-        CancellationToken cancellationToken)
-    {
-        // Detecteer medewerkers die niet meer in enige groep zitten (optioneel)
-        // Dit kan uitgebreid worden indien nodig
-
-        await Task.CompletedTask; // Placeholder voor toekomstige logica
     }
 
     private static SyncResultaatDto MaakResultaatDto(SyncLogboek logboek)
