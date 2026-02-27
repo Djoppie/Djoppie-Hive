@@ -13,6 +13,8 @@ import SectorHierarchy from './pages/SectorHierarchy';
 import Vrijwilligers from './pages/Vrijwilligers';
 import SyncGeschiedenis from './pages/SyncGeschiedenis';
 import AuditLog from './pages/AuditLog';
+import AutoRoltoewijzing from './pages/AutoRoltoewijzing';
+import Licenties from './pages/Licenties';
 
 export default function App() {
   return (
@@ -29,6 +31,8 @@ export default function App() {
               <Route path="/sectoren" element={<SectorHierarchy />} />
               <Route path="/uitnodigingen" element={<Uitnodigingen />} />
               <Route path="/rollen" element={<Rollen />} />
+              <Route path="/auto-roltoewijzing" element={<AutoRoltoewijzing />} />
+              <Route path="/licenties" element={<Licenties />} />
               <Route path="/sync" element={<SyncGeschiedenis />} />
               <Route path="/import" element={<ADImport />} />
               <Route path="/audit" element={<AuditLog />} />

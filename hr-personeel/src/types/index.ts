@@ -562,3 +562,91 @@ export interface EmailExport {
   emailCount: number;
   truncatedWarning: string | null;
 }
+
+// ============================================
+// License types (Microsoft 365 License Management)
+// ============================================
+
+/** License subscription (E3, F3, etc.) */
+export interface LicenseSubscriptionDto {
+  skuId: string;
+  skuPartNumber: string;
+  displayName: string;
+  totalLicenses: number;
+  usedLicenses: number;
+  availableLicenses: number;
+  percentageUsed: number;
+  status: 'healthy' | 'warning' | 'critical';
+}
+
+/** User with license information */
+export interface LicenseUserDto {
+  userId: string;
+  displayName: string;
+  email: string;
+  department: string | null;
+  jobTitle: string | null;
+  assignedLicenses: string[];
+  primaryLicense: string;
+  lastSignInDate: string | null;
+  daysSinceLastSignIn: number;
+  activityStatus: string;
+  hasRecommendation: boolean;
+}
+
+/** License usage data */
+export interface LicenseUsageDto {
+  hasEmailActivity: boolean;
+  emailsSent: number;
+  emailsReceived: number;
+  hasTeamsActivity: boolean;
+  teamsChatMessages: number;
+  teamsMeetingsAttended: number;
+  hasOneDriveActivity: boolean;
+  oneDriveStorageUsedBytes: number;
+  hasSharePointActivity: boolean;
+  lastActivityDate: string | null;
+}
+
+/** License optimization recommendation */
+export interface LicenseRecommendationDto {
+  userId: string;
+  userDisplayName: string;
+  userEmail: string;
+  currentLicense: string;
+  recommendationType: string;
+  recommendationTitle: string;
+  recommendationDescription: string;
+  severity: 'low' | 'medium' | 'high';
+  daysSinceActivity: number;
+  estimatedMonthlySavings: number | null;
+}
+
+/** License summary statistics */
+export interface LicenseSummaryDto {
+  totalE3Licenses: number;
+  usedE3Licenses: number;
+  availableE3Licenses: number;
+  totalF3Licenses: number;
+  usedF3Licenses: number;
+  availableF3Licenses: number;
+  totalRecommendations: number;
+  potentialSavings: number;
+}
+
+/** Complete license overview */
+export interface LicenseOverviewDto {
+  subscriptions: LicenseSubscriptionDto[];
+  users: LicenseUserDto[];
+  recommendations: LicenseRecommendationDto[];
+  summary: LicenseSummaryDto;
+}
+
+/** Filter for license queries */
+export interface LicenseFilterDto {
+  licenseType?: string;
+  activityStatus?: string;
+  onlyWithRecommendations?: boolean;
+  department?: string;
+  inactiveDaysThreshold?: number;
+}

@@ -48,6 +48,9 @@ public static class DependencyInjection
         // Register UserRoleService (doesn't depend on Graph)
         services.AddScoped<IUserRoleService, UserRoleService>();
 
+        // Register JobTitleRoleMappingService (depends on UserRoleService)
+        services.AddScoped<IJobTitleRoleMappingService, JobTitleRoleMappingService>();
+
         // Register AuditService for manual audit logging
         services.AddScoped<IAuditService, AuditService>();
 
@@ -70,6 +73,9 @@ public static class DependencyInjection
             services.AddScoped<GraphEmployeeService>(); // Available for sync if needed
 
             services.AddScoped<ISyncService, SyncService>();
+
+            // License management (requires Graph API for license information)
+            services.AddScoped<ILicenseService, LicenseService>();
         }
         else
         {

@@ -809,6 +809,148 @@ export const userRolesApi = {
 };
 
 // ============================================
+// JobTitle Role Mappings API (Automatic Role Assignment)
+// ============================================
+
+export type ScopeDeterminationType = 'None' | 'FromSectorMembership' | 'FromDienstMembership' | 'FromPrimaryDienst';
+
+export interface JobTitleRoleMapping {
+  id: string;
+  jobTitlePattern: string;
+  exactMatch: boolean;
+  role: string;
+  roleDisplayName: string;
+  scopeDetermination: ScopeDeterminationType;
+  scopeDeterminationDisplayName: string;
+  priority: number;
+  isActive: boolean;
+  description: string | null;
+  createdAt: string;
+  createdBy: string | null;
+  updatedAt: string | null;
+  updatedBy: string | null;
+}
+
+export interface CreateJobTitleRoleMappingDto {
+  jobTitlePattern: string;
+  exactMatch: boolean;
+  role: string;
+  scopeDetermination: ScopeDeterminationType;
+  priority?: number;
+  description?: string;
+}
+
+export interface UpdateJobTitleRoleMappingDto {
+  jobTitlePattern?: string;
+  exactMatch?: boolean;
+  role?: string;
+  scopeDetermination?: ScopeDeterminationType;
+  priority?: number;
+  isActive?: boolean;
+  description?: string;
+}
+
+export interface AutoRoleAssignmentResult {
+  employeeId: string;
+  employeeDisplayName: string;
+  employeeEmail: string;
+  jobTitle: string | null;
+  roleAssigned: boolean;
+  assignedRole: string | null;
+  assignedRoleDisplayName: string | null;
+  scopeType: string | null;
+  scopeId: string | null;
+  scopeName: string | null;
+  message: string | null;
+}
+
+export interface AutoRoleAssignmentSummary {
+  totalProcessed: number;
+  rolesAssigned: number;
+  rolesSkipped: number;
+  errors: number;
+  processedAt: string;
+  processedBy: string;
+  results: AutoRoleAssignmentResult[];
+}
+
+export interface ScopeDeterminationTypeDto {
+  value: number;
+  name: string;
+  displayName: string;
+}
+
+export const jobTitleRoleMappingsApi = {
+  /** Haal alle mappings op */
+  getAll: (): Promise<JobTitleRoleMapping[]> => {
+    return fetchWithAuth<JobTitleRoleMapping[]>('/jobtitlerolemappings');
+  },
+
+  /** Haal een specifieke mapping op */
+  getById: (id: string): Promise<JobTitleRoleMapping> => {
+    return fetchWithAuth<JobTitleRoleMapping>(`/jobtitlerolemappings/${id}`);
+  },
+
+  /** Maak een nieuwe mapping aan */
+  create: (dto: CreateJobTitleRoleMappingDto): Promise<JobTitleRoleMapping> => {
+    return fetchWithAuth<JobTitleRoleMapping>('/jobtitlerolemappings', {
+      method: 'POST',
+      body: JSON.stringify(dto),
+    });
+  },
+
+  /** Update een mapping */
+  update: (id: string, dto: UpdateJobTitleRoleMappingDto): Promise<JobTitleRoleMapping> => {
+    return fetchWithAuth<JobTitleRoleMapping>(`/jobtitlerolemappings/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(dto),
+    });
+  },
+
+  /** Verwijder een mapping */
+  delete: (id: string): Promise<void> => {
+    return fetchWithAuth<void>(`/jobtitlerolemappings/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  /** Test welke mapping van toepassing is voor een gegeven JobTitle */
+  findMatch: (jobTitle: string): Promise<JobTitleRoleMapping | null> => {
+    return fetchWithAuth<JobTitleRoleMapping | null>(
+      `/jobtitlerolemappings/match?jobTitle=${encodeURIComponent(jobTitle)}`
+    ).catch(() => null);
+  },
+
+  /** Preview welke rollen zouden worden toegekend */
+  previewAutoAssignment: (onlyNew: boolean = false): Promise<AutoRoleAssignmentSummary> => {
+    return fetchWithAuth<AutoRoleAssignmentSummary>(
+      `/jobtitlerolemappings/auto-assign/preview?onlyNew=${onlyNew}`
+    );
+  },
+
+  /** Voer automatische roltoewijzing uit voor één medewerker */
+  assignRoleForEmployee: (employeeId: string): Promise<AutoRoleAssignmentResult> => {
+    return fetchWithAuth<AutoRoleAssignmentResult>(
+      `/jobtitlerolemappings/auto-assign/employee/${employeeId}`,
+      { method: 'POST' }
+    );
+  },
+
+  /** Voer automatische roltoewijzing uit voor alle medewerkers */
+  assignRolesForAll: (onlyNew: boolean = false): Promise<AutoRoleAssignmentSummary> => {
+    return fetchWithAuth<AutoRoleAssignmentSummary>(
+      `/jobtitlerolemappings/auto-assign?onlyNew=${onlyNew}`,
+      { method: 'POST' }
+    );
+  },
+
+  /** Haal alle beschikbare scope determination types op */
+  getScopeTypes: (): Promise<ScopeDeterminationTypeDto[]> => {
+    return fetchWithAuth<ScopeDeterminationTypeDto[]>('/jobtitlerolemappings/scope-types');
+  },
+};
+
+// ============================================
 // Events API (Uitnodigingen)
 // ============================================
 
@@ -903,5 +1045,66 @@ export const auditApi = {
   /** Haal beschikbare filter opties op */
   getFilterOptions: (): Promise<AuditFilterOptions> => {
     return fetchWithAuth<AuditFilterOptions>('/audit/options');
+  },
+};
+
+// ============================================
+// Licenses API (Microsoft 365 License Management)
+// ============================================
+
+import type {
+  LicenseOverviewDto,
+  LicenseSubscriptionDto,
+  LicenseUserDto,
+  LicenseRecommendationDto,
+  LicenseSummaryDto,
+  LicenseFilterDto,
+} from '../types';
+
+export const licensesApi = {
+  /** Haal volledig licentie-overzicht op */
+  getOverview: (filter?: LicenseFilterDto): Promise<LicenseOverviewDto> => {
+    const params = new URLSearchParams();
+    if (filter?.licenseType) params.append('licenseType', filter.licenseType);
+    if (filter?.activityStatus) params.append('activityStatus', filter.activityStatus);
+    if (filter?.onlyWithRecommendations) params.append('onlyWithRecommendations', 'true');
+    if (filter?.department) params.append('department', filter.department);
+    if (filter?.inactiveDaysThreshold) params.append('inactiveDaysThreshold', filter.inactiveDaysThreshold.toString());
+
+    const queryString = params.toString();
+    return fetchWithAuth<LicenseOverviewDto>(`/licenses/overview${queryString ? `?${queryString}` : ''}`);
+  },
+
+  /** Haal licentie-samenvatting op */
+  getSummary: (): Promise<LicenseSummaryDto> => {
+    return fetchWithAuth<LicenseSummaryDto>('/licenses/summary');
+  },
+
+  /** Haal alle licentie-abonnementen op */
+  getSubscriptions: (): Promise<LicenseSubscriptionDto[]> => {
+    return fetchWithAuth<LicenseSubscriptionDto[]>('/licenses/subscriptions');
+  },
+
+  /** Haal gebruikers met licenties op */
+  getUsers: (filter?: LicenseFilterDto): Promise<LicenseUserDto[]> => {
+    const params = new URLSearchParams();
+    if (filter?.licenseType) params.append('licenseType', filter.licenseType);
+    if (filter?.activityStatus) params.append('activityStatus', filter.activityStatus);
+    if (filter?.onlyWithRecommendations) params.append('onlyWithRecommendations', 'true');
+    if (filter?.department) params.append('department', filter.department);
+    if (filter?.inactiveDaysThreshold) params.append('inactiveDaysThreshold', filter.inactiveDaysThreshold.toString());
+
+    const queryString = params.toString();
+    return fetchWithAuth<LicenseUserDto[]>(`/licenses/users${queryString ? `?${queryString}` : ''}`);
+  },
+
+  /** Haal licentie-info voor specifieke gebruiker op */
+  getUserLicenseInfo: (userId: string): Promise<LicenseUserDto | null> => {
+    return fetchWithAuth<LicenseUserDto>(`/licenses/users/${userId}`).catch(() => null);
+  },
+
+  /** Haal optimalisatie-aanbevelingen op */
+  getRecommendations: (): Promise<LicenseRecommendationDto[]> => {
+    return fetchWithAuth<LicenseRecommendationDto[]>('/licenses/recommendations');
   },
 };

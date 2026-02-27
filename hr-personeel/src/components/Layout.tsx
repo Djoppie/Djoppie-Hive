@@ -16,6 +16,8 @@ import {
   Heart,
   RefreshCw,
   FileText,
+  Wand2,
+  Key,
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { useUserRole } from '../context/UserRoleContext';
@@ -41,6 +43,8 @@ const navItems: NavItem[] = [
   { to: '/distributiegroepen', icon: MailCheck, label: 'Distributiegroepen' },
   { to: '/uitnodigingen', icon: Mail, label: 'Uitnodigingen', requiredRoles: ['ict_super_admin', 'hr_admin', 'sectormanager', 'diensthoofd'] },
   { to: '/rollen', icon: Shield, label: 'Rollen & Rechten', requiredRoles: ['ict_super_admin'] },
+  { to: '/auto-roltoewijzing', icon: Wand2, label: 'Auto Roltoewijzing', requiredRoles: ['ict_super_admin'] },
+  { to: '/licenties', icon: Key, label: 'Licenties', requiredRoles: ['ict_super_admin'] },
   { to: '/sync', icon: RefreshCw, label: 'Sync Geschiedenis', requiredRoles: ['ict_super_admin', 'hr_admin'] },
   { to: '/import', icon: CloudDownload, label: 'AD Import', requiredRoles: ['ict_super_admin', 'hr_admin'] },
   { to: '/audit', icon: FileText, label: 'Audit Log', requiredRoles: ['ict_super_admin', 'hr_admin'] },
