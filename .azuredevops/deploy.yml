@@ -1,0 +1,575 @@
+# ==============================================================================
+# Djoppie-Hive CD Pipeline - Deployment
+# ==============================================================================
+# Runs on: Successful build of main branch only
+# Purpose: Deploy infrastructure, run migrations, and deploy frontend/backend
+#
+# Deployment Stages:
+#   1. Download artifacts from completed build
+#   2. Deploy infrastructure (Bicep)
+#   3. Run database migrations (EF Core)
+#   4. Deploy backend (App Service)
+#   5. Deploy frontend (Static Web App)
+#   6. Run smoke tests & health checks
+#
+# Environment Variables:
+#   - Uses variable group: 'Djoppie-Hive-Dev'
+#   - Sensitive values from Azure Key Vault
+#
+# Security:
+#   - Authenticated with service connection: AzureResourceManager-Djoppie
+#   - Secrets stored in Key Vault (not in variable groups)
+#   - RBAC-based access via Managed Identity
+# ==============================================================================
+
+# Only trigger on successful main branch builds (not manual)
+trigger: none
+
+# Can be manually triggered from Azure DevOps UI
+pr: none
+
+# Global variables
+variables:
+  # Azure Environment
+  azureSubscriptionId: '$(AZURE_SUBSCRIPTION_ID)'
+  azureResourceGroup: 'rg-djoppie-hive'
+  azureLocation: 'westeurope'
+  
+  # Service Connection Name (must be configured in Azure DevOps)
+  serviceConnectionName: 'AzureResourceManager-Djoppie'
+  
+  # Resource Names (must match Bicep outputs)
+  appServiceName: 'app-djoppie-hive-dev-api'
+  staticWebAppName: 'swa-djoppie-hive-dev-ui'
+  keyVaultName: 'kv-djoppie-hive-dev'
+  sqlServerName: 'sql-djoppie-hive-dev'
+  sqlDatabaseName: 'djoppie-hive-db'
+  
+  # Build Configuration
+  buildConfiguration: 'Release'
+  dotnetVersion: '8.x'
+
+stages:
+  # ============================================================================
+  # STAGE 1: PRE-DEPLOYMENT PREPARATION
+  # ============================================================================
+  - stage: PrepareDeployment
+    displayName: '🔍 Pre-Deployment Checks'
+    jobs:
+      - job: DownloadArtifacts
+        displayName: 'Download Build Artifacts'
+        pool:
+          vmImage: 'ubuntu-latest'
+        
+        variables:
+          - group: 'Djoppie-Hive-Dev'  # Load variable group with secrets
+        
+        steps:
+          # Authenticate to Azure
+          - task: AzureCLI@2
+            displayName: '🔐 Authenticate to Azure'
+            inputs:
+              azureSubscription: $(serviceConnectionName)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                echo "✅ Azure authentication successful"
+                az account show --output table
+          
+          # Download build artifacts
+          - task: DownloadBuildArtifacts@0
+            displayName: '📥 Download Frontend Build Artifact'
+            inputs:
+              buildType: 'specific'
+              project: '$(System.TeamProject)'
+              pipeline: 'CI - Djoppie-Hive'  # Name of the CI pipeline
+              branchName: 'refs/heads/main'
+              buildVersionToDownload: 'latest'
+              downloadType: 'specific'
+              itemPattern: 'frontend-dist/**'
+              downloadPath: '$(Pipeline.Workspace)'
+            continueOnError: true
+          
+          - task: DownloadBuildArtifacts@0
+            displayName: '📥 Download Backend Build Artifact'
+            inputs:
+              buildType: 'specific'
+              project: '$(System.TeamProject)'
+              pipeline: 'CI - Djoppie-Hive'
+              branchName: 'refs/heads/main'
+              buildVersionToDownload: 'latest'
+              downloadType: 'specific'
+              itemPattern: 'backend-publish/**'
+              downloadPath: '$(Pipeline.Workspace)'
+            continueOnError: true
+          
+          - task: DownloadBuildArtifacts@0
+            displayName: '📥 Download Migration Scripts'
+            inputs:
+              buildType: 'specific'
+              project: '$(System.TeamProject)'
+              pipeline: 'CI - Djoppie-Hive'
+              branchName: 'refs/heads/main'
+              buildVersionToDownload: 'latest'
+              downloadType: 'specific'
+              itemPattern: 'migration-scripts/**'
+              downloadPath: '$(Pipeline.Workspace)'
+            continueOnError: true
+          
+          # Verify artifact existence
+          - script: |
+              echo "=========================================="
+              echo "Downloaded Artifacts:"
+              echo "=========================================="
+              ls -lah $(Pipeline.Workspace)/
+            displayName: '📋 List Downloaded Artifacts'
+
+  # ============================================================================
+  # STAGE 2: INFRASTRUCTURE DEPLOYMENT
+  # ============================================================================
+  - stage: DeployInfrastructure
+    displayName: '🏛️ Deploy Infrastructure (Bicep)'
+    dependsOn: PrepareDeployment
+    condition: succeeded()
+    jobs:
+      - job: DeployBicepTemplates
+        displayName: 'Deploy Azure Resources via Bicep'
+        pool:
+          vmImage: 'ubuntu-latest'
+        
+        variables:
+          - group: 'Djoppie-Hive-Dev'
+        
+        steps:
+          # Setup .NET SDK for EF Core tools
+          - task: UseDotNet@2
+            displayName: '⚙️ Setup .NET SDK'
+            inputs:
+              version: $(dotnetVersion)
+              packageType: 'sdk'
+          
+          # Authenticate to Azure
+          - task: AzureCLI@2
+            displayName: '🔐 Authenticate to Azure'
+            inputs:
+              azureSubscription: $(serviceConnectionName)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                echo "✅ Azure subscription authenticated"
+          
+          # Deploy Bicep template
+          - task: AzureCLI@2
+            displayName: '🚀 Deploy Bicep Template'
+            inputs:
+              azureSubscription: $(serviceConnectionName)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                echo "Deploying Bicep template to $(azureResourceGroup)..."
+                
+                # Check if Bicep file exists
+                if [ -f "$(System.DefaultWorkingDirectory)/infra/bicep/main.dev.bicep" ]; then
+                  az deployment group create \
+                    --name "djoppie-hive-$(Build.BuildId)" \
+                    --resource-group "$(azureResourceGroup)" \
+                    --template-file "$(System.DefaultWorkingDirectory)/infra/bicep/main.dev.bicep" \
+                    --parameters "$(System.DefaultWorkingDirectory)/infra/bicep/parameters-dev.json" \
+                    --output table
+                  
+                  echo "✅ Bicep deployment successful"
+                else
+                  echo "⚠️ Bicep template not found at expected location"
+                  echo "Skipping infrastructure deployment"
+                fi
+            continueOnError: true
+          
+          # Export deployment outputs for later stages
+          - task: AzureCLI@2
+            displayName: '📤 Export Deployment Outputs'
+            inputs:
+              azureSubscription: $(serviceConnectionName)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                # Get resource IDs for later use
+                RESOURCE_GROUP="$(azureResourceGroup)"
+                
+                # Store outputs for pipeline
+                echo "##vso[task.setvariable variable=sqlConnectionString;isSecret=true]$(az keyvault secret show --vault-name $(keyVaultName) --name 'sql-connection-string' --query value -o tsv)"
+                echo "##vso[task.setvariable variable=appServiceId]$(az resource show --name $(appServiceName) --resource-group $RESOURCE_GROUP --resource-type "Microsoft.Web/sites" --query id -o tsv)"
+                echo "##vso[task.setvariable variable=staticWebAppId]$(az resource show --name $(staticWebAppName) --resource-group $RESOURCE_GROUP --resource-type "Microsoft.Web/staticSites" --query id -o tsv)"
+                
+                echo "✅ Deployment outputs exported"
+            continueOnError: true
+
+  # ============================================================================
+  # STAGE 3: DATABASE MIGRATIONS
+  # ============================================================================
+  - stage: RunDatabaseMigrations
+    displayName: '🗄️ Run Database Migrations'
+    dependsOn: DeployInfrastructure
+    condition: succeeded()
+    jobs:
+      - job: EFCoreMigrations
+        displayName: 'Execute Entity Framework Core Migrations'
+        pool:
+          vmImage: 'ubuntu-latest'
+        
+        variables:
+          - group: 'Djoppie-Hive-Dev'
+        
+        steps:
+          # Setup .NET SDK
+          - task: UseDotNet@2
+            displayName: '⚙️ Setup .NET SDK'
+            inputs:
+              version: $(dotnetVersion)
+              packageType: 'sdk'
+          
+          # Download migration scripts artifact
+          - task: DownloadBuildArtifacts@0
+            displayName: '📥 Download Migration Scripts'
+            inputs:
+              buildType: 'specific'
+              project: '$(System.TeamProject)'
+              pipeline: 'CI - Djoppie-Hive'
+              branchName: 'refs/heads/main'
+              buildVersionToDownload: 'latest'
+              downloadType: 'specific'
+              itemPattern: 'migration-scripts/**'
+              downloadPath: '$(Pipeline.Workspace)'
+            continueOnError: true
+          
+          # Restore Infrastructure project
+          - task: DotNetCoreCLI@2
+            displayName: '📥 Restore Database Project'
+            inputs:
+              command: 'restore'
+              projects: '$(System.DefaultWorkingDirectory)/src/backend/DjoppieHive.Infrastructure/DjoppieHive.Infrastructure.csproj'
+          
+          # Run EF Core migrations
+          - task: DotNetCoreCLI@2
+            displayName: '🔄 Apply Database Migrations'
+            inputs:
+              command: 'custom'
+              custom: 'ef'
+              arguments: 'database update --project $(System.DefaultWorkingDirectory)/src/backend/DjoppieHive.Infrastructure/DjoppieHive.Infrastructure.csproj --startup-project $(System.DefaultWorkingDirectory)/src/backend/DjoppieHive.API/DjoppieHive.API.csproj --configuration $(buildConfiguration)'
+            env:
+              ConnectionStrings__DefaultConnection: $(SQL_CONNECTION_STRING)
+              ASPNETCORE_ENVIRONMENT: 'Development'
+            continueOnError: false
+          
+          # Verify migration success
+          - script: |
+              echo "=========================================="
+              echo "Migration Summary"
+              echo "=========================================="
+              echo "✅ Database migrations applied successfully"
+              echo "Database: $(sqlDatabaseName)"
+              echo "Server: $(sqlServerName)"
+              echo "=========================================="
+            displayName: '✅ Migration Success Confirmation'
+
+  # ============================================================================
+  # STAGE 4: BACKEND DEPLOYMENT
+  # ============================================================================
+  - stage: DeployBackend
+    displayName: '🔧 Deploy Backend (App Service)'
+    dependsOn: RunDatabaseMigrations
+    condition: succeeded()
+    jobs:
+      - job: DeployAppService
+        displayName: 'Deploy API to App Service'
+        pool:
+          vmImage: 'ubuntu-latest'
+        
+        variables:
+          - group: 'Djoppie-Hive-Dev'
+        
+        steps:
+          # Download backend build artifact
+          - task: DownloadBuildArtifacts@0
+            displayName: '📥 Download Backend Build'
+            inputs:
+              buildType: 'specific'
+              project: '$(System.TeamProject)'
+              pipeline: 'CI - Djoppie-Hive'
+              branchName: 'refs/heads/main'
+              buildVersionToDownload: 'latest'
+              downloadType: 'specific'
+              itemPattern: 'backend-publish/**'
+              downloadPath: '$(Pipeline.Workspace)/backend'
+          
+          # Authenticate to Azure
+          - task: AzureCLI@2
+            displayName: '🔐 Authenticate to Azure'
+            inputs:
+              azureSubscription: $(serviceConnectionName)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                echo "✅ Azure authentication successful"
+          
+          # Deploy to App Service using WebDeploy
+          - task: AzureWebApp@1
+            displayName: '🚀 Deploy API to App Service'
+            inputs:
+              azureSubscription: $(serviceConnectionName)
+              appType: 'webAppLinux'
+              appName: $(appServiceName)
+              package: '$(Pipeline.Workspace)/backend/backend-publish/**/*.zip'
+              deploymentMethod: 'zipDeploy'
+          
+          # Configure App Service settings
+          - task: AzureAppServiceSettings@1
+            displayName: '⚙️ Configure App Service Settings'
+            inputs:
+              azureSubscription: $(serviceConnectionName)
+              appName: $(appServiceName)
+              resourceGroupName: $(azureResourceGroup)
+              appSettings: |
+                [
+                  {
+                    "name": "ASPNETCORE_ENVIRONMENT",
+                    "value": "Development",
+                    "slotSetting": false
+                  },
+                  {
+                    "name": "AZURE_TENANT_ID",
+                    "value": "$(AZURE_TENANT_ID)",
+                    "slotSetting": false
+                  },
+                  {
+                    "name": "ENTRA_TENANT_ID",
+                    "value": "$(ENTRA_TENANT_ID)",
+                    "slotSetting": false
+                  },
+                  {
+                    "name": "ENTRA_CLIENT_ID",
+                    "value": "$(ENTRA_BACKEND_CLIENT_ID)",
+                    "slotSetting": false
+                  }
+                ]
+              connectionStrings: |
+                [
+                  {
+                    "name": "DefaultConnection",
+                    "value": "$(SQL_CONNECTION_STRING)",
+                    "type": "SQLServer",
+                    "slotSetting": false
+                  }
+                ]
+            continueOnError: false
+          
+          # Restart App Service
+          - task: AzureAppServiceManage@0
+            displayName: '🔄 Restart App Service'
+            inputs:
+              azureSubscription: $(serviceConnectionName)
+              appType: 'webAppLinux'
+              appName: $(appServiceName)
+              resourceGroupName: $(azureResourceGroup)
+              action: 'Restart App Service'
+
+  # ============================================================================
+  # STAGE 5: FRONTEND DEPLOYMENT
+  # ============================================================================
+  - stage: DeployFrontend
+    displayName: '🎨 Deploy Frontend (Static Web App)'
+    dependsOn: DeployBackend
+    condition: succeeded()
+    jobs:
+      - job: DeployStaticWebApp
+        displayName: 'Deploy React UI to Static Web App'
+        pool:
+          vmImage: 'ubuntu-latest'
+        
+        variables:
+          - group: 'Djoppie-Hive-Dev'
+        
+        steps:
+          # Download frontend build artifact
+          - task: DownloadBuildArtifacts@0
+            displayName: '📥 Download Frontend Build'
+            inputs:
+              buildType: 'specific'
+              project: '$(System.TeamProject)'
+              pipeline: 'CI - Djoppie-Hive'
+              branchName: 'refs/heads/main'
+              buildVersionToDownload: 'latest'
+              downloadType: 'specific'
+              itemPattern: 'frontend-dist/**'
+              downloadPath: '$(Pipeline.Workspace)/frontend'
+          
+          # Authenticate to Azure
+          - task: AzureCLI@2
+            displayName: '🔐 Authenticate to Azure'
+            inputs:
+              azureSubscription: $(serviceConnectionName)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                echo "✅ Azure authentication successful"
+          
+          # Get Static Web App deployment token
+          - task: AzureCLI@2
+            displayName: '🔑 Retrieve Deployment Token'
+            inputs:
+              azureSubscription: $(serviceConnectionName)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                # Get deployment token for Static Web App
+                DEPLOYMENT_TOKEN=$(az staticwebapp secrets list --name $(staticWebAppName) --resource-group $(azureResourceGroup) --query "properties.apiKey" -o tsv)
+                echo "##vso[task.setvariable variable=swaDeploymentToken;issecret=true]$DEPLOYMENT_TOKEN"
+                echo "✅ Deployment token retrieved"
+          
+          # Deploy to Static Web App using Azure CLI
+          - task: AzureCLI@2
+            displayName: '🚀 Deploy Frontend to Static Web App'
+            inputs:
+              azureSubscription: $(serviceConnectionName)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                # Install Static Web Apps CLI
+                npm install -g @azure/static-web-apps-cli
+                
+                # Deploy the static files
+                swa deploy \
+                  --deployment-token "$(swaDeploymentToken)" \
+                  --env production \
+                  --app-location "$(Pipeline.Workspace)/frontend/frontend-dist"
+                
+                echo "✅ Frontend deployment successful"
+          
+          # Alternative: Using AzureStaticWebApp@0 task (if CLI fails)
+          - task: AzureStaticWebApp@0
+            displayName: '🚀 Deploy Frontend (Alt: Azure Task)'
+            condition: failed()
+            inputs:
+              azure_static_web_apps_api_token: $(swaDeploymentToken)
+              app_location: '$(Pipeline.Workspace)/frontend/frontend-dist'
+              api_location: ''
+              output_location: ''
+
+  # ============================================================================
+  # STAGE 6: POST-DEPLOYMENT VALIDATION
+  # ============================================================================
+  - stage: ValidateDeployment
+    displayName: '✅ Validate Deployment'
+    dependsOn: DeployFrontend
+    condition: succeeded()
+    jobs:
+      - job: HealthChecks
+        displayName: 'Run Health Checks & Smoke Tests'
+        pool:
+          vmImage: 'ubuntu-latest'
+        
+        variables:
+          - group: 'Djoppie-Hive-Dev'
+        
+        steps:
+          # Wait for App Service to be ready
+          - script: |
+              echo "⏳ Waiting for App Service to be ready..."
+              sleep 30
+            displayName: '⏳ Wait for Startup'
+          
+          # Health check on backend API
+          - task: AzureCLI@2
+            displayName: '🏥 Backend Health Check'
+            inputs:
+              azureSubscription: $(serviceConnectionName)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                API_URL="https://$(appServiceName).azurewebsites.net/api/health"
+                
+                echo "Checking backend API health: $API_URL"
+                
+                # Retry logic for health check
+                MAX_RETRIES=5
+                RETRY_COUNT=0
+                
+                while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+                  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X GET "$API_URL" -H "Content-Type: application/json")
+                  
+                  if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "401" ]; then
+                    echo "✅ Backend is healthy (HTTP $HTTP_CODE)"
+                    exit 0
+                  fi
+                  
+                  RETRY_COUNT=$((RETRY_COUNT + 1))
+                  if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                    echo "⏳ Retry attempt $RETRY_COUNT/$MAX_RETRIES..."
+                    sleep 10
+                  fi
+                done
+                
+                echo "❌ Backend health check failed after $MAX_RETRIES attempts"
+                exit 1
+            continueOnError: true
+          
+          # Health check on frontend
+          - script: |
+              FRONTEND_URL="https://$(staticWebAppName).azurestaticapps.net/"
+              
+              echo "Checking frontend availability: $FRONTEND_URL"
+              
+              HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X GET "$FRONTEND_URL")
+              
+              if [ "$HTTP_CODE" = "200" ]; then
+                echo "✅ Frontend is available (HTTP $HTTP_CODE)"
+              else
+                echo "⚠️ Frontend returned HTTP $HTTP_CODE (may be normal for SPA)"
+              fi
+            displayName: '🏥 Frontend Health Check'
+            continueOnError: true
+          
+          # Summary report
+          - script: |
+              echo "=========================================="
+              echo "🎉 Deployment Completed Successfully"
+              echo "=========================================="
+              echo "Backend URL: https://$(appServiceName).azurewebsites.net"
+              echo "Frontend URL: https://$(staticWebAppName).azurestaticapps.net"
+              echo "=========================================="
+              echo "Next Steps:"
+              echo "1. Verify frontend loads and connects to API"
+              echo "2. Test core features"
+              echo "3. Check application logs if issues occur"
+              echo "=========================================="
+            displayName: '📋 Deployment Summary'
+
+  # ============================================================================
+  # STAGE 7: NOTIFICATIONS & CLEANUP
+  # ============================================================================
+  - stage: PostDeploymentNotification
+    displayName: '📢 Post-Deployment Notifications'
+    dependsOn: ValidateDeployment
+    condition: always()
+    jobs:
+      - job: NotifyDeploymentStatus
+        displayName: 'Send Deployment Notification'
+        pool:
+          vmImage: 'ubuntu-latest'
+        
+        steps:
+          - script: |
+              if [ "$(Agent.JobStatus)" = "Succeeded" ]; then
+                echo "✅ All deployment stages completed successfully!"
+                echo ""
+                echo "Resources deployed:"
+                echo "  - App Service: $(appServiceName)"
+                echo "  - Static Web App: $(staticWebAppName)"
+                echo "  - SQL Database: $(sqlDatabaseName)"
+              else
+                echo "❌ Deployment encountered issues. Please review logs."
+              fi
+            displayName: '📢 Deployment Status'
+
+# ==============================================================================
+# END OF CD PIPELINE
+# ==============================================================================

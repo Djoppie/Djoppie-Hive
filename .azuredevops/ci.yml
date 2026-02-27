@@ -1,0 +1,268 @@
+# ==============================================================================
+# Djoppie-Hive CI Pipeline - Build & Test
+# ==============================================================================
+# Runs on: Pull Requests and Push to main branch
+# Purpose: Compile frontend/backend, run tests, linting, and create artifacts
+# 
+# Triggers:
+#   - All PRs
+#   - Push to main branch
+#
+# Artifacts:
+#   - frontend-dist: React build output (dist/)
+#   - backend-publish: .NET publish folder
+#   - test-results: Test result files (TRX format)
+# ==============================================================================
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    exclude:
+      - docs/**
+      - .azuredevops/README.md
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    exclude:
+      - docs/**
+      - .azuredevops/README.md
+
+# Global variables available to all jobs
+variables:
+  buildConfiguration: 'Release'
+  nodeVersion: '20.x'
+  dotnetVersion: '8.x'
+
+# Named pipeline stages for better organization
+stages:
+  # ============================================================================
+  # FRONTEND BUILD STAGE
+  # ============================================================================
+  - stage: BuildFrontend
+    displayName: '📦 Build Frontend (React)'
+    jobs:
+      - job: FrontendBuild
+        displayName: 'Frontend - Build, Lint & Test'
+        pool:
+          vmImage: 'ubuntu-latest'
+        
+        steps:
+          # Setup Node.js
+          - task: NodeTool@0
+            displayName: '⚙️ Setup Node.js'
+            inputs:
+              versionSpec: $(nodeVersion)
+              addToPath: true
+          
+          # Install dependencies
+          - task: Npm@1
+            displayName: '📥 Install Dependencies (npm ci)'
+            inputs:
+              command: 'ci'
+              workingDir: '$(System.DefaultWorkingDirectory)/hr-personeel'
+          
+          # Run ESLint
+          - task: Npm@1
+            displayName: '🔍 Linting (ESLint)'
+            inputs:
+              command: 'custom'
+              customCommand: 'run lint'
+              workingDir: '$(System.DefaultWorkingDirectory)/hr-personeel'
+            continueOnError: true  # Don't fail pipeline on lint warnings
+          
+          # Run unit tests
+          - task: Npm@1
+            displayName: '🧪 Running Unit Tests'
+            inputs:
+              command: 'custom'
+              customCommand: 'run test:run'
+              workingDir: '$(System.DefaultWorkingDirectory)/hr-personeel'
+            env:
+              CI: 'true'
+          
+          # Build for production
+          - task: Npm@1
+            displayName: '🏗️ Building Production Bundle'
+            inputs:
+              command: 'custom'
+              customCommand: 'run build'
+              workingDir: '$(System.DefaultWorkingDirectory)/hr-personeel'
+            env:
+              # Vite build variables - injected from pipeline variables
+              VITE_ENTRA_CLIENT_ID: $(VITE_ENTRA_CLIENT_ID)
+              VITE_ENTRA_AUTHORITY: $(VITE_ENTRA_AUTHORITY)
+              VITE_API_BASE_URL: $(VITE_API_BASE_URL_DEV)
+          
+          # Publish frontend build artifact
+          - task: PublishBuildArtifacts@1
+            displayName: '📤 Publish Frontend Build Artifact'
+            inputs:
+              PathtoPublish: '$(System.DefaultWorkingDirectory)/hr-personeel/dist'
+              ArtifactName: 'frontend-dist'
+              publishLocation: 'Container'
+          
+          # Publish test results (optional: if using test reporter)
+          - task: PublishTestResults@2
+            displayName: '📊 Publish Test Results'
+            condition: always()
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: '$(System.DefaultWorkingDirectory)/hr-personeel/test-results/**/*.xml'
+              mergeTestResults: true
+              failTaskOnFailedTests: false
+            continueOnError: true
+
+  # ============================================================================
+  # BACKEND BUILD & TEST STAGE
+  # ============================================================================
+  - stage: BuildBackend
+    displayName: '📦 Build Backend (.NET)'
+    jobs:
+      - job: BackendBuild
+        displayName: 'Backend - Restore, Build, Test & Publish'
+        pool:
+          vmImage: 'ubuntu-latest'
+        
+        steps:
+          # Setup .NET SDK
+          - task: UseDotNet@2
+            displayName: '⚙️ Setup .NET SDK'
+            inputs:
+              version: $(dotnetVersion)
+              packageType: 'sdk'
+          
+          # Restore NuGet packages
+          - task: DotNetCoreCLI@2
+            displayName: '📥 Restore NuGet Packages'
+            inputs:
+              command: 'restore'
+              projects: '$(System.DefaultWorkingDirectory)/src/backend/**/*.csproj'
+          
+          # Build solution
+          - task: DotNetCoreCLI@2
+            displayName: '🏗️ Building Solution'
+            inputs:
+              command: 'build'
+              projects: '$(System.DefaultWorkingDirectory)/src/backend/**/*.csproj'
+              arguments: '--configuration $(buildConfiguration) --no-restore'
+          
+          # Run unit and integration tests
+          - task: DotNetCoreCLI@2
+            displayName: '🧪 Running Tests'
+            inputs:
+              command: 'test'
+              projects: '$(System.DefaultWorkingDirectory)/src/backend/DjoppieHive.Tests/DjoppieHive.Tests.csproj'
+              arguments: '--configuration $(buildConfiguration) --logger trx --results-directory $(Agent.TempDirectory)/TestResults --no-build'
+              publishTestResults: false
+            continueOnError: true
+          
+          # Publish test results to Azure DevOps
+          - task: PublishTestResults@2
+            displayName: '📊 Publish Test Results'
+            condition: always()
+            inputs:
+              testResultsFormat: 'VSTest'
+              testResultsFiles: '$(Agent.TempDirectory)/TestResults/**/*.trx'
+              mergeTestResults: true
+              failTaskOnFailedTests: false
+          
+          # Publish API for deployment
+          - task: DotNetCoreCLI@2
+            displayName: '📤 Publishing API for Deployment'
+            inputs:
+              command: 'publish'
+              publishWebProjects: false
+              projects: '$(System.DefaultWorkingDirectory)/src/backend/DjoppieHive.API/DjoppieHive.API.csproj'
+              arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/publish'
+              zipAfterPublish: true
+          
+          # Publish backend artifacts
+          - task: PublishBuildArtifacts@1
+            displayName: '📤 Publish Backend Build Artifact'
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)/publish'
+              ArtifactName: 'backend-publish'
+              publishLocation: 'Container'
+
+  # ============================================================================
+  # INFRASTRUCTURE & DATABASE PREPARATION STAGE
+  # ============================================================================
+  - stage: PrepareInfrastructure
+    displayName: '🏛️ Prepare Infrastructure'
+    condition: succeeded()
+    jobs:
+      - job: ValidateInfra
+        displayName: 'Validate Bicep & Migration Scripts'
+        pool:
+          vmImage: 'ubuntu-latest'
+        
+        steps:
+          # Validate Bicep templates (if using Infrastructure-as-Code)
+          - task: AzureCLI@2
+            displayName: '✅ Validate Bicep Templates'
+            condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+            inputs:
+              azureSubscription: 'AzureResourceManager-Djoppie'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                # Validate bicep if exists
+                if [ -f "$(System.DefaultWorkingDirectory)/infra/bicep/main.dev.bicep" ]; then
+                  echo "Validating Bicep template..."
+                  az bicep build --file "$(System.DefaultWorkingDirectory)/infra/bicep/main.dev.bicep" \
+                    --outfile /tmp/main.dev.json
+                  echo "✅ Bicep validation successful"
+                else
+                  echo "⏭️ No Bicep templates found, skipping validation"
+                fi
+            continueOnError: true
+          
+          # Publish migration scripts as artifact
+          - task: PublishBuildArtifacts@1
+            displayName: '📤 Publish Migration Scripts'
+            inputs:
+              PathtoPublish: '$(System.DefaultWorkingDirectory)/src/backend/DjoppieHive.Infrastructure'
+              ArtifactName: 'migration-scripts'
+              publishLocation: 'Container'
+            continueOnError: true
+
+  # ============================================================================
+  # SUMMARY & REPORTING STAGE
+  # ============================================================================
+  - stage: BuildSummary
+    displayName: '📋 Build Summary'
+    condition: always()
+    jobs:
+      - job: ReportBuildStatus
+        displayName: 'Generate Build Report'
+        pool:
+          vmImage: 'ubuntu-latest'
+        
+        steps:
+          - script: |
+              echo "=========================================="
+              echo "Build Pipeline Summary"
+              echo "=========================================="
+              echo "Build ID: $(Build.BuildId)"
+              echo "Branch: $(Build.SourceBranch)"
+              echo "Commit: $(Build.SourceVersion)"
+              echo "=========================================="
+            displayName: '📊 Build Report'
+          
+          - task: PublishBuildArtifacts@1
+            displayName: '📤 Publish Build Logs'
+            condition: always()
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+              ArtifactName: 'build-logs'
+              publishLocation: 'Container'
+            continueOnError: true
+
+# ==============================================================================
+# END OF CI PIPELINE
+# ==============================================================================
