@@ -1,0 +1,566 @@
+/*
+ * ========================================
+ * DJOPPIE • HIVE LOGO
+ * Advanced Customization Snippets
+ * ========================================
+ *
+ * Copy these snippets to customize the logo for specific use cases.
+ * Add to your component's CSS module or global styles.
+ */
+
+
+/* ====================================
+ * 1. SEASONAL VARIANTS
+ * ==================================== */
+
+/* Spring Theme - Fresh greens and yellows */
+.logo-spring .separator {
+  background: linear-gradient(
+    135deg,
+    #FFD700 0%,      /* Bright gold */
+    #90EE90 50%,     /* Light green */
+    #32CD32 100%     /* Lime green */
+  );
+}
+
+.logo-spring .hive {
+  background: linear-gradient(
+    135deg,
+    #90EE90 0%,
+    #32CD32 50%,
+    #228B22 100%
+  );
+}
+
+/* Winter Theme - Cool blues and silvers */
+.logo-winter .separator {
+  background: linear-gradient(
+    135deg,
+    #E0F7FA 0%,      /* Ice blue */
+    #81D4FA 50%,     /* Sky blue */
+    #039BE5 100%     /* Deep blue */
+  );
+}
+
+.logo-winter .hive {
+  background: linear-gradient(
+    135deg,
+    #B0BEC5 0%,      /* Cool grey */
+    #78909C 50%,     /* Blue grey */
+    #455A64 100%     /* Dark blue grey */
+  );
+}
+
+/* Autumn Theme - Rich oranges and browns */
+.logo-autumn .separator {
+  background: linear-gradient(
+    135deg,
+    #FF8C00 0%,      /* Dark orange */
+    #D2691E 50%,     /* Chocolate */
+    #8B4513 100%     /* Saddle brown */
+  );
+}
+
+.logo-autumn .hive {
+  background: linear-gradient(
+    135deg,
+    #CD853F 0%,      /* Peru */
+    #A0522D 50%,     /* Sienna */
+    #654321 100%     /* Dark brown */
+  );
+}
+
+
+/* ====================================
+ * 2. PERFORMANCE MODES
+ * ==================================== */
+
+/* Reduced Animation Mode - Faster, simpler */
+.logo-reduced-motion .separator {
+  animation: none !important;
+  filter: drop-shadow(0 0 8px var(--glow-color));
+}
+
+.logo-reduced-motion:hover .separator {
+  animation: none !important;
+  transform: scale(1.1);
+}
+
+/* Static Mode - No animations at all */
+.logo-static * {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* High Performance Mode - Minimal effects */
+.logo-high-performance .djoppie,
+.logo-high-performance .hive {
+  filter: none;
+}
+
+.logo-high-performance .separator {
+  animation: none;
+  filter: drop-shadow(0 0 4px var(--glow-color));
+}
+
+
+/* ====================================
+ * 3. SIZE VARIATIONS
+ * ==================================== */
+
+/* Compact Sidebar (collapsed state) */
+.logo-compact {
+  flex-direction: column;
+  gap: 4px;
+}
+
+.logo-compact .logo-text {
+  font-size: 12px;
+}
+
+.logo-compact .subtitle {
+  display: none;
+}
+
+/* Mobile Header */
+.logo-mobile {
+  gap: 6px;
+}
+
+.logo-mobile .logo-text {
+  font-size: 16px;
+}
+
+.logo-mobile .subtitle {
+  font-size: 8px;
+  letter-spacing: 0.06em;
+}
+
+/* Print Version */
+@media print {
+  .logo {
+    transform: none !important;
+  }
+
+  .logo .djoppie,
+  .logo .hive,
+  .logo .separator {
+    animation: none !important;
+    filter: none !important;
+    -webkit-text-fill-color: initial !important;
+    background: none !important;
+  }
+
+  .logo .djoppie {
+    color: #3E2723 !important;
+  }
+
+  .logo .hive {
+    color: #E65100 !important;
+  }
+
+  .logo .separator {
+    color: #F5A623 !important;
+  }
+
+  .logo .subtitle::after {
+    display: none;
+  }
+}
+
+
+/* ====================================
+ * 4. SPECIAL EFFECTS
+ * ==================================== */
+
+/* Neon Glow Effect (for dark mode) */
+.logo-neon .separator {
+  filter: drop-shadow(0 0 20px var(--glow-color))
+          drop-shadow(0 0 40px var(--glow-color))
+          drop-shadow(0 2px 4px var(--shadow-accent));
+  animation: neonPulse 2s ease-in-out infinite;
+}
+
+@keyframes neonPulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 20px var(--glow-color))
+            drop-shadow(0 0 40px var(--glow-color));
+  }
+  50% {
+    filter: drop-shadow(0 0 30px var(--glow-color))
+            drop-shadow(0 0 60px var(--glow-color));
+  }
+}
+
+/* Holographic Effect */
+.logo-holographic .djoppie,
+.logo-holographic .hive {
+  background: linear-gradient(
+    45deg,
+    #FF6B9D 0%,
+    #C371F5 20%,
+    #6BBAFF 40%,
+    #6BFFC3 60%,
+    #FFE66B 80%,
+    #FF6B9D 100%
+  );
+  background-size: 200% 200%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: holographicShift 4s ease infinite;
+}
+
+@keyframes holographicShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Metallic Gold Effect */
+.logo-metallic .separator {
+  background: linear-gradient(
+    135deg,
+    #FFD700 0%,
+    #FDB931 10%,
+    #FFED4E 20%,
+    #F5C231 30%,
+    #FFD700 40%,
+    #FDB931 50%,
+    #FFED4E 60%,
+    #F5C231 70%,
+    #FFD700 80%,
+    #FDB931 90%,
+    #FFED4E 100%
+  );
+  background-size: 200% 200%;
+  animation: metallicShine 3s linear infinite;
+}
+
+@keyframes metallicShine {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+
+/* ====================================
+ * 5. LOADING STATES
+ * ==================================== */
+
+/* Loading Animation - Pulsing logo */
+.logo-loading {
+  animation: logoPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes logoPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(0.98);
+  }
+}
+
+/* Skeleton Loading */
+.logo-skeleton .djoppie,
+.logo-skeleton .hive,
+.logo-skeleton .separator {
+  background: linear-gradient(
+    90deg,
+    #E0E0E0 0%,
+    #F0F0F0 50%,
+    #E0E0E0 100%
+  ) !important;
+  background-size: 200% 100% !important;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+  -webkit-text-fill-color: transparent !important;
+}
+
+@keyframes skeletonShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+
+/* ====================================
+ * 6. STATE VARIANTS
+ * ==================================== */
+
+/* Error State - Red accent */
+.logo-error .separator {
+  background: linear-gradient(
+    135deg,
+    #FF6B6B 0%,
+    #EE5A6F 50%,
+    #C73E1D 100%
+  );
+  animation: errorPulse 0.5s ease-in-out 3;
+}
+
+@keyframes errorPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+/* Success State - Green accent */
+.logo-success .separator {
+  background: linear-gradient(
+    135deg,
+    #51CF66 0%,
+    #37B24D 50%,
+    #2F9E44 100%
+  );
+  animation: successBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes successBounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+}
+
+/* Warning State - Amber accent */
+.logo-warning .separator {
+  background: linear-gradient(
+    135deg,
+    #FFD43B 0%,
+    #FAB005 50%,
+    #F59F00 100%
+  );
+  animation: warningShake 0.5s ease-in-out 2;
+}
+
+@keyframes warningShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* Disabled State */
+.logo-disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.logo-disabled .separator {
+  animation: none;
+  filter: grayscale(1);
+}
+
+
+/* ====================================
+ * 7. BRAND VARIATIONS
+ * ==================================== */
+
+/* Monochrome Version (for watermarks) */
+.logo-monochrome .djoppie,
+.logo-monochrome .hive,
+.logo-monochrome .separator {
+  background: none !important;
+  -webkit-text-fill-color: currentColor !important;
+  filter: none !important;
+  color: inherit;
+}
+
+/* High Contrast Mode */
+.logo-high-contrast .djoppie {
+  background: none !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+.logo-high-contrast .hive {
+  background: none !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+.logo-high-contrast .separator {
+  background: none !important;
+  -webkit-text-fill-color: #FFAA00 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .logo-high-contrast .djoppie,
+  .logo-high-contrast .hive {
+    -webkit-text-fill-color: #FFFFFF !important;
+  }
+}
+
+/* Inverted Colors */
+.logo-inverted {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+
+/* ====================================
+ * 8. ACCESSIBILITY ENHANCEMENTS
+ * ==================================== */
+
+/* Focus Ring Enhancement */
+.logo:focus-visible {
+  outline: 3px solid var(--hive-amber);
+  outline-offset: 6px;
+  border-radius: 12px;
+  background: rgba(245, 166, 35, 0.1);
+}
+
+/* High Contrast Focus */
+@media (prefers-contrast: high) {
+  .logo:focus-visible {
+    outline: 4px solid #000000;
+    outline-offset: 4px;
+  }
+}
+
+/* Large Text Mode */
+@media (prefers-contrast: more) {
+  .logo .logo-text {
+    font-size: 150% !important;
+  }
+}
+
+
+/* ====================================
+ * 9. RESPONSIVE ADJUSTMENTS
+ * ==================================== */
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  .logo-responsive {
+    gap: 6px;
+  }
+
+  .logo-responsive .logo-text {
+    font-size: 18px;
+  }
+
+  .logo-responsive .subtitle {
+    font-size: 9px;
+    letter-spacing: 0.06em;
+  }
+
+  /* Simplified animations on mobile */
+  .logo-responsive:hover .separator {
+    animation: none;
+    transform: scale(1.1);
+  }
+}
+
+/* Tablet Adjustments */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .logo-responsive .logo-text {
+    font-size: 20px;
+  }
+
+  .logo-responsive .subtitle {
+    font-size: 10px;
+  }
+}
+
+/* Large Desktop */
+@media (min-width: 1920px) {
+  .logo-responsive .logo-text {
+    font-size: 26px;
+  }
+
+  .logo-responsive .subtitle {
+    font-size: 12px;
+  }
+}
+
+
+/* ====================================
+ * 10. INTEGRATION EXAMPLES
+ * ==================================== */
+
+/* Sidebar Collapsed State */
+.sidebar-collapsed .logo {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+.sidebar-collapsed .logo .subtitle {
+  display: none;
+}
+
+/* App Bar / Top Navigation */
+.app-bar .logo {
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+}
+
+/* Card Header */
+.card-header .logo {
+  border-bottom: 2px solid rgba(245, 166, 35, 0.2);
+  padding-bottom: 1rem;
+}
+
+/* Modal / Dialog */
+.modal-header .logo {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Footer Branding */
+.footer .logo {
+  opacity: 0.6;
+  filter: grayscale(0.3);
+  transition: all 0.3s ease;
+}
+
+.footer .logo:hover {
+  opacity: 1;
+  filter: grayscale(0);
+}
+
+
+/* ====================================
+ * 11. DARK MODE ENHANCEMENTS
+ * ==================================== */
+
+/* Enhanced Dark Mode Glow */
+[data-theme="dark"] .logo-enhanced .separator {
+  filter: drop-shadow(0 0 16px var(--glow-color))
+          drop-shadow(0 0 32px var(--glow-color))
+          drop-shadow(0 4px 8px var(--shadow-accent));
+}
+
+/* Glassmorphism Dark Mode */
+[data-theme="dark"] .logo-glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+}
+
+
+/* ====================================
+ * 12. USAGE TIPS
+ * ==================================== */
+
+/*
+ * HOW TO USE THESE SNIPPETS:
+ *
+ * 1. Copy the desired snippet to your component's CSS module
+ * 2. Add the corresponding className to your DjoppieHiveLogo component
+ * 3. Example:
+ *    <DjoppieHiveLogo className="logo-neon" />
+ *
+ * COMBINING VARIANTS:
+ * - You can combine multiple classes:
+ *   <DjoppieHiveLogo className="logo-neon logo-responsive" />
+ *
+ * CUSTOMIZATION:
+ * - Adjust colors by changing the gradient values
+ * - Modify animation durations to match your app's feel
+ * - Mix and match effects for unique combinations
+ *
+ * PERFORMANCE:
+ * - Use logo-high-performance for low-end devices
+ * - Use logo-reduced-motion for better UX
+ * - Consider logo-static for print stylesheets
+ */

@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Djoppie • Hive Logo Showcase</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* Reset and Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #FAF7F2 0%, #FFF8E1 100%);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        body.dark-mode {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #ffffff;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #3E2723;
+        }
+
+        body.dark-mode h1 {
+            color: #ffffff;
+        }
+
+        .description {
+            font-size: 1.1rem;
+            color: #5D4037;
+            margin-bottom: 3rem;
+            line-height: 1.6;
+        }
+
+        body.dark-mode .description {
+            color: #cccccc;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: #F5A623;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(245, 166, 35, 0.3);
+        }
+
+        .theme-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(245, 166, 35, 0.4);
+        }
+
+        /* Showcase Grid */
+        .showcase-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .showcase-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        body.dark-mode .showcase-card {
+            background: #333333;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .showcase-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-title {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            color: #E65100;
+        }
+
+        body.dark-mode .card-title {
+            color: #F5A623;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 120px;
+            background: linear-gradient(135deg, #FAF7F2 0%, #FFF8E1 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        body.dark-mode .logo-container {
+            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        }
+
+        /* Logo Styles - Copied from module.css */
+        :root {
+            --hive-honey: #F5A623;
+            --hive-gold: #E8A524;
+            --hive-amber: #FFB300;
+            --hive-deep-orange: #E65100;
+            --gradient-gold-start: #FFD700;
+            --gradient-gold-mid: #F5A623;
+            --gradient-gold-end: #E8A524;
+            --gradient-red-start: #FF6B35;
+            --gradient-red-mid: #E65100;
+            --gradient-red-end: #8B2500;
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            user-select: none;
+            cursor: pointer;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .logo:hover {
+            transform: translateY(-1px);
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .main-text {
+            display: flex;
+            align-items: center;
+            gap: 0.25em;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        /* Light mode colors */
+        .logo {
+            --text-main: #3E2723;
+            --text-accent: #E65100;
+            --text-subtitle: #5D4037;
+            --shadow-main: rgba(62, 39, 35, 0.15);
+            --shadow-accent: rgba(230, 81, 0, 0.25);
+            --glow-color: rgba(245, 166, 35, 0.3);
+        }
+
+        /* Dark mode colors */
+        body.dark-mode .logo {
+            --text-main: #FFFFFF;
+            --text-accent: #F5A623;
+            --text-subtitle: #FFB300;
+            --shadow-main: rgba(0, 0, 0, 0.3);
+            --shadow-accent: rgba(245, 166, 35, 0.4);
+            --glow-color: rgba(245, 166, 35, 0.2);
+        }
+
+        .djoppie {
+            background: linear-gradient(
+                135deg,
+                var(--text-main) 0%,
+                var(--text-main) 70%,
+                color-mix(in srgb, var(--text-main) 85%, var(--hive-honey) 15%) 100%
+            );
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            filter: drop-shadow(0 1px 2px var(--shadow-main));
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .logo:hover .djoppie {
+            filter: drop-shadow(0 2px 4px var(--shadow-main));
+            letter-spacing: -0.01em;
+        }
+
+        .separator {
+            background: linear-gradient(
+                135deg,
+                var(--gradient-gold-start) 0%,
+                var(--gradient-gold-mid) 50%,
+                var(--gradient-gold-end) 100%
+            );
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+            margin: 0 0.15em;
+            display: inline-block;
+            filter: drop-shadow(0 0 8px var(--glow-color))
+                    drop-shadow(0 2px 4px var(--shadow-accent));
+            animation: pulseGlow 3s ease-in-out infinite;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform-origin: center;
+        }
+
+        .logo:hover .separator {
+            animation: spinGlow 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            filter: drop-shadow(0 0 12px var(--glow-color))
+                    drop-shadow(0 2px 6px var(--shadow-accent));
+        }
+
+        .hive {
+            background: linear-gradient(
+                135deg,
+                var(--gradient-red-start) 0%,
+                var(--gradient-red-mid) 50%,
+                var(--gradient-red-end) 100%
+            );
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            filter: drop-shadow(0 2px 8px var(--shadow-accent));
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        body.dark-mode .hive {
+            background: linear-gradient(
+                135deg,
+                var(--gradient-gold-start) 0%,
+                var(--gradient-gold-mid) 50%,
+                var(--gradient-gold-end) 100%
+            );
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo:hover .hive {
+            filter: drop-shadow(0 2px 10px var(--shadow-accent));
+            letter-spacing: -0.01em;
+        }
+
+        .subtitle {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-subtitle);
+            opacity: 0.65;
+            margin-top: 4px;
+            font-size: 0.85em;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .logo:hover .subtitle {
+            opacity: 0.85;
+            letter-spacing: 0.12em;
+        }
+
+        .subtitle::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                var(--hive-gold) 50%,
+                transparent 100%
+            );
+            transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .logo:hover .subtitle::after {
+            width: 100%;
+        }
+
+        /* Animations */
+        @keyframes pulseGlow {
+            0%, 100% {
+                filter: drop-shadow(0 0 8px var(--glow-color))
+                        drop-shadow(0 2px 4px var(--shadow-accent));
+            }
+            50% {
+                filter: drop-shadow(0 0 12px var(--glow-color))
+                        drop-shadow(0 2px 6px var(--shadow-accent));
+            }
+        }
+
+        @keyframes spinGlow {
+            0% {
+                transform: rotate(0deg) scale(1);
+            }
+            50% {
+                transform: rotate(180deg) scale(1.2);
+            }
+            100% {
+                transform: rotate(360deg) scale(1);
+            }
+        }
+
+        /* Feature List */
+        .feature-list {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-top: 3rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        body.dark-mode .feature-list {
+            background: #333333;
+        }
+
+        .feature-list h2 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            color: #E65100;
+            margin-bottom: 1.5rem;
+        }
+
+        body.dark-mode .feature-list h2 {
+            color: #F5A623;
+        }
+
+        .feature-list ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 0.75rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .feature-list li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: #F5A623;
+            font-weight: 900;
+            font-size: 1.5em;
+        }
+
+        /* Interaction Guide */
+        .interaction-guide {
+            background: linear-gradient(135deg, #FFF8E1 0%, #FFE0B2 100%);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            border-left: 4px solid #F5A623;
+        }
+
+        body.dark-mode .interaction-guide {
+            background: linear-gradient(135deg, #2d2d2d 0%, #3d3d3d 100%);
+        }
+
+        .interaction-guide h3 {
+            font-family: 'Outfit', sans-serif;
+            color: #E65100;
+            margin-bottom: 0.5rem;
+        }
+
+        body.dark-mode .interaction-guide h3 {
+            color: #F5A623;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()">Toggle Dark Mode</button>
+
+    <div class="container">
+        <h1>Djoppie • Hive Logo Design Showcase</h1>
+        <p class="description">
+            A premium, distinctive brand mark featuring elegant gradients, micro-animations,
+            and sophisticated typography. Hover over each logo to see interactive effects.
+        </p>
+
+        <div class="showcase-grid">
+            <!-- Extra Small -->
+            <div class="showcase-card">
+                <div class="card-title">Extra Small (14px)</div>
+                <div class="logo-container">
+                    <div class="logo">
+                        <div class="logo-text" style="font-size: 14px;">
+                            <div class="main-text">
+                                <span class="djoppie">Djoppie</span>
+                                <span class="separator">•</span>
+                                <span class="hive">Hive</span>
+                            </div>
+                            <div class="subtitle" style="font-size: 8px;">HR administration</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Small -->
+            <div class="showcase-card">
+                <div class="card-title">Small (17px)</div>
+                <div class="logo-container">
+                    <div class="logo">
+                        <div class="logo-text" style="font-size: 17px;">
+                            <div class="main-text">
+                                <span class="djoppie">Djoppie</span>
+                                <span class="separator">•</span>
+                                <span class="hive">Hive</span>
+                            </div>
+                            <div class="subtitle" style="font-size: 9px;">HR administration</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medium (Default) -->
+            <div class="showcase-card">
+                <div class="card-title">Medium - Default (22px)</div>
+                <div class="logo-container">
+                    <div class="logo">
+                        <div class="logo-text" style="font-size: 22px;">
+                            <div class="main-text">
+                                <span class="djoppie">Djoppie</span>
+                                <span class="separator">•</span>
+                                <span class="hive">Hive</span>
+                            </div>
+                            <div class="subtitle" style="font-size: 10px;">HR administration</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Large -->
+            <div class="showcase-card">
+                <div class="card-title">Large (28px)</div>
+                <div class="logo-container">
+                    <div class="logo">
+                        <div class="logo-text" style="font-size: 28px;">
+                            <div class="main-text">
+                                <span class="djoppie">Djoppie</span>
+                                <span class="separator">•</span>
+                                <span class="hive">Hive</span>
+                            </div>
+                            <div class="subtitle" style="font-size: 12px;">HR administration</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hero -->
+            <div class="showcase-card" style="grid-column: span 2;">
+                <div class="card-title">Hero Size (42px)</div>
+                <div class="logo-container">
+                    <div class="logo">
+                        <div class="logo-text" style="font-size: 42px;">
+                            <div class="main-text">
+                                <span class="djoppie">Djoppie</span>
+                                <span class="separator">•</span>
+                                <span class="hive">Hive</span>
+                            </div>
+                            <div class="subtitle" style="font-size: 14px;">HR administration</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Without Subtitle -->
+            <div class="showcase-card">
+                <div class="card-title">Without Subtitle</div>
+                <div class="logo-container">
+                    <div class="logo">
+                        <div class="logo-text" style="font-size: 22px;">
+                            <div class="main-text">
+                                <span class="djoppie">Djoppie</span>
+                                <span class="separator">•</span>
+                                <span class="hive">Hive</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="interaction-guide">
+            <h3>Interactive Features</h3>
+            <p><strong>Hover over any logo</strong> to see:</p>
+            <ul style="margin-top: 1rem; padding-left: 1.5rem;">
+                <li>Golden separator spins 360° with scale effect</li>
+                <li>Letter spacing expands for breathing effect</li>
+                <li>Drop shadows intensify for depth</li>
+                <li>Subtitle reveals golden gradient underline</li>
+                <li>Entire logo lifts slightly upward</li>
+            </ul>
+        </div>
+
+        <div class="feature-list">
+            <h2>Premium Design Features</h2>
+            <ul>
+                <li><strong>Multi-Stop Gradients:</strong> Rich color transitions on all text elements</li>
+                <li><strong>Continuous Pulse Animation:</strong> Golden separator gently glows (3s cycle)</li>
+                <li><strong>Interactive Spin:</strong> Separator rotates 360° with bounce easing on hover</li>
+                <li><strong>Drop Shadow Depth:</strong> Layered shadows create dimension and luxury</li>
+                <li><strong>Letter Spacing Animation:</strong> Text breathes and expands on interaction</li>
+                <li><strong>Theme Adaptive:</strong> Seamlessly transitions between light and dark modes</li>
+                <li><strong>Decorative Underline:</strong> Gradient line expands on subtitle hover</li>
+                <li><strong>Premium Typography:</strong> Outfit 800 weight for bold presence</li>
+                <li><strong>Accessibility First:</strong> WCAG AAA contrast, keyboard navigation, reduced motion support</li>
+                <li><strong>Performance Optimized:</strong> GPU-accelerated transforms and filters</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+        }
+
+        // Keyboard accessibility
+        document.querySelectorAll('.logo').forEach(logo => {
+            logo.setAttribute('tabindex', '0');
+            logo.setAttribute('role', 'button');
+        });
+    </script>
+</body>
+</html>

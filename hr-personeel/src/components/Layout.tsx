@@ -24,7 +24,6 @@ import {
   Database,
   UserPlus,
   AppWindow,
-  Network,
   Laptop,
   UserCheck,
   KeyRound,
@@ -86,27 +85,29 @@ const menuGroups: MenuGroup[] = [
     ],
   },
   {
-    id: 'toegang',
-    label: 'Toegang & Licenties',
-    icon: KeyRound,
+    id: 'applicaties',
+    label: 'Applicaties',
+    icon: AppWindow,
     defaultOpen: true,
+    items: [
+      {
+        to: '/applicaties',
+        icon: AppWindow,
+        label: 'Toegangsbeheer',
+        requiredRoles: ['ict_super_admin', 'hr_admin'],
+      },
+    ],
+  },
+  {
+    id: 'licenties',
+    label: 'Licenties & Materiaal',
+    icon: KeyRound,
+    defaultOpen: false,
     items: [
       {
         to: '/licenties',
         icon: Key,
-        label: 'Microsoft 365 Licenties',
-        requiredRoles: ['ict_super_admin'],
-      },
-      {
-        to: '/applicaties',
-        icon: AppWindow,
-        label: 'Applicatie Toegang',
-        requiredRoles: ['ict_super_admin', 'hr_admin'],
-      },
-      {
-        to: '/infrastructuur',
-        icon: Network,
-        label: 'Infrastructuur',
+        label: 'Microsoft 365',
         requiredRoles: ['ict_super_admin'],
       },
       {
@@ -274,7 +275,6 @@ export default function Layout() {
             />
           </div>
           <div className="header-actions">
-            <ThemeToggle />
             <button
               className="sidebar-toggle"
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -373,6 +373,9 @@ export default function Layout() {
                 <LogOut size={18} />
               </button>
             )}
+          </div>
+          <div className="theme-toggle-section">
+            <ThemeToggle />
           </div>
         </div>
       </aside>
