@@ -77,4 +77,10 @@ public interface IEmployeeService
     /// Includes: personal data, group memberships, event participations, audit logs, roles.
     /// </summary>
     Task<GdprExportDto?> ExportPersonalDataAsync(Guid employeeId, string exportedBy, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the count of employees that need validation (status Nieuw or InReview).
+    /// Optionally filtered by sector.
+    /// </summary>
+    Task<int> GetValidatieAantalAsync(Guid? sectorId = null, CancellationToken cancellationToken = default);
 }

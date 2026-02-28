@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Users,
   UserCheck,
@@ -15,14 +16,26 @@ import {
   ShieldAlert,
   ShieldX,
   ShieldQuestion,
+  KeyRound,
+  Key,
+  AppWindow,
+  Network,
+  Laptop,
+  UserCog,
+  ClipboardCheck,
+  Wand2,
+  ArrowRight,
+  Database,
+  Boxes,
 } from 'lucide-react';
-import { statisticsApi, type DashboardStatistics } from '../services/api';
+import { statisticsApi, employeeValidatieApi, type DashboardStatistics } from '../services/api';
 import SyncKnop from '../components/SyncKnop';
 
 export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStatistics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mijnValidaties, setMijnValidaties] = useState<number>(0);
 
   const loadStats = async () => {
     try {
@@ -37,8 +50,20 @@ export default function Dashboard() {
     }
   };
 
+  // Load validation count (backend filters by user's sector)
+  const loadMijnValidaties = async () => {
+    try {
+      const aantal = await employeeValidatieApi.getAantal();
+      setMijnValidaties(aantal);
+    } catch (err) {
+      console.error('Error loading validation count:', err);
+      setMijnValidaties(0);
+    }
+  };
+
   useEffect(() => {
     loadStats();
+    loadMijnValidaties();
   }, []);
 
   if (isLoading) {
@@ -94,7 +119,7 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="page-actions">
-          <button className="btn btn-secondary" onClick={loadStats}>
+          <button className="btn btn-secondary" onClick={() => { loadStats(); loadMijnValidaties(); }}>
             <RefreshCw size={16} /> Vernieuwen
           </button>
         </div>
@@ -153,6 +178,155 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Quick Access Categories */}
+      <div className="quick-access-section">
+        <h2 className="section-title">Snel Navigeren</h2>
+        <div className="quick-access-grid">
+          {/* Medewerkers */}
+          <div className="quick-access-card category-medewerkers">
+            <div className="quick-access-header">
+              <div className="quick-access-icon">
+                <UserCog size={24} />
+              </div>
+              <h3>Medewerkers</h3>
+            </div>
+            <p className="quick-access-description">
+              Beheer personeel, vrijwilligers en on/offboarding processen
+            </p>
+            <div className="quick-access-links">
+              <Link to="/personeel" className="quick-link">
+                <Users size={14} /> Personeelslijst
+                <ArrowRight size={14} />
+              </Link>
+              <Link to="/vrijwilligers" className="quick-link">
+                <HeartHandshake size={14} /> Vrijwilligers
+                <ArrowRight size={14} />
+              </Link>
+              <Link to="/validatie" className="quick-link">
+                <ClipboardCheck size={14} /> Validatie
+                {mijnValidaties > 0 && (
+                  <span className="quick-link-badge">{mijnValidaties}</span>
+                )}
+                <ArrowRight size={14} />
+              </Link>
+              <Link to="/onboarding" className="quick-link">
+                <UserPlus size={14} /> On/Offboarding
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+          </div>
+
+          {/* Toegang & Licenties */}
+          <div className="quick-access-card category-toegang">
+            <div className="quick-access-header">
+              <div className="quick-access-icon">
+                <KeyRound size={24} />
+              </div>
+              <h3>Toegang & Licenties</h3>
+            </div>
+            <p className="quick-access-description">
+              Microsoft 365, applicaties, infrastructuur en materiaal
+            </p>
+            <div className="quick-access-links">
+              <Link to="/licenties" className="quick-link">
+                <Key size={14} /> Microsoft 365 Licenties
+                <ArrowRight size={14} />
+              </Link>
+              <Link to="/applicaties" className="quick-link">
+                <AppWindow size={14} /> Applicatie Toegang
+                <ArrowRight size={14} />
+              </Link>
+              <Link to="/infrastructuur" className="quick-link">
+                <Network size={14} /> Infrastructuur
+                <ArrowRight size={14} />
+              </Link>
+              <Link to="/materiaal" className="quick-link">
+                <Laptop size={14} /> Materiaal
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+          </div>
+
+          {/* Rollen & Rechten */}
+          <div className="quick-access-card category-rollen">
+            <div className="quick-access-header">
+              <div className="quick-access-icon">
+                <Shield size={24} />
+              </div>
+              <h3>Rollen & Rechten</h3>
+            </div>
+            <p className="quick-access-description">
+              Gebruikersrollen, automatische toewijzing en functieprofielen
+            </p>
+            <div className="quick-access-links">
+              <Link to="/rollen" className="quick-link">
+                <UserCheck size={14} /> Gebruikersrollen
+                <ArrowRight size={14} />
+              </Link>
+              <Link to="/auto-roltoewijzing" className="quick-link">
+                <Wand2 size={14} /> Auto Roltoewijzing
+                <ArrowRight size={14} />
+              </Link>
+              <Link to="/functieprofielen" className="quick-link">
+                <ClipboardCheck size={14} /> Functieprofielen
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+          </div>
+
+          {/* Organisatie */}
+          <div className="quick-access-card category-organisatie">
+            <div className="quick-access-header">
+              <div className="quick-access-icon">
+                <Boxes size={24} />
+              </div>
+              <h3>Organisatie</h3>
+            </div>
+            <p className="quick-access-description">
+              Sectoren, diensten en distributiegroepen beheren
+            </p>
+            <div className="quick-access-links">
+              <Link to="/sectoren" className="quick-link">
+                <Building2 size={14} /> Sectoren & Diensten
+                <ArrowRight size={14} />
+              </Link>
+              <Link to="/distributiegroepen" className="quick-link">
+                <Users size={14} /> Distributiegroepen
+                <span className="quick-link-count">{stats.totaalGroepen}</span>
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+          </div>
+
+          {/* Systeem */}
+          <div className="quick-access-card category-systeem">
+            <div className="quick-access-header">
+              <div className="quick-access-icon">
+                <Database size={24} />
+              </div>
+              <h3>Systeem</h3>
+            </div>
+            <p className="quick-access-description">
+              AD synchronisatie, import en audit logging
+            </p>
+            <div className="quick-access-links">
+              <Link to="/sync" className="quick-link">
+                <RefreshCw size={14} /> AD Sync
+                <ArrowRight size={14} />
+              </Link>
+              <Link to="/import" className="quick-link">
+                <Cloud size={14} /> Import
+                <ArrowRight size={14} />
+              </Link>
+              <Link to="/audit" className="quick-link">
+                <Briefcase size={14} /> Audit Log
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Sync & Validatie status */}
       <div className="dashboard-grid">
         <div className="card sync-card-prominent">
@@ -178,10 +352,10 @@ export default function Dashboard() {
               <span className="sync-value">{stats.totaalSyncs}</span>
             </div>
           </div>
-          {stats.openValidaties > 0 && (
+          {mijnValidaties > 0 && (
             <div className="alert alert-warning mt-3">
               <AlertTriangle size={16} />
-              <span>{stats.openValidaties} openstaande validatie(s)</span>
+              <span>{mijnValidaties} medewerker(s) te valideren</span>
             </div>
           )}
         </div>

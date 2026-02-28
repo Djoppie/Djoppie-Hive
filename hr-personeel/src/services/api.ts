@@ -636,6 +636,11 @@ export const employeeValidatieApi = {
       body: JSON.stringify({ employeeIds }),
     });
   },
+
+  /** Haal het aantal medewerkers op dat gevalideerd moet worden (voor badge) */
+  getAantal: (): Promise<number> => {
+    return fetchWithAuth<number>('/employees/validatie/aantal');
+  },
 };
 
 // ============================================

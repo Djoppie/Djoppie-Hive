@@ -253,4 +253,9 @@ public class GraphEmployeeService : IEmployeeService
     {
         throw new NotImplementedException("GraphEmployeeService does not support database operations. Use EmployeeService instead.");
     }
+
+    public Task<int> GetValidatieAantalAsync(Guid? sectorId = null, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("GraphEmployeeService does not support database operations. Use EmployeeService instead.");
+    }
 }

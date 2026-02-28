@@ -786,4 +786,32 @@ public class EmployeeService : IEmployeeService
     }
 
     #endregion
+
+    #region Validation Count
+
+    /// <inheritdoc />
+    public async Task<int> GetValidatieAantalAsync(Guid? sectorId = null, CancellationToken cancellationToken = default)
+    {
+        var query = _context.Employees
+            .Where(e => e.IsActive &&
+                       (e.ValidatieStatus == ValidatieStatus.Nieuw ||
+                        e.ValidatieStatus == ValidatieStatus.InReview));
+
+        // Filter by sector if provided (non-admin users)
+        if (sectorId.HasValue)
+        {
+            // Get all diensten (child groups) within this sector
+            var dienstIdsInSector = await _context.DistributionGroups
+                .Where(g => g.BovenliggendeGroepId == sectorId.Value)
+                .Select(g => g.Id)
+                .ToListAsync(cancellationToken);
+
+            // Include employees in any dienst within the sector
+            query = query.Where(e => e.DienstId.HasValue && dienstIdsInSector.Contains(e.DienstId.Value));
+        }
+
+        return await query.CountAsync(cancellationToken);
+    }
+
+    #endregion
 }

@@ -297,6 +297,21 @@ public class EmployeesController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    /// <summary>
+    /// Gets the count of employees that need validation (status Nieuw or InReview).
+    /// Filtered by user's sector for non-admin users.
+    /// Used for badge display in navigation.
+    /// </summary>
+    [HttpGet("validatie/aantal")]
+    [Authorize]
+    [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
+    public async Task<ActionResult<int>> GetValidatieAantal(CancellationToken cancellationToken)
+    {
+        var sectorId = await _userContext.GetCurrentUserSectorIdAsync();
+        var count = await _employeeService.GetValidatieAantalAsync(sectorId, cancellationToken);
+        return Ok(count);
+    }
 }
 
 /// <summary>
