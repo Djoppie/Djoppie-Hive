@@ -31,7 +31,7 @@ namespace DjoppieHive.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("CorrelationId")
-                        .HasMaxLength(36)
+                        .HasMaxLength(256)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("EntityDescription")
@@ -70,7 +70,7 @@ namespace DjoppieHive.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("UserId")
-                        .HasMaxLength(36)
+                        .HasMaxLength(256)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -117,7 +117,7 @@ namespace DjoppieHive.Infrastructure.Migrations
 
                     b.Property<string>("EntraObjectId")
                         .IsRequired()
-                        .HasMaxLength(36)
+                        .HasMaxLength(256)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("GroupType")
@@ -242,7 +242,7 @@ namespace DjoppieHive.Infrastructure.Migrations
 
                     b.Property<string>("EntraObjectId")
                         .IsRequired()
-                        .HasMaxLength(36)
+                        .HasMaxLength(256)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("GevalideerdDoor")
@@ -430,6 +430,65 @@ namespace DjoppieHive.Infrastructure.Migrations
                     b.ToTable("EventParticipants");
                 });
 
+            modelBuilder.Entity("DjoppieHive.Core.Entities.JobTitleRoleMapping", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("ExactMatch")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("JobTitlePattern")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ScopeDetermination")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("JobTitlePattern");
+
+                    b.HasIndex("Priority");
+
+                    b.HasIndex("Role");
+
+                    b.ToTable("JobTitleRoleMappings");
+                });
+
             modelBuilder.Entity("DjoppieHive.Core.Entities.LocalGroup", b =>
                 {
                     b.Property<Guid>("Id")
@@ -486,6 +545,293 @@ namespace DjoppieHive.Infrastructure.Migrations
                     b.HasIndex("EmployeeId");
 
                     b.ToTable("LocalGroupMembers");
+                });
+
+            modelBuilder.Entity("DjoppieHive.Core.Entities.OnboardingProcess", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("AantalVoltooideTaken")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Beschrijving")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DatumGeannuleerd")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DatumVoltooid")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("GeplandeStartdatum")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("GewensteEinddatum")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Prioriteit")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("TemplateId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Titel")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TotaalAantalTaken")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("VerantwoordelijkeEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("VerantwoordelijkeId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("VerantwoordelijkeNaam")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("VoortgangPercentage")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("GeplandeStartdatum");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TemplateId");
+
+                    b.HasIndex("Type");
+
+                    b.HasIndex("VerantwoordelijkeId");
+
+                    b.ToTable("OnboardingProcesses");
+                });
+
+            modelBuilder.Entity("DjoppieHive.Core.Entities.OnboardingTask", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("AfhankelijkVanTaakId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Beschrijving")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("Deadline")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("GestartOp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsVerplicht")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Metadata")
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OnboardingProcessId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TaskType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Titel")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ToegewezenAanAfdeling")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ToegewezenAanEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ToegewezenAanId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ToegewezenAanNaam")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("VerwachteDuurDagen")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Volgorde")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("VoltooidDoor")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("VoltooidOp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("VoltooiingNotities")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AfhankelijkVanTaakId");
+
+                    b.HasIndex("Deadline");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("OnboardingProcessId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TaskType");
+
+                    b.HasIndex("ToegewezenAanId");
+
+                    b.HasIndex("Volgorde");
+
+                    b.ToTable("OnboardingTasks");
+                });
+
+            modelBuilder.Entity("DjoppieHive.Core.Entities.OnboardingTemplate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Beschrijving")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Naam")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ProcessType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("StandaardDuurDagen")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TaskenDefinitie")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Versie")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("VoorDepartment")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("VoorDienstId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("VoorEmployeeType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("VoorSectorId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("IsDefault");
+
+                    b.HasIndex("ProcessType");
+
+                    b.HasIndex("VoorDienstId");
+
+                    b.HasIndex("VoorEmployeeType");
+
+                    b.HasIndex("VoorSectorId");
+
+                    b.ToTable("OnboardingTemplates");
                 });
 
             modelBuilder.Entity("DjoppieHive.Core.Entities.SyncLogboek", b =>
@@ -572,7 +918,7 @@ namespace DjoppieHive.Infrastructure.Migrations
 
                     b.Property<string>("EntraObjectId")
                         .IsRequired()
-                        .HasMaxLength(36)
+                        .HasMaxLength(256)
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsActive")
@@ -822,6 +1168,52 @@ namespace DjoppieHive.Infrastructure.Migrations
                     b.Navigation("LocalGroup");
                 });
 
+            modelBuilder.Entity("DjoppieHive.Core.Entities.OnboardingProcess", b =>
+                {
+                    b.HasOne("DjoppieHive.Core.Entities.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DjoppieHive.Core.Entities.OnboardingTemplate", "Template")
+                        .WithMany("Processes")
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("Template");
+                });
+
+            modelBuilder.Entity("DjoppieHive.Core.Entities.OnboardingTask", b =>
+                {
+                    b.HasOne("DjoppieHive.Core.Entities.OnboardingTask", "AfhankelijkVanTaak")
+                        .WithMany("AfhankelijkeTaken")
+                        .HasForeignKey("AfhankelijkVanTaakId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("DjoppieHive.Core.Entities.OnboardingProcess", "OnboardingProcess")
+                        .WithMany("Tasks")
+                        .HasForeignKey("OnboardingProcessId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AfhankelijkVanTaak");
+
+                    b.Navigation("OnboardingProcess");
+                });
+
+            modelBuilder.Entity("DjoppieHive.Core.Entities.OnboardingTemplate", b =>
+                {
+                    b.HasOne("DjoppieHive.Core.Entities.DistributionGroup", "VoorDienst")
+                        .WithMany()
+                        .HasForeignKey("VoorDienstId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("VoorDienst");
+                });
+
             modelBuilder.Entity("DjoppieHive.Core.Entities.UserRole", b =>
                 {
                     b.HasOne("DjoppieHive.Core.Entities.DistributionGroup", "Dienst")
@@ -900,6 +1292,21 @@ namespace DjoppieHive.Infrastructure.Migrations
             modelBuilder.Entity("DjoppieHive.Core.Entities.LocalGroup", b =>
                 {
                     b.Navigation("Members");
+                });
+
+            modelBuilder.Entity("DjoppieHive.Core.Entities.OnboardingProcess", b =>
+                {
+                    b.Navigation("Tasks");
+                });
+
+            modelBuilder.Entity("DjoppieHive.Core.Entities.OnboardingTask", b =>
+                {
+                    b.Navigation("AfhankelijkeTaken");
+                });
+
+            modelBuilder.Entity("DjoppieHive.Core.Entities.OnboardingTemplate", b =>
+                {
+                    b.Navigation("Processes");
                 });
 
             modelBuilder.Entity("DjoppieHive.Core.Entities.SyncLogboek", b =>

@@ -183,16 +183,19 @@ public class EmployeeService : IEmployeeService
     {
         try
         {
-            // Validate DienstId if provided
+            // Validate DienstId if provided - if not found locally, we'll skip setting it
+            // (Azure AD groups may not be synced to local DB yet)
+            Guid? validatedDienstId = null;
             if (dto.DienstId.HasValue)
             {
                 var dienstExists = await _context.DistributionGroups
                     .AnyAsync(d => d.Id == dto.DienstId.Value, cancellationToken);
 
-                if (!dienstExists)
+                if (dienstExists)
                 {
-                    throw new InvalidOperationException($"Dienst with ID {dto.DienstId.Value} does not exist.");
+                    validatedDienstId = dto.DienstId.Value;
                 }
+                // If dienst doesn't exist locally, we just skip setting it (no error)
             }
 
             // Check for duplicate email
@@ -221,7 +224,7 @@ public class EmployeeService : IEmployeeService
                 EmployeeType = dto.EmployeeType,
                 ArbeidsRegime = dto.ArbeidsRegime,
                 PhotoUrl = dto.PhotoUrl,
-                DienstId = dto.DienstId,
+                DienstId = validatedDienstId,
                 StartDatum = dto.StartDatum,
                 EindDatum = dto.EindDatum,
                 Telefoonnummer = dto.Telefoonnummer,
@@ -298,15 +301,16 @@ public class EmployeeService : IEmployeeService
                 {
                     if (dto.DienstId.Value != Guid.Empty)
                     {
+                        // Check if dienst exists locally - if not, skip setting it
+                        // (Azure AD groups may not be synced to local DB yet)
                         var dienstExists = await _context.DistributionGroups
                             .AnyAsync(d => d.Id == dto.DienstId.Value, cancellationToken);
 
-                        if (!dienstExists)
+                        if (dienstExists)
                         {
-                            throw new InvalidOperationException($"Dienst with ID {dto.DienstId.Value} does not exist.");
+                            employee.DienstId = dto.DienstId.Value;
                         }
-
-                        employee.DienstId = dto.DienstId.Value;
+                        // If dienst doesn't exist locally, we just skip setting it (no error)
                     }
                     else
                     {
@@ -382,15 +386,16 @@ public class EmployeeService : IEmployeeService
                 {
                     if (dto.DienstId.Value != Guid.Empty)
                     {
+                        // Check if dienst exists locally - if not, skip setting it
+                        // (Azure AD groups may not be synced to local DB yet)
                         var dienstExists = await _context.DistributionGroups
                             .AnyAsync(d => d.Id == dto.DienstId.Value, cancellationToken);
 
-                        if (!dienstExists)
+                        if (dienstExists)
                         {
-                            throw new InvalidOperationException($"Dienst with ID {dto.DienstId.Value} does not exist.");
+                            employee.DienstId = dto.DienstId.Value;
                         }
-
-                        employee.DienstId = dto.DienstId.Value;
+                        // If dienst doesn't exist locally, we just skip setting it (no error)
                     }
                     else
                     {

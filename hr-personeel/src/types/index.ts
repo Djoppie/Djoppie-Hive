@@ -100,6 +100,7 @@ export interface Medewerker {
 
   // HR velden
   dienst: string;
+  dienstId?: string;
   sector: string;
   arbeidsRegime: ArbeidsRegime;
   type: PersoneelType;

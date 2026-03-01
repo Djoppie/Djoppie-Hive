@@ -13,8 +13,19 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<Applicatio
     {
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
 
-        // Gebruik SQLite voor design-time operaties
-        optionsBuilder.UseSqlite("Data Source=djoppie-hive-design.db");
+        // Check for SQL Server connection string in environment variable
+        var sqlServerConnection = Environment.GetEnvironmentVariable("AZURE_SQL_CONNECTION");
+
+        if (!string.IsNullOrEmpty(sqlServerConnection))
+        {
+            // Use SQL Server for Azure migrations
+            optionsBuilder.UseSqlServer(sqlServerConnection);
+        }
+        else
+        {
+            // Gebruik SQLite voor local design-time operaties
+            optionsBuilder.UseSqlite("Data Source=djoppie-hive-design.db");
+        }
 
         return new ApplicationDbContext(optionsBuilder.Options);
     }

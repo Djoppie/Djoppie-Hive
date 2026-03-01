@@ -69,5 +69,8 @@ public enum AuditEntityType
     EventParticipant,
     ValidatieVerzoek,
     SyncLogboek,
-    System
+    System,
+    OnboardingProcess,
+    OnboardingTask,
+    OnboardingTemplate
 }

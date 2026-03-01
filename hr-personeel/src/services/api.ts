@@ -59,7 +59,7 @@ async function getAccessToken(): Promise<string | null> {
 }
 
 // Generic fetch wrapper with authentication
-async function fetchWithAuth<T>(
+export async function fetchWithAuth<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
@@ -248,6 +248,7 @@ export interface Employee {
 }
 
 export interface CreateEmployeeDto {
+  displayName: string;
   givenName: string;
   surname: string;
   email: string;
@@ -265,6 +266,7 @@ export interface CreateEmployeeDto {
 }
 
 export interface UpdateEmployeeDto {
+  displayName?: string;
   givenName?: string;
   surname?: string;
   email?: string;

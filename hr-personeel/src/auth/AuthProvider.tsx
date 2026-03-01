@@ -98,7 +98,7 @@ function LoginPage() {
         <div className="login-header">
           <DjoppieHiveLogo
             size="large"
-            theme="light"
+            theme="dark"
             showSubtitle={true}
           />
         </div>

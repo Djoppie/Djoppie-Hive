@@ -20,6 +20,7 @@ const defaultFormData = {
   functie: '',
   sector: '',
   dienst: '',
+  dienstId: '' as string | undefined,
   arbeidsRegime: 'voltijds' as ArbeidsRegime,
   type: 'personeel' as PersoneelType,
   actief: true,
@@ -269,7 +270,16 @@ export default function MedewerkerModal({ medewerker, open, onClose, onSave, vie
                 id="dienst"
                 required={!viewOnly}
                 value={formData.dienst}
-                onChange={e => setFormData(prev => ({ ...prev, dienst: e.target.value }))}
+                onChange={e => {
+                  const selectedDienst = e.target.value;
+                  // Find the dienstId from apiDiensten if available
+                  const dienstObj = apiDiensten.find(d => formatDienstName(d.displayName) === selectedDienst);
+                  setFormData(prev => ({
+                    ...prev,
+                    dienst: selectedDienst,
+                    dienstId: dienstObj?.id || undefined,
+                  }));
+                }}
                 disabled={viewOnly || !formData.sector || dienstenLoading}
                 className={viewOnly ? 'input-readonly' : ''}
               >

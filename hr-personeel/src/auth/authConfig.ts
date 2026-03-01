@@ -4,7 +4,7 @@ import { LogLevel } from '@azure/msal-browser';
 // MSAL configuration for Djoppie-Hive
 export const msalConfig: Configuration = {
   auth: {
-    clientId: import.meta.env.VITE_ENTRA_CLIENT_ID || 'acc348be-b533-4402-8041-672c1cba1273',
+    clientId: import.meta.env.VITE_ENTRA_CLIENT_ID || '2ea8a14d-ea05-40cc-af35-dd482bf8e235',
     authority: `https://login.microsoftonline.com/${import.meta.env.VITE_ENTRA_TENANT_ID || '7db28d6f-d542-40c1-b529-5e5ed2aad545'}`,
     redirectUri: window.location.origin,
     postLogoutRedirectUri: window.location.origin,

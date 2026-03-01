@@ -103,7 +103,6 @@ export function UserRoleProvider({ children }: { children: ReactNode }) {
           dienstId: meResponse.dienstId || undefined,
         });
 
-        console.log('User roles loaded from API:', apiRoles);
       } catch (apiError) {
         console.error('Error fetching user from API, falling back to token:', apiError);
         // Fallback: use account info with medewerker role

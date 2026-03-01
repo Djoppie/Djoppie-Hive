@@ -43,3 +43,17 @@ appsettings.*.local.json
 # Test results
 TestResults/
 coverage/
+
+# Publish/Deploy artifacts
+publish/
+deploy.zip
+backend-api.zip
+*.zip
+
+# Azure logs
+azure-logs*/
+webapp-logs/
+
+# Temporary files
+*.tmp
+*.bak

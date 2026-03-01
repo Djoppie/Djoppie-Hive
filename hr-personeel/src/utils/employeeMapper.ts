@@ -108,6 +108,7 @@ export function mapEmployeeToMedewerker(employee: Employee): Medewerker {
     functie: employee.jobTitle || undefined,
     afdeling: employee.department || undefined,
     dienst: dienst,
+    dienstId: employee.dienstId || undefined,
     sector: sector,
     arbeidsRegime: mapArbeidsRegimeFromAPI(employee.arbeidsRegime),
     type: mapEmployeeTypeToPersoneelType(employee.employeeType),
@@ -123,12 +124,18 @@ export function mapEmployeeToMedewerker(employee: Employee): Medewerker {
 
 // Map frontend Medewerker to backend CreateEmployeeDto
 export function mapMedewerkerToCreateDto(medewerker: Partial<Medewerker>) {
+  const voornaam = medewerker.voornaam || '';
+  const achternaam = medewerker.achternaam || '';
+  const displayName = `${voornaam} ${achternaam}`.trim() || medewerker.email || '';
+
   return {
-    givenName: medewerker.voornaam || '',
-    surname: medewerker.achternaam || '',
+    displayName,
+    givenName: voornaam,
+    surname: achternaam,
     email: medewerker.email || '',
     jobTitle: medewerker.functie,
     department: medewerker.afdeling || medewerker.dienst,
+    dienstId: medewerker.dienstId,
     mobilePhone: medewerker.telefoon,
     employeeType: medewerker.type ? mapPersoneelTypeToEmployeeType(medewerker.type) : 'Personeel',
     arbeidsRegime: medewerker.arbeidsRegime ? mapArbeidsRegimeToAPI(medewerker.arbeidsRegime) : 'Voltijds',
@@ -143,10 +150,20 @@ export function mapMedewerkerToUpdateDto(medewerker: Partial<Medewerker>): Recor
 
   if (medewerker.voornaam !== undefined) dto.givenName = medewerker.voornaam;
   if (medewerker.achternaam !== undefined) dto.surname = medewerker.achternaam;
+
+  // Update displayName when either name field changes
+  if (medewerker.voornaam !== undefined || medewerker.achternaam !== undefined) {
+    const voornaam = medewerker.voornaam || '';
+    const achternaam = medewerker.achternaam || '';
+    const displayName = `${voornaam} ${achternaam}`.trim();
+    if (displayName) dto.displayName = displayName;
+  }
+
   if (medewerker.email !== undefined) dto.email = medewerker.email;
   if (medewerker.functie !== undefined) dto.jobTitle = medewerker.functie;
   if (medewerker.afdeling !== undefined) dto.department = medewerker.afdeling;
   if (medewerker.dienst !== undefined && !medewerker.afdeling) dto.department = medewerker.dienst;
+  if (medewerker.dienstId !== undefined) dto.dienstId = medewerker.dienstId;
   if (medewerker.telefoon !== undefined) {
     dto.mobilePhone = medewerker.telefoon;
     dto.telefoonnummer = medewerker.telefoon;

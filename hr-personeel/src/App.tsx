@@ -17,6 +17,8 @@ import AutoRoltoewijzing from './pages/AutoRoltoewijzing';
 import Licenties from './pages/Licenties';
 // New pages
 import Onboarding from './pages/Onboarding';
+import OnboardingDetail from './pages/OnboardingDetail';
+import OnboardingTemplates from './pages/OnboardingTemplates';
 import ApplicatieToegang from './pages/ApplicatieToegang';
 import Infrastructuur from './pages/Infrastructuur';
 import Materiaal from './pages/Materiaal';
@@ -35,6 +37,8 @@ export default function App() {
               <Route path="/vrijwilligers" element={<Vrijwilligers />} />
               <Route path="/validatie" element={<Validatie />} />
               <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/onboarding/:id" element={<OnboardingDetail />} />
+              <Route path="/onboarding/templates" element={<OnboardingTemplates />} />
               {/* Toegang & Licenties */}
               <Route path="/licenties" element={<Licenties />} />
               <Route path="/applicaties" element={<ApplicatieToegang />} />

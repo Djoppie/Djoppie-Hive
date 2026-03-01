@@ -95,10 +95,7 @@ if (!string.IsNullOrEmpty(tenantId) && !string.IsNullOrEmpty(clientId) && !strin
     var graphClient = new GraphServiceClient(credential, new[] { "https://graph.microsoft.com/.default" });
     builder.Services.AddSingleton(graphClient);
 }
-else
-{
-    Console.WriteLine("WARNING: Graph API credentials not configured. Distribution groups will not work.");
-}
+// Graph API credentials not configured - distribution groups will use stub service
 
 // ============================================
 // SECURITY: Authorization with role-based policies
@@ -242,7 +239,12 @@ builder.Services.AddCors(options =>
             policy.WithOrigins(
                     "http://localhost:5173",
                     "http://localhost:5174",
-                    "http://localhost:5175"
+                    "http://localhost:5175",
+                    "http://localhost:5176",
+                    "http://localhost:5177",
+                    "http://localhost:5178",
+                    "http://localhost:5179",
+                    "http://localhost:5180"
                 )
                 .AllowAnyHeader()
                 .AllowAnyMethod()
@@ -260,11 +262,6 @@ builder.Services.AddCors(options =>
         if (!string.IsNullOrEmpty(frontendUrl))
         {
             allowedOrigins = allowedOrigins.Append(frontendUrl).ToArray();
-        }
-
-        if (allowedOrigins.Length == 0)
-        {
-            Console.WriteLine("WARNING: No allowed CORS origins configured for production!");
         }
 
         options.AddPolicy("AllowFrontend", policy =>

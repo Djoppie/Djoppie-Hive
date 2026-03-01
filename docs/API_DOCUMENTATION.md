@@ -16,7 +16,8 @@ dotnet run
 ```
 
 Swagger UI is beschikbaar op:
-- **URL**: http://localhost:5014/swagger
+
+- **URL**: <http://localhost:5014/swagger>
 - **Endpoint**: `/swagger/v1/swagger.json` (OpenAPI specificatie)
 
 ### Productie Omgeving
@@ -24,6 +25,7 @@ Swagger UI is beschikbaar op:
 In **Production mode** is Swagger UI uitgeschakeld voor security redenen. Alleen de API endpoints zijn beschikbaar.
 
 Voor productie moet je een API client gebruiken zoals:
+
 - **Postman** (importeer de OpenAPI spec)
 - **Insomnia**
 - **curl** (command-line)
@@ -81,6 +83,7 @@ Endpoints zijn gegroepeerd per functionaliteit met **Tags**:
 ### 3. Request/Response Examples
 
 Elk endpoint documenteert:
+
 - **HTTP Method** en **URL pattern**
 - **Query parameters** met beschrijvingen
 - **Request body** schema (met voorbeeld JSON)
@@ -92,6 +95,7 @@ Elk endpoint documenteert:
 **Endpoint**: `POST /api/Employees`
 
 **Request Body**:
+
 ```json
 {
   "displayName": "Jan Janssen",
@@ -110,6 +114,7 @@ Elk endpoint documenteert:
 ```
 
 **Response** (201 Created):
+
 ```json
 {
   "id": "98765432-1234-1234-1234-123456789012",
@@ -169,6 +174,7 @@ Bij overschrijding krijg je een **429 Too Many Requests** met `Retry-After` head
 | `/api/Employees/search` | GET | Zoeken op naam/email | Authenticated |
 
 **Query Parameters** (voor GET `/api/Employees`):
+
 - `type`: EmployeeType filter (Personeel, Vrijwilliger, Interim, Extern, Stagiair)
 - `regime`: ArbeidsRegime filter (Voltijds, Deeltijds, Vrijwilliger)
 - `isActive`: true/false voor actief/inactief
@@ -225,6 +231,7 @@ Bij overschrijding krijg je een **429 Too Many Requests** met `Retry-After` head
 | `/api/Me` | GET | Ingelogde gebruiker info + rechten | Authenticated |
 
 **Response voorbeeld**:
+
 ```json
 {
   "id": "abc123-def456",
@@ -287,6 +294,7 @@ Endpoint: `GET /api/Employees/{id}/export`
 Exporteert **alle** persoonlijke data van een medewerker in JSON formaat (GDPR Artikel 15 - Right of Access).
 
 **Audit Logging**: Elke export wordt gelogd met:
+
 - Wie heeft geëxporteerd
 - Wanneer
 - Voor welke medewerker
@@ -294,12 +302,14 @@ Exporteert **alle** persoonlijke data van een medewerker in JSON formaat (GDPR A
 ### Audit Trail
 
 Alle wijzigingen worden gelogd in `AuditLogs` tabel:
+
 - CRUD operaties
 - Validatie status wijzigingen
 - Roltoekennningen
 - Synchronisatie acties
 
 Audit logs zijn **onveranderbaar** (append-only) en bevatten:
+
 - Old values (JSON)
 - New values (JSON)
 - User info (ID, email, naam)
@@ -311,6 +321,7 @@ Audit logs zijn **onveranderbaar** (append-only) en bevatten:
 Alle endpoints, DTOs en enums zijn gedocumenteerd met **XML comments**:
 
 ### Controllers
+
 - ✅ **EmployeesController** - Volledig gedocumenteerd
 - ✅ **MeController** - Volledig gedocumenteerd
 - ✅ **SyncController** - Volledig gedocumenteerd
@@ -323,12 +334,14 @@ Alle endpoints, DTOs en enums zijn gedocumenteerd met **XML comments**:
 - ✅ **ValidatieVerzoekenController** - Volledig gedocumenteerd
 
 ### DTOs (Core Project)
+
 - ✅ **EmployeeDto** - Volledig gedocumenteerd met alle properties
 - ✅ **CreateEmployeeDto** - Beschrijvingen voor alle velden
 - ✅ **UpdateEmployeeDto** - Beschrijvingen voor alle velden
 - ✅ Alle andere DTOs hebben XML comments
 
 ### Enums
+
 - ✅ **EmployeeType** - Alle waarden gedocumenteerd
 - ✅ **ArbeidsRegime** - Alle waarden gedocumenteerd
 - ✅ **ValidatieStatus** - Alle waarden gedocumenteerd
@@ -342,6 +355,7 @@ De volledige OpenAPI 3.0 specificatie is beschikbaar als JSON:
 **URL**: `http://localhost:5014/swagger/v1/swagger.json`
 
 Deze specificatie kan worden geïmporteerd in:
+
 - **Postman** (Collection import)
 - **Insomnia** (Design Document)
 - **Azure API Management**
@@ -391,6 +405,7 @@ Alle errors volgen het **RFC 7807 Problem Details** formaat:
 ### 3. Rate Limiting
 
 Monitor de response headers:
+
 - `X-RateLimit-Limit`: Maximum aantal requests
 - `X-RateLimit-Remaining`: Overgebleven requests
 - `Retry-After`: Wacht tijd bij 429 (seconds)
@@ -398,6 +413,7 @@ Monitor de response headers:
 ### 4. Paginering
 
 Voor grote datasets (audit logs):
+
 - Gebruik `pageNumber` en `pageSize` query parameters
 - Standaard: `pageSize=20`, `pageNumber=1`
 - Response bevat `totalCount`, `totalPages`, `currentPage`
@@ -409,6 +425,7 @@ Voor grote datasets (audit logs):
 **Probleem**: `/swagger` geeft 404
 
 **Oplossing**:
+
 ```bash
 # Verificeer dat de app in Development mode draait
 echo $ASPNETCORE_ENVIRONMENT  # Moet "Development" zijn
@@ -419,12 +436,16 @@ echo $ASPNETCORE_ENVIRONMENT  # Moet "Development" zijn
 **Probleem**: Swagger toont geen beschrijvingen
 
 **Oplossing**:
+
 1. Controleer `DjoppieHive.API.csproj`:
+
    ```xml
    <GenerateDocumentationFile>true</GenerateDocumentationFile>
    ```
+
 2. Rebuild project: `dotnet build`
 3. Controleer of XML files bestaan:
+
    ```bash
    ls bin/Debug/net8.0/*.xml
    # Verwacht: DjoppieHive.API.xml, DjoppieHive.Core.xml
@@ -435,6 +456,7 @@ echo $ASPNETCORE_ENVIRONMENT  # Moet "Development" zijn
 **Probleem**: Elke API call geeft 401 Unauthorized
 
 **Oplossing**:
+
 1. Klik **Authorize** in Swagger UI
 2. Voer **volledig** Bearer token in (niet alleen "Bearer ...")
 3. Verificeer token scope: moet `access_as_user` bevatten
@@ -443,10 +465,12 @@ echo $ASPNETCORE_ENVIRONMENT  # Moet "Development" zijn
 ## Contact & Support
 
 **ICT Diepenbeek**
-- Email: ict@diepenbeek.be
-- Website: https://www.diepenbeek.be
+
+- Email: <ict@diepenbeek.be>
+- Website: <https://www.diepenbeek.be>
 
 **Tenant Info**:
+
 - Tenant ID: `7db28d6f-d542-40c1-b529-5e5ed2aad545`
 - API Client ID: `2b620e06-39ee-4177-a559-76a12a79320f`
 - SPA Client ID: `2ea8a14d-ea05-40cc-af35-dd482bf8e235`

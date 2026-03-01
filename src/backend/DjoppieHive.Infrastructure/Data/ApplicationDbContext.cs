@@ -26,6 +26,14 @@ public class ApplicationDbContext : DbContext
     public DbSet<LocalGroup> LocalGroups => Set<LocalGroup>();
     public DbSet<LocalGroupMember> LocalGroupMembers => Set<LocalGroupMember>();
 
+    // Role Management
+    public DbSet<JobTitleRoleMapping> JobTitleRoleMappings => Set<JobTitleRoleMapping>();
+
+    // Onboarding/Offboarding System
+    public DbSet<OnboardingProcess> OnboardingProcesses => Set<OnboardingProcess>();
+    public DbSet<OnboardingTask> OnboardingTasks => Set<OnboardingTask>();
+    public DbSet<OnboardingTemplate> OnboardingTemplates => Set<OnboardingTemplate>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -42,7 +50,7 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.DienstId);
             entity.Property(e => e.DisplayName).HasMaxLength(256).IsRequired();
             entity.Property(e => e.Email).HasMaxLength(256).IsRequired();
-            entity.Property(e => e.EntraObjectId).HasMaxLength(36).IsRequired();
+            entity.Property(e => e.EntraObjectId).HasMaxLength(256).IsRequired();
             entity.Property(e => e.PhotoUrl).HasMaxLength(500);
             entity.Property(e => e.Telefoonnummer).HasMaxLength(50);
 
@@ -68,7 +76,7 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(g => g.Niveau);
             entity.Property(g => g.DisplayName).HasMaxLength(256).IsRequired();
             entity.Property(g => g.Email).HasMaxLength(256).IsRequired();
-            entity.Property(g => g.EntraObjectId).HasMaxLength(36).IsRequired();
+            entity.Property(g => g.EntraObjectId).HasMaxLength(256).IsRequired();
 
             // Zelf-refererende relatie voor hierarchie (Sector -> Diensten)
             entity.HasOne(g => g.BovenliggendeGroep)
@@ -156,7 +164,7 @@ public class ApplicationDbContext : DbContext
             // Unique constraint: een gebruiker kan elke rol maar 1x hebben
             entity.HasIndex(r => new { r.EntraObjectId, r.Role }).IsUnique();
 
-            entity.Property(r => r.EntraObjectId).HasMaxLength(36).IsRequired();
+            entity.Property(r => r.EntraObjectId).HasMaxLength(256).IsRequired();
             entity.Property(r => r.Email).HasMaxLength(256).IsRequired();
             entity.Property(r => r.DisplayName).HasMaxLength(256).IsRequired();
             entity.Property(r => r.Role).HasMaxLength(50).IsRequired();
@@ -224,13 +232,13 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(a => a.EntityId);
             entity.HasIndex(a => a.CorrelationId);
 
-            entity.Property(a => a.UserId).HasMaxLength(36);
+            entity.Property(a => a.UserId).HasMaxLength(256);
             entity.Property(a => a.UserEmail).HasMaxLength(256);
             entity.Property(a => a.UserDisplayName).HasMaxLength(256);
             entity.Property(a => a.EntityDescription).HasMaxLength(256);
             entity.Property(a => a.IpAddress).HasMaxLength(45); // IPv6 max length
             entity.Property(a => a.UserAgent).HasMaxLength(500);
-            entity.Property(a => a.CorrelationId).HasMaxLength(36);
+            entity.Property(a => a.CorrelationId).HasMaxLength(256);
             entity.Property(a => a.AdditionalInfo).HasMaxLength(1000);
             // OldValues and NewValues are unlimited (JSON)
         });
@@ -279,6 +287,122 @@ public class ApplicationDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.Property(m => m.AddedBy).HasMaxLength(256);
+        });
+
+        // ============================================
+        // ROLE MANAGEMENT
+        // ============================================
+
+        // JobTitleRoleMapping configuratie
+        modelBuilder.Entity<JobTitleRoleMapping>(entity =>
+        {
+            entity.HasKey(m => m.Id);
+            entity.HasIndex(m => m.JobTitlePattern);
+            entity.HasIndex(m => m.Role);
+            entity.HasIndex(m => m.IsActive);
+            entity.HasIndex(m => m.Priority);
+
+            entity.Property(m => m.JobTitlePattern).HasMaxLength(256).IsRequired();
+            entity.Property(m => m.Role).HasMaxLength(50).IsRequired();
+            entity.Property(m => m.Description).HasMaxLength(500);
+            entity.Property(m => m.CreatedBy).HasMaxLength(256);
+            entity.Property(m => m.UpdatedBy).HasMaxLength(256);
+        });
+
+        // ============================================
+        // ONBOARDING/OFFBOARDING SYSTEM
+        // ============================================
+
+        // OnboardingProcess configuratie
+        modelBuilder.Entity<OnboardingProcess>(entity =>
+        {
+            entity.HasKey(p => p.Id);
+            entity.HasIndex(p => p.Type);
+            entity.HasIndex(p => p.Status);
+            entity.HasIndex(p => p.EmployeeId);
+            entity.HasIndex(p => p.VerantwoordelijkeId);
+            entity.HasIndex(p => p.GeplandeStartdatum);
+            entity.HasIndex(p => p.IsActive);
+            entity.HasIndex(p => p.CreatedAt);
+
+            entity.Property(p => p.Titel).HasMaxLength(256).IsRequired();
+            entity.Property(p => p.Beschrijving).HasMaxLength(2000);
+            entity.Property(p => p.VerantwoordelijkeEmail).HasMaxLength(256);
+            entity.Property(p => p.VerantwoordelijkeNaam).HasMaxLength(256);
+            entity.Property(p => p.CreatedBy).HasMaxLength(256);
+            entity.Property(p => p.UpdatedBy).HasMaxLength(256);
+
+            // Relatie met Employee
+            entity.HasOne(p => p.Employee)
+                .WithMany()
+                .HasForeignKey(p => p.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Relatie met Template
+            entity.HasOne(p => p.Template)
+                .WithMany(t => t.Processes)
+                .HasForeignKey(p => p.TemplateId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // OnboardingTask configuratie
+        modelBuilder.Entity<OnboardingTask>(entity =>
+        {
+            entity.HasKey(t => t.Id);
+            entity.HasIndex(t => t.OnboardingProcessId);
+            entity.HasIndex(t => t.TaskType);
+            entity.HasIndex(t => t.Status);
+            entity.HasIndex(t => t.ToegewezenAanId);
+            entity.HasIndex(t => t.Volgorde);
+            entity.HasIndex(t => t.IsActive);
+            entity.HasIndex(t => t.Deadline);
+
+            entity.Property(t => t.Titel).HasMaxLength(256).IsRequired();
+            entity.Property(t => t.Beschrijving).HasMaxLength(2000);
+            entity.Property(t => t.ToegewezenAanEmail).HasMaxLength(256);
+            entity.Property(t => t.ToegewezenAanNaam).HasMaxLength(256);
+            entity.Property(t => t.VoltooidDoor).HasMaxLength(256);
+            entity.Property(t => t.VoltooiingNotities).HasMaxLength(1000);
+            entity.Property(t => t.Metadata).HasMaxLength(4000); // JSON
+            entity.Property(t => t.CreatedBy).HasMaxLength(256);
+            entity.Property(t => t.UpdatedBy).HasMaxLength(256);
+
+            // Relatie met OnboardingProcess
+            entity.HasOne(t => t.OnboardingProcess)
+                .WithMany(p => p.Tasks)
+                .HasForeignKey(t => t.OnboardingProcessId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Self-referencing relatie voor taak-afhankelijkheden
+            entity.HasOne(t => t.AfhankelijkVanTaak)
+                .WithMany(t => t.AfhankelijkeTaken)
+                .HasForeignKey(t => t.AfhankelijkVanTaakId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // OnboardingTemplate configuratie
+        modelBuilder.Entity<OnboardingTemplate>(entity =>
+        {
+            entity.HasKey(t => t.Id);
+            entity.HasIndex(t => t.ProcessType);
+            entity.HasIndex(t => t.IsActive);
+            entity.HasIndex(t => t.IsDefault);
+            entity.HasIndex(t => t.VoorEmployeeType);
+            entity.HasIndex(t => t.VoorDienstId);
+            entity.HasIndex(t => t.VoorSectorId);
+
+            entity.Property(t => t.Naam).HasMaxLength(256).IsRequired();
+            entity.Property(t => t.Beschrijving).HasMaxLength(1000);
+            entity.Property(t => t.VoorDepartment).HasMaxLength(256);
+            entity.Property(t => t.TaskenDefinitie).IsRequired(); // JSON
+            entity.Property(t => t.CreatedBy).HasMaxLength(256);
+            entity.Property(t => t.UpdatedBy).HasMaxLength(256);
+
+            // Relatie met Dienst (DistributionGroup)
+            entity.HasOne(t => t.VoorDienst)
+                .WithMany()
+                .HasForeignKey(t => t.VoorDienstId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 }

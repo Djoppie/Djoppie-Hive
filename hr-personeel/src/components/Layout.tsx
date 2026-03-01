@@ -27,6 +27,7 @@ import {
   Laptop,
   UserCheck,
   KeyRound,
+  Layers,
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { useUserRole } from '../context/UserRoleContext';
@@ -81,6 +82,12 @@ const menuGroups: MenuGroup[] = [
         icon: UserPlus,
         label: 'On/Offboarding',
         requiredRoles: ['ict_super_admin', 'hr_admin', 'sectormanager', 'diensthoofd'],
+      },
+      {
+        to: '/onboarding/templates',
+        icon: Layers,
+        label: 'Templates',
+        requiredRoles: ['ict_super_admin', 'hr_admin'],
       },
     ],
   },
