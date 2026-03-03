@@ -27,12 +27,14 @@ public class EmployeeService : IEmployeeService
 
     #region Legacy Graph API Methods (Stub implementations)
 
+    [Obsolete("Use GetAllAsync with filters instead. This method will be removed in a future version.")]
     public Task<IEnumerable<EmployeeDto>> GetAllEmployeesAsync(CancellationToken cancellationToken = default)
     {
         _logger.LogWarning("GetAllEmployeesAsync is deprecated. Use GetAllAsync with filters instead.");
         return GetAllAsync(null, cancellationToken);
     }
 
+    [Obsolete("Use GetByIdAsync(Guid) instead. This method will be removed in a future version.")]
     public async Task<EmployeeDto?> GetEmployeeByIdAsync(string userId, CancellationToken cancellationToken = default)
     {
         _logger.LogWarning("GetEmployeeByIdAsync(string) is deprecated. Use GetByIdAsync(Guid) instead.");

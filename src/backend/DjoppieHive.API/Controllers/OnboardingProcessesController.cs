@@ -17,13 +17,16 @@ namespace DjoppieHive.API.Controllers;
 public class OnboardingProcessesController : ControllerBase
 {
     private readonly IOnboardingService _onboardingService;
+    private readonly IUserContextService _userContext;
     private readonly ILogger<OnboardingProcessesController> _logger;
 
     public OnboardingProcessesController(
         IOnboardingService onboardingService,
+        IUserContextService userContext,
         ILogger<OnboardingProcessesController> logger)
     {
         _onboardingService = onboardingService;
+        _userContext = userContext;
         _logger = logger;
     }
 
@@ -97,9 +100,7 @@ public class OnboardingProcessesController : ControllerBase
     public async Task<ActionResult<IEnumerable<OnboardingProcessSummaryDto>>> GetMyProcesses(
         CancellationToken cancellationToken)
     {
-        var userEmail = User.FindFirst("preferred_username")?.Value
-            ?? User.FindFirst("email")?.Value
-            ?? "unknown";
+        var userEmail = _userContext.GetCurrentUserEmail() ?? "unknown";
 
         var processes = await _onboardingService.GetMyProcessesAsync(userEmail, cancellationToken);
         return Ok(processes);
@@ -127,9 +128,7 @@ public class OnboardingProcessesController : ControllerBase
         [FromBody] CreateOnboardingProcessDto dto,
         CancellationToken cancellationToken)
     {
-        var createdBy = User.FindFirst("preferred_username")?.Value
-            ?? User.FindFirst("email")?.Value
-            ?? "unknown";
+        var createdBy = _userContext.GetCurrentUserEmail() ?? "unknown";
 
         try
         {
@@ -153,9 +152,7 @@ public class OnboardingProcessesController : ControllerBase
         [FromBody] CreateProcessFromTemplateDto dto,
         CancellationToken cancellationToken)
     {
-        var createdBy = User.FindFirst("preferred_username")?.Value
-            ?? User.FindFirst("email")?.Value
-            ?? "unknown";
+        var createdBy = _userContext.GetCurrentUserEmail() ?? "unknown";
 
         try
         {
@@ -180,9 +177,7 @@ public class OnboardingProcessesController : ControllerBase
         [FromBody] UpdateOnboardingProcessDto dto,
         CancellationToken cancellationToken)
     {
-        var updatedBy = User.FindFirst("preferred_username")?.Value
-            ?? User.FindFirst("email")?.Value
-            ?? "unknown";
+        var updatedBy = _userContext.GetCurrentUserEmail() ?? "unknown";
 
         var process = await _onboardingService.UpdateProcessAsync(id, dto, updatedBy, cancellationToken);
 
@@ -207,9 +202,7 @@ public class OnboardingProcessesController : ControllerBase
         [FromBody] ChangeProcessStatusDto dto,
         CancellationToken cancellationToken)
     {
-        var updatedBy = User.FindFirst("preferred_username")?.Value
-            ?? User.FindFirst("email")?.Value
-            ?? "unknown";
+        var updatedBy = _userContext.GetCurrentUserEmail() ?? "unknown";
 
         try
         {

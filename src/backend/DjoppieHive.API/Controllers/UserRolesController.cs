@@ -18,13 +18,16 @@ namespace DjoppieHive.API.Controllers;
 public class UserRolesController : ControllerBase
 {
     private readonly IUserRoleService _userRoleService;
+    private readonly IUserContextService _userContext;
     private readonly ILogger<UserRolesController> _logger;
 
     public UserRolesController(
         IUserRoleService userRoleService,
+        IUserContextService userContext,
         ILogger<UserRolesController> logger)
     {
         _userRoleService = userRoleService;
+        _userContext = userContext;
         _logger = logger;
     }
 
@@ -80,8 +83,7 @@ public class UserRolesController : ControllerBase
         [FromBody] CreateUserRoleDto dto,
         CancellationToken cancellationToken)
     {
-        var currentUser = User.Identity?.Name ?? User.Claims
-            .FirstOrDefault(c => c.Type == "preferred_username")?.Value ?? "Onbekend";
+        var currentUser = _userContext.GetCurrentUserName() ?? _userContext.GetCurrentUserEmail() ?? "Onbekend";
 
         try
         {
@@ -112,8 +114,7 @@ public class UserRolesController : ControllerBase
         [FromBody] UpdateUserRoleDto dto,
         CancellationToken cancellationToken)
     {
-        var currentUser = User.Identity?.Name ?? User.Claims
-            .FirstOrDefault(c => c.Type == "preferred_username")?.Value ?? "Onbekend";
+        var currentUser = _userContext.GetCurrentUserName() ?? _userContext.GetCurrentUserEmail() ?? "Onbekend";
 
         try
         {
@@ -145,8 +146,7 @@ public class UserRolesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
-        var currentUser = User.Identity?.Name ?? User.Claims
-            .FirstOrDefault(c => c.Type == "preferred_username")?.Value ?? "Onbekend";
+        var currentUser = _userContext.GetCurrentUserName() ?? _userContext.GetCurrentUserEmail() ?? "Onbekend";
 
         var deleted = await _userRoleService.DeleteAsync(id, cancellationToken);
 

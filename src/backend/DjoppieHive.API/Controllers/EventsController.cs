@@ -22,6 +22,7 @@ namespace DjoppieHive.API.Controllers;
 public class EventsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
+    private readonly IUserContextService _userContext;
     private readonly ILogger<EventsController> _logger;
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -30,9 +31,11 @@ public class EventsController : ControllerBase
 
     public EventsController(
         ApplicationDbContext context,
+        IUserContextService userContext,
         ILogger<EventsController> logger)
     {
         _context = context;
+        _userContext = userContext;
         _logger = logger;
     }
 
@@ -95,8 +98,7 @@ public class EventsController : ControllerBase
         [FromBody] CreateEventDto dto,
         CancellationToken cancellationToken)
     {
-        var currentUser = User.Identity?.Name ?? User.Claims
-            .FirstOrDefault(c => c.Type == "preferred_username")?.Value ?? "Onbekend";
+        var currentUser = _userContext.GetCurrentUserName() ?? _userContext.GetCurrentUserEmail() ?? "Onbekend";
 
         var eventEntity = new Event
         {
@@ -222,8 +224,7 @@ public class EventsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<EventDto>> Versturen(Guid id, CancellationToken cancellationToken)
     {
-        var currentUser = User.Identity?.Name ?? User.Claims
-            .FirstOrDefault(c => c.Type == "preferred_username")?.Value ?? "Onbekend";
+        var currentUser = _userContext.GetCurrentUserName() ?? _userContext.GetCurrentUserEmail() ?? "Onbekend";
 
         var eventEntity = await _context.Events
             .Include(e => e.DistributieGroep)

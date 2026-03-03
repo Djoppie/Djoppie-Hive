@@ -16,13 +16,16 @@ namespace DjoppieHive.API.Controllers;
 public class OnboardingTasksController : ControllerBase
 {
     private readonly IOnboardingService _onboardingService;
+    private readonly IUserContextService _userContext;
     private readonly ILogger<OnboardingTasksController> _logger;
 
     public OnboardingTasksController(
         IOnboardingService onboardingService,
+        IUserContextService userContext,
         ILogger<OnboardingTasksController> logger)
     {
         _onboardingService = onboardingService;
+        _userContext = userContext;
         _logger = logger;
     }
 
@@ -47,9 +50,7 @@ public class OnboardingTasksController : ControllerBase
     public async Task<ActionResult<IEnumerable<OnboardingTaskDto>>> GetMyTasks(
         CancellationToken cancellationToken)
     {
-        var userEmail = User.FindFirst("preferred_username")?.Value
-            ?? User.FindFirst("email")?.Value
-            ?? "unknown";
+        var userEmail = _userContext.GetCurrentUserEmail() ?? "unknown";
 
         var tasks = await _onboardingService.GetMyTasksAsync(userEmail, cancellationToken);
         return Ok(tasks);
@@ -84,9 +85,7 @@ public class OnboardingTasksController : ControllerBase
         [FromBody] CreateOnboardingTaskDto dto,
         CancellationToken cancellationToken)
     {
-        var createdBy = User.FindFirst("preferred_username")?.Value
-            ?? User.FindFirst("email")?.Value
-            ?? "unknown";
+        var createdBy = _userContext.GetCurrentUserEmail() ?? "unknown";
 
         try
         {
@@ -111,9 +110,7 @@ public class OnboardingTasksController : ControllerBase
         [FromBody] UpdateOnboardingTaskDto dto,
         CancellationToken cancellationToken)
     {
-        var updatedBy = User.FindFirst("preferred_username")?.Value
-            ?? User.FindFirst("email")?.Value
-            ?? "unknown";
+        var updatedBy = _userContext.GetCurrentUserEmail() ?? "unknown";
 
         var task = await _onboardingService.UpdateTaskAsync(id, dto, updatedBy, cancellationToken);
 
@@ -137,9 +134,7 @@ public class OnboardingTasksController : ControllerBase
         [FromBody] ChangeTaskStatusDto dto,
         CancellationToken cancellationToken)
     {
-        var updatedBy = User.FindFirst("preferred_username")?.Value
-            ?? User.FindFirst("email")?.Value
-            ?? "unknown";
+        var updatedBy = _userContext.GetCurrentUserEmail() ?? "unknown";
 
         try
         {
@@ -171,9 +166,7 @@ public class OnboardingTasksController : ControllerBase
         [FromBody] AssignTaskDto dto,
         CancellationToken cancellationToken)
     {
-        var assignedBy = User.FindFirst("preferred_username")?.Value
-            ?? User.FindFirst("email")?.Value
-            ?? "unknown";
+        var assignedBy = _userContext.GetCurrentUserEmail() ?? "unknown";
 
         var task = await _onboardingService.AssignTaskAsync(id, dto, assignedBy, cancellationToken);
 
