@@ -89,6 +89,9 @@ public static class DependencyInjection
             services.AddScoped<IEmployeeService>(sp => sp.GetRequiredService<EmployeeService>());
 
             services.AddScoped<ISyncService, StubSyncService>();
+
+            // Stub license service (Graph API required for real license data)
+            services.AddScoped<ILicenseService, StubLicenseService>();
         }
 
         return services;

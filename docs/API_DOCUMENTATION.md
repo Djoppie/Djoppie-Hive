@@ -1,8 +1,16 @@
 # Djoppie-Hive API Documentation
 
+**Last Updated:** 2026-03-03
+
+## Overview
+
+De Djoppie-Hive API is volledig gedocumenteerd met **Swagger/OpenAPI 3.0** specificaties. Dit document biedt een compleet overzicht van alle beschikbare endpoints.
+
+**Base URL:** `https://your-domain/api`
+
 ## Swagger/OpenAPI Setup
 
-De Djoppie-Hive API is volledig gedocumenteerd met **Swagger/OpenAPI 3.0** specificaties. Alle endpoints, request/response modellen, en authenticatie-eisen zijn gedocumenteerd via XML comments die automatisch worden geconverteerd naar interactieve API documentatie.
+De Djoppie-Hive API endpoints, request/response modellen, en authenticatie-eisen zijn gedocumenteerd via XML comments die automatisch worden geconverteerd naar interactieve API documentatie.
 
 ## Toegang tot Swagger UI
 
@@ -474,3 +482,258 @@ echo $ASPNETCORE_ENVIRONMENT  # Moet "Development" zijn
 - Tenant ID: `7db28d6f-d542-40c1-b529-5e5ed2aad545`
 - API Client ID: `2b620e06-39ee-4177-a559-76a12a79320f`
 - SPA Client ID: `2ea8a14d-ea05-40cc-af35-dd482bf8e235`
+
+---
+
+## Additional API Endpoints (2026-03)
+
+### Unified Groups (`/api/UnifiedGroups`)
+
+Hybrid group system combining Exchange, Dynamic, and Local groups.
+
+| Endpoint | Method | Beschrijving | Auth |
+|----------|--------|--------------|------|
+| `/api/UnifiedGroups` | GET | Alle groepen uit alle bronnen | Authenticated |
+| `/api/UnifiedGroups/{id}` | GET | Specifieke groep (ID format: `guid`, `dynamic:guid`, `local:guid`) | Authenticated |
+| `/api/UnifiedGroups/{id}/members` | GET | Groepsleden | Authenticated |
+| `/api/UnifiedGroups/preview` | GET | Preview gecombineerde leden (query: `groupIds=id1,id2`) | Authenticated |
+| `/api/UnifiedGroups/dynamic` | POST | Dynamische groep aanmaken | CanManageGroups |
+| `/api/UnifiedGroups/dynamic/{id}` | PUT | Dynamische groep bijwerken | CanManageGroups |
+| `/api/UnifiedGroups/dynamic/{id}` | DELETE | Dynamische groep verwijderen | CanManageGroups |
+| `/api/UnifiedGroups/dynamic/{id}/evaluate` | POST | Dynamische groep herberekenen | CanManageGroups |
+| `/api/UnifiedGroups/local` | POST | Lokale groep aanmaken | CanManageGroups |
+| `/api/UnifiedGroups/local/{id}` | PUT | Lokale groep bijwerken | CanManageGroups |
+| `/api/UnifiedGroups/local/{id}` | DELETE | Lokale groep verwijderen | CanManageGroups |
+| `/api/UnifiedGroups/local/{groupId}/members/{employeeId}` | POST | Lid toevoegen aan lokale groep | CanManageGroups |
+| `/api/UnifiedGroups/local/{groupId}/members/{employeeId}` | DELETE | Lid verwijderen uit lokale groep | CanManageGroups |
+| `/api/UnifiedGroups/export/emails` | GET | Email export als CSV (query: `groupIds=id1,id2`) | Authenticated |
+| `/api/UnifiedGroups/export/mailto` | GET | Mailto link genereren | Authenticated |
+
+**Dynamic Group Request Body:**
+
+```json
+{
+  "displayName": "Alle Voltijds Personeel",
+  "description": "Dynamische groep voor voltijdse medewerkers",
+  "filterCriteria": {
+    "employeeTypes": ["Personeel"],
+    "arbeidsRegimes": ["Voltijds"],
+    "alleenActief": true
+  }
+}
+```
+
+### Job Title Role Mappings (`/api/JobTitleRoleMappings`)
+
+Automatische roltoewijzing op basis van functietitel.
+
+| Endpoint | Method | Beschrijving | Auth |
+|----------|--------|--------------|------|
+| `/api/JobTitleRoleMappings` | GET | Alle mappings | CanManageRoles |
+| `/api/JobTitleRoleMappings/{id}` | GET | Specifieke mapping | CanManageRoles |
+| `/api/JobTitleRoleMappings` | POST | Nieuwe mapping aanmaken | CanManageRoles |
+| `/api/JobTitleRoleMappings/{id}` | PUT | Mapping bijwerken | CanManageRoles |
+| `/api/JobTitleRoleMappings/{id}` | DELETE | Mapping verwijderen | CanManageRoles |
+| `/api/JobTitleRoleMappings/match` | GET | Matchende mapping vinden (query: `jobTitle=...`) | CanManageRoles |
+| `/api/JobTitleRoleMappings/auto-assign/preview` | GET | Preview automatische toewijzing | CanManageRoles |
+| `/api/JobTitleRoleMappings/auto-assign/employee/{employeeId}` | POST | Rol toewijzen voor 1 medewerker | CanManageRoles |
+| `/api/JobTitleRoleMappings/auto-assign` | POST | Rollen toewijzen voor alle medewerkers | CanManageRoles |
+| `/api/JobTitleRoleMappings/scope-types` | GET | Beschikbare scope types | AllowAnonymous |
+
+**Mapping Request Body:**
+
+```json
+{
+  "jobTitlePattern": "*Diensthoofd*",
+  "role": "diensthoofd",
+  "scopeDeterminationType": "FromDienstMembership",
+  "description": "Automatisch diensthoofd rol toekennen",
+  "priority": 10,
+  "isActive": true
+}
+```
+
+### Onboarding Processes (`/api/onboarding-processes`)
+
+Beheer van onboarding en offboarding workflows.
+
+| Endpoint | Method | Beschrijving | Auth |
+|----------|--------|--------------|------|
+| `/api/onboarding-processes` | GET | Alle processen (met filters) | Authenticated |
+| `/api/onboarding-processes/{id}` | GET | Specifiek proces met taken | Authenticated |
+| `/api/onboarding-processes/employee/{employeeId}` | GET | Processen voor medewerker | Authenticated |
+| `/api/onboarding-processes/my-processes` | GET | Mijn toegewezen processen | Authenticated |
+| `/api/onboarding-processes/statistics` | GET | Dashboard statistieken | Authenticated |
+| `/api/onboarding-processes` | POST | Nieuw proces aanmaken | RequireHrAdmin |
+| `/api/onboarding-processes/from-template` | POST | Proces aanmaken van template | RequireHrAdmin |
+| `/api/onboarding-processes/{id}` | PUT | Proces bijwerken | RequireHrAdmin |
+| `/api/onboarding-processes/{id}/status` | PATCH | Status wijzigen | RequireHrAdmin |
+| `/api/onboarding-processes/{id}` | DELETE | Proces verwijderen (soft delete) | RequireHrAdmin |
+
+**Query Parameters:**
+
+| Parameter | Type | Beschrijving |
+|-----------|------|--------------|
+| `type` | string | `Onboarding`, `Offboarding` |
+| `status` | string | `Nieuw`, `InProgress`, `Wachtend`, `Voltooid`, `Geannuleerd` |
+| `employeeId` | guid | Filter op medewerker |
+| `verantwoordelijkeId` | guid | Filter op verantwoordelijke |
+| `startDatumVan` | date | Startdatum vanaf |
+| `startDatumTot` | date | Startdatum tot |
+| `isActive` | boolean | Alleen actieve processen |
+| `searchQuery` | string | Zoekterm |
+
+**Process Request Body:**
+
+```json
+{
+  "employeeId": "employee-guid",
+  "type": "Onboarding",
+  "titel": "Onboarding Jan Janssen",
+  "beschrijving": "Standaard onboarding proces",
+  "verantwoordelijkeId": "manager-guid",
+  "geplandeStartdatum": "2024-07-01"
+}
+```
+
+### Onboarding Tasks (`/api/onboarding-tasks`)
+
+Beheer van taken binnen onboarding processen.
+
+| Endpoint | Method | Beschrijving | Auth |
+|----------|--------|--------------|------|
+| `/api/onboarding-tasks/process/{processId}` | GET | Alle taken voor proces | Authenticated |
+| `/api/onboarding-tasks/my-tasks` | GET | Mijn toegewezen taken | Authenticated |
+| `/api/onboarding-tasks/{id}` | GET | Specifieke taak | Authenticated |
+| `/api/onboarding-tasks` | POST | Nieuwe taak aanmaken | RequireHrAdmin |
+| `/api/onboarding-tasks/{id}` | PUT | Taak bijwerken | RequireHrAdmin |
+| `/api/onboarding-tasks/{id}/status` | PATCH | Status wijzigen | Authenticated |
+| `/api/onboarding-tasks/{id}/assign` | PATCH | Taak toewijzen | RequireHrAdmin |
+| `/api/onboarding-tasks/{id}/can-start` | GET | Check of taak gestart kan worden | Authenticated |
+| `/api/onboarding-tasks/{id}` | DELETE | Taak verwijderen | RequireHrAdmin |
+
+**Task Status Change Body:**
+
+```json
+{
+  "nieuweStatus": "Voltooid",
+  "voltooiingNotities": "Account aangemaakt, credentials verstuurd"
+}
+```
+
+### Onboarding Templates (`/api/onboarding-templates`)
+
+Templates voor standaard onboarding/offboarding workflows.
+
+| Endpoint | Method | Beschrijving | Auth |
+|----------|--------|--------------|------|
+| `/api/onboarding-templates` | GET | Alle templates (optional: `?type=Onboarding`) | Authenticated |
+| `/api/onboarding-templates/{id}` | GET | Specifieke template | Authenticated |
+| `/api/onboarding-templates` | POST | Nieuwe template aanmaken | RequireIctAdmin |
+| `/api/onboarding-templates/{id}` | PUT | Template bijwerken | RequireIctAdmin |
+| `/api/onboarding-templates/{id}/set-default` | PATCH | Als standaard instellen | RequireIctAdmin |
+| `/api/onboarding-templates/{id}` | DELETE | Template verwijderen | RequireIctAdmin |
+
+**Template Request Body:**
+
+```json
+{
+  "naam": "Standaard Onboarding IT",
+  "beschrijving": "Onboarding template voor IT afdeling",
+  "processType": "Onboarding",
+  "voorEmployeeType": "Personeel",
+  "voorDepartment": "IT",
+  "taskenDefinitie": [
+    {
+      "titel": "AD Account aanmaken",
+      "beschrijving": "Maak Active Directory account aan",
+      "taskType": "ITSetup",
+      "volgorde": 1,
+      "standaardDeadlineDagen": 1
+    },
+    {
+      "titel": "Email configureren",
+      "taskType": "ITSetup",
+      "volgorde": 2,
+      "standaardDeadlineDagen": 2,
+      "afhankelijkVanVolgorde": 1
+    }
+  ]
+}
+```
+
+### Licenses (`/api/Licenses`)
+
+Microsoft 365 licentie-analyse en optimalisatie.
+
+| Endpoint | Method | Beschrijving | Auth |
+|----------|--------|--------------|------|
+| `/api/Licenses/overview` | GET | Volledig licentie-overzicht met aanbevelingen | RequireIctAdmin |
+| `/api/Licenses/summary` | GET | Samenvatting licentiegebruik | RequireIctAdmin |
+| `/api/Licenses/subscriptions` | GET | Beschikbare abonnementen | RequireIctAdmin |
+| `/api/Licenses/users` | GET | Gebruikers met licenties (met filters) | RequireIctAdmin |
+| `/api/Licenses/users/{userId}` | GET | Licentie-info voor gebruiker | RequireIctAdmin |
+| `/api/Licenses/recommendations` | GET | Optimalisatie-aanbevelingen | RequireIctAdmin |
+
+**Query Parameters (voor `/users` en `/overview`):**
+
+| Parameter | Type | Beschrijving |
+|-----------|------|--------------|
+| `licenseType` | string | `e3`, `f3` |
+| `activityStatus` | string | Activiteitsstatus |
+| `onlyWithRecommendations` | boolean | Alleen met aanbevelingen |
+| `department` | string | Filter op afdeling |
+| `inactiveDaysThreshold` | int | Minimaal aantal dagen inactief |
+
+### Statistics (`/api/Statistics`)
+
+Dashboard statistieken en KPIs.
+
+| Endpoint | Method | Beschrijving | Auth |
+|----------|--------|--------------|------|
+| `/api/Statistics/dashboard` | GET | Alle dashboard statistieken | Authenticated |
+
+**Response:**
+
+```json
+{
+  "totaalMedewerkers": 150,
+  "actieveMedewerkers": 145,
+  "vrijwilligers": 25,
+  "interims": 5,
+  "perSector": [
+    { "sectorNaam": "Algemene Zaken", "aantal": 40 }
+  ],
+  "perArbeidsRegime": [
+    { "regime": "Voltijds", "aantal": 100 }
+  ],
+  "laatsteSyncDatum": "2024-06-20T14:00:00Z",
+  "syncStatus": "Geslaagd",
+  "openstaandeValidaties": 3
+}
+```
+
+---
+
+## Complete Endpoint Index
+
+| Controller | Endpoints | Primary Auth |
+|------------|-----------|--------------|
+| Employees | 11 | Authenticated / CanEditEmployees |
+| Vrijwilligers | 8 | Authenticated |
+| DistributionGroups | 6 | Authenticated / CanManageGroups |
+| UnifiedGroups | 14 | Authenticated / CanManageGroups |
+| Events | 8 | Authenticated / CanEditEmployees |
+| UserRoles | 8 | CanManageRoles |
+| JobTitleRoleMappings | 10 | CanManageRoles |
+| ValidatieVerzoeken | 4 | CanValidate |
+| Sync | 4 | Authenticated / CanSync |
+| OnboardingProcesses | 10 | Authenticated / RequireHrAdmin |
+| OnboardingTasks | 9 | Authenticated / RequireHrAdmin |
+| OnboardingTemplates | 6 | Authenticated / RequireIctAdmin |
+| Licenses | 6 | RequireIctAdmin |
+| Statistics | 1 | Authenticated |
+| Audit | 3 | CanViewAuditLogs |
+| Me | 1 | Authenticated |
+
+**Total: 109 endpoints**
